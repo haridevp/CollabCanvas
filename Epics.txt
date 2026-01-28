@@ -1,0 +1,293 @@
+﻿SOFTWARE ENGINEERING PROJECT
+
+
+TEAM 12
+
+
+RATAN RAJA         : CB.SC.U4CSE23414
+HARIDEV P                 : CB.SC.U4CSE23417
+LAKKINENI JATHIN        : CB.SC.U4CSE23426
+SIDHARTH S NAIR         : CB.SC.U4CSE23443
+SISTHICK S                 : CB.SC.U4CSE23465
+
+
+EPICS AND USER STORIES
+
+
+1. LOGIN SYSTEM
+        
+        1.1 As a new user i would like to create an account to securely access the platform
+                1.1.1 -> Design responsive registration form UI
+                1.1.2 -> Create password strength validation component
+                1.1.3 -> Build username availability real-time checker 
+                1.1.4 -> Implement email validation API with confirmation flow
+                1.1.5 -> Create terms of service and privacy policy agreement checkbox
+
+
+        1.2 As a returning user i would like to login to the system with my credentials to gain access to the platform under my profile
+                1.2.1 -> Design a responsive login form
+                1.2.2 -> Implement email/password authentication
+                1.2.3 -> Build Google OAuth 2.0 integration
+                1.2.4 -> Build login activity logging
+                1.2.5 -> Build login error handling with user-friendly messages
+
+
+        1.3 As a user my credentials should be stored securely for protecting my account from unauthorized access
+                1.3.1 -> Implement bcrypt password hashing with proper salt rounds
+                1.3.2 -> Implement HTTPS enforcement for all authentication endpoints
+                1.3.3 -> Implement security headers
+        
+        1.4 As a forgetful user I would like to reset my password for regaining access to my account when locked out
+                1.4.1 -> Create "Forgot Password" page with email input
+                1.4.2 -> Implement password reset token generation with expiry
+1.4.3 -> Create reset password form with validation
+1.4.4 -> Implement password reset success confirmation
+
+
+1.5 As a user who wants to leave I would like to delete my account permanently for removing my data from the platform
+        1.5.1 -> Create account deletion request flow
+        1.5.2 -> Build account deletion confirmation with password verification
+        1.5.3 -> Create final deletion confirmation email
+        1.5.4 -> Create post-deletion feedback survey
+
+
+1.6 As a logged-in user I would like to securely sign out from my account
+        1.6.1 -> Create signout button/icon in navigation header
+        1.6.2 -> Build signout confirmation modal
+        1.6.3 -> Create signout success feedback
+
+
+2. PROFILE MANAGEMENT AND CUSTOMISATION
+
+
+2.1 As a registered user I would like to access and view my complete profile information
+        2.1.1 -> Build user information card component
+        2.1.2 -> Create quick access to profile editing sections
+        2.1.3 -> Design user profile dashboard layout
+        2.1.4 -> Window to import profile pictures
+        2.1.5 -> Allow editing personal information as and when required
+        2.1.6 -> Save button to save the changes made to profile 
+
+
+2.2 As a user I would like to edit my personal information for keeping my profile up-to-date and accurate
+        2.2.1 -> Create personal information editing form
+        2.2.2 -> Implement display name validation (3-50 characters)
+        2.2.3 -> Build bio/description editor with character counter
+
+
+2.3 As a user I would like to upload and manage my profile picture
+        2.3.1 -> Design profile picture upload interface
+        2.3.2 -> Implement image upload
+        2.3.3 -> Implement supported formats validation (JPG, PNG, WebP)
+        2.3.4 -> Build image cropping tool
+        2.3.5 -> Option to remove profile picture
+
+
+2.4 As a user I would like to customize the application theme
+        2.4.1 -> Implement dark/light theme toggle
+        2.4.2 -> Implement theme selector screen
+        2.4.3 -> Show active theme indicator
+        2.4.4 -> Add reset to default theme option
+
+
+2.5 As a user I would like to manage notifications on the platform
+        2.5.1 -> Create notification settings page
+        2.5.2 -> Enable/disable in-app notifications
+        2.5.3 -> Toggle platform notifications drop down
+        2.5.4 -> Set notification sounds preferences
+
+
+2.6 As a user I want to customize keyboard shortcuts for faster drawing
+        2.6.1 -> Create keyboard shortcuts customization panel
+2.6.2 -> Implement tool shortcut assignment
+2.6.3 -> Create shortcut conflict detection 
+2.6.4 ->  Add shortcut reset to defaults
+
+
+3. ROOM MANAGEMENT
+
+
+3.1 As a logged-in user I would like to create a new collaborative room for starting drawing sessions with others
+        3.1.1 -> Create "New Room" button in dashboard
+        3.1.2 -> Design room creation modal/form
+        3.1.3 -> Implement room name input with validation
+        3.1.4 -> Add room description text area
+        3.1.5 ->  Implement room visibility toggle
+
+
+3.2 As a user I would like to join existing collaborative rooms for participating in drawing sessions
+        3.2.1 -> Create "Join Room" button/interface
+        3.2.2 -> Implement room code input field
+        3.2.3 -> Build room validation
+        3.2.4 -> Add password input for private rooms
+        3.2.5 -> Create loading state while joining
+        3.2.6 -> Add join error handling
+
+
+3.3 As a room creator I would like to invite other users to my room using a room code
+        3.3.1 -> Create "Invite Users" button in room
+        3.3.2 -> Create area to copy the room code and password ( if private )
+        3.3.3 -> Implement public visibility for public rooms
+
+
+3.4 As a user looking for collaborations I would like to browse available public rooms
+        3.4.1 -> Design public rooms gallery page
+        3.4.2 -> Create room card components
+        3.4.3 -> Implement room search functionality
+        3.4.4 -> Add room filtering
+        3.4.5 -> Implement joining rooms through public gallery
+
+
+3.5 As a room owner I would like to manage room settings for controlling the collaboration environment
+        3.5.1 -> Create room settings panel
+        3.5.2 -> Implement room name/description editing
+        3.5.3 -> Add room visibility change
+        3.5.4 -> Create room password setting
+        3.5.5 -> Implement room deleting
+
+
+3.6 As a room moderator I would like to manage room participants
+        3.6.1 -> Create participants list sidebar
+        3.6.2 -> Implement participant role assignment
+        3.6.3 -> Add kick/remove participant functionality
+        3.6.4 -> Implement ban/unban system
+        3.6.5 -> Implement participant search/filter
+
+
+3.7 As a returning user I would like to access my previous rooms for continuing collaborative work
+        3.7.1 -> Create "My Rooms" dashboard section
+        3.7.2 -> Implement room auto-save functionality
+        3.7.3 -> Add room bookmark/favorite system
+        3.7.4 -> Create recently visited rooms list
+        3.7.5 -> Implement “Leave Room Permanently” functionality
+
+
+4. REAL-TIME COLLABORATIVE CANVAS
+
+
+4.1 Basic Drawing Tools as a creative user I would like to draw freehand on the canvas for expressing my ideas visually
+        4.1.1 -> Create canvas rendering component
+4.1.2 -> Create Freehand Brush Engine
+4.1.3 -> Create color picker component with opacity control
+4.1.4 -> Build Variable Stroke Settings
+4.1.5 -> Implement Eraser Logic
+4.1.6 -> Create Local History (Undo/Redo)
+4.1.7 -> Build "Clear Canvas" Feature
+
+
+4.2 As a diagram creator I would like to add precise shapes to the canvas For creating structured designs and diagrams
+        4.2.1 -> Implement Shape Primitives (rectangles,squares,circles and etc)
+        4.2.2 -> Create Straight Line & Arrow Tool
+        4.2.3 -> Build Text Input Tool
+        4.2.4 -> Implement Image Insertion
+        4.2.5 -> Create Selection & Transform Handles
+        4.2.6 -> Build Object Deletion
+
+
+4.3 As a user I want to navigate the workspace efficiently to manage large or detailed drawings.
+        4.3.1 -> Implement infinite canvas logic (pan/scroll)
+        4.3.2 -> Build zoom in/out functionality (mouse wheel and UI buttons)
+        4.3.3 -> Implement "Fit to Screen" and "Reset Zoom"
+4.3.4 -> Create toggleable background grid
+
+
+4.4 As a user I want to select and manipulate objects to reorganize my composition.
+        4.4.1 -> Create selection tool (click to select, drag box and select to multi-select)
+        4.4.2 -> Implement drag-and-drop move functionality for selected objects
+        4.4.3 -> Build transformation handles (resize, rotate)
+        4.4.4 -> Add clipboard functions (Cut, Copy, Paste within canvas)
+
+
+4.5 As a user I want to manage drawing layers to organize complex artwork.
+        4.5.1 -> Design Layers panel UI
+        4.5.2 -> Implement functionality to add, delete, and rename layers
+4.5.3 -> Implement layer reordering (drag to reorder)
+4.5.4 -> Add visibility toggle (eye icon) and lock toggle for layers 
+
+
+4.6 As a user I want to format text effectively
+        4.6.1 -> Implement text formatting toolbar
+        4.6.2 -> Add font family selection
+        4.6.3 -> Create text size and color controls
+        4.6.4 -> Build text alignment options
+        4.6.5 -> Implement text effects (bold, italic, underline)
+
+
+5. SYNCHRONISATION AND PERFORMANCE
+
+
+5.1 As a collaborator I want to see others' changes immediately to ensure we are working on the same version.
+        5.1.1 -> Implement WebSocket connection for bi-directional communication
+        5.1.2 -> Build event broadcasting system (emit drawing events to room)
+        5.1.3 -> Implement real-time rendering of remote strokes
+        5.1.4 -> Integrate conflict resolution strategy (CRDTs or Operational Transformation)
+
+
+5.2 As a collaborator I want to see the presence of other users to avoid working over them.
+        5.2.1 -> Implement live remote cursors with user labels/colors
+        5.2.2 -> Create visual "currently selecting" indicators for other users
+        5.2.3 -> Broadcast "user joined" and "user left" notifications
+        5.2.4 -> Show active tool status next to remote cursors
+
+
+5.3 As a user I want the system to handle network issues gracefully to prevent data loss.
+        5.3.1 -> Implement connection health monitoring (ping/latency display)
+        5.3.2 -> Build automatic reconnection logic with exponential backoff
+5.3.3 -> Implement offline mode (queue actions locally)
+5.3.4 -> Create state reconciliation/sync upon reconnection
+
+
+5.4 As a user I want the canvas to perform smoothly even with many objects to maintain a good drawing experience.
+        5.4.1 -> Implement spatial indexing for faster rendering
+        5.4.2 -> Implement viewport culling (only render what is visible)
+        5.4.3 -> Compress drawing data payloads for network efficiency
+
+
+5.5 As a collaborator I want the system to prevent conflicting edits on the same object to ensure my changes aren't overwritten.
+        5.5.1 -> Implement Object Locking Mechanism
+        5.5.2 -> Render a visual cue (e.g., a colored border or padlock icon) on objects currently being edited by others.
+        5.5.3 -> Implement server-side logic to decide who "wins" if two users click an object at the exact same time
+5.5.4 -> Create a timeout or "on-deselect" trigger to free up objects if a user goes idle or disconnects while holding a lock.
+
+
+5.6 As a user I want the system to save my work automatically to prevent data loss
+        5.6.1 -> Implement periodic auto-save
+        5.6.2 -> Add save confirmation notifications
+        5.6.3 -> Implement save conflict resolution
+        5.6.4 -> Create manual save trigger
+
+
+6. ADDITIONAL FEATURES AND ENHANCEMENTS
+
+
+6.1 As a user I want to export my work to share it outside the platform.
+        6.1.1 -> Implement "Export as PNG" with selectable quality
+        6.1.2 -> Implement "Export as SVG" for vector scalability
+        6.1.3 -> Create option to export specific selection or whole canvas
+        6.1.4 -> Add option to include/exclude background grid in export
+
+
+6.2 As a user I want to undo and redo my actions to correct mistakes without affecting others.
+6.2.1 -> Implement local Undo/Redo stack
+6.2.2 -> Build history state manager
+6.2.3 -> Create keyboard shortcuts for Undo (Ctrl+Z) and Redo (Ctrl+Y)
+
+
+6.3 As a collaborator I want to communicate with my team without leaving the canvas.
+6.3.1 -> Design in-room text chat sidebar
+6.3.2 -> Implement real-time message broadcasting
+6.3.3 -> Add system messages to chat
+6.3.4 -> Implement chat toggle
+
+
+6.4 As a user I want AI-assisted tools to enhance my drawing precision and speed.
+6.4.1 -> Implement AI Stroke Smoothing to automatically stabilize shaky hand movements
+6.4.2 -> Build "Auto-Segmentation" algorithm to intelligently select objects based on visual boundaries (Magic Wand)
+6.4.3 -> Implement "Shape Recognition" to convert rough sketches into perfect geometric forms
+6.4.4 -> Add "Gesture Recognition" for shortcut actions
+
+
+6.5 As a user I want measurement and alignment tools for precision work
+        6.5.1 -> Create smart alignment guides
+        6.5.2 -> Add angle measurement tool
+        6.5.3 -> Create dimension lines for technical drawings
