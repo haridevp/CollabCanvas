@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './services/AuthContext';
 import RegisterPage from './pages/RegisterPage';
+import RegistrationSuccess from './pages/RegistrationSuccess'; // NEW
 import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
@@ -28,8 +29,14 @@ function App() {
           {/* Authentication routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          
+          {/* NEW: Intermediate page shown after hitting 'Sign Up' */}
+          <Route path="/registration-success" element={<RegistrationSuccess />} />
+          
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          
+          {/* Email verification landing page */}
           <Route path="/verify-email" element={<EmailVerificationPage />} />
           
           {/* Legal pages */}

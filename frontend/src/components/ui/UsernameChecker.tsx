@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Check, X, Loader2 } from 'lucide-react';
-import { debounce } from '../../utils/debounce';
-import { checkUsernameAvailability } from '../../services/usernameService';
-import type { UsernameCheckResult } from '../../services/usernameService';
+// Corrected imports to use your existing files
+import { checkUsernameAvailability } from '../../utils/authService';
+
+// Utility debounce if you don't have a separate file, 
+// otherwise keep your import from ../../utils/debounce
+const debounceFunc = (fn: Function, ms: number) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return function (this: any, ...args: any[]) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn.apply(this, args), ms);
+  };
+};
 
 export interface UsernameCheckerProps {
   username: string;
@@ -11,31 +20,20 @@ export interface UsernameCheckerProps {
   debounceTime?: number;
 }
 
-/**
- * UsernameChecker Component
- * Real-time username availability checker with validation
- * 
- * @component
- * @example
- * <UsernameChecker 
- *   username={username} 
- *   onAvailabilityChange={(available) => setUsernameAvailable(available)}
- * />
- */
 export const UsernameChecker: React.FC<UsernameCheckerProps> = ({
   username,
   onAvailabilityChange,
   className = '',
   debounceTime = 500
 }) => {
-  const [checkResult, setCheckResult] = useState<UsernameCheckResult | null>(null);
+  const [checkResult, setCheckResult] = useState<{available: boolean, message: string, suggestions?: string[]} | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Debounced check function
-  const debouncedCheck = React.useMemo(() => 
-    debounce(async (usernameToCheck: string) => {
-      if (!usernameToCheck.trim() || usernameToCheck.trim().length < 3) {
+  const debouncedCheck = useMemo(() => 
+    debounceFunc(async (usernameToCheck: string) => {
+      const trimmed = usernameToCheck.trim();
+      if (!trimmed || trimmed.length < 3) {
         setCheckResult(null);
         setIsChecking(false);
         onAvailabilityChange?.(false);
@@ -45,11 +43,10 @@ export const UsernameChecker: React.FC<UsernameCheckerProps> = ({
       try {
         setIsChecking(true);
         setError(null);
-        const result = await checkUsernameAvailability(usernameToCheck);
+        const result = await checkUsernameAvailability(trimmed);
         setCheckResult(result);
         onAvailabilityChange?.(result.available);
       } catch (err) {
-        console.error('Username check failed:', err);
         setError('Unable to check username availability');
         setCheckResult(null);
         onAvailabilityChange?.(false);
@@ -60,99 +57,48 @@ export const UsernameChecker: React.FC<UsernameCheckerProps> = ({
     [debounceTime, onAvailabilityChange]
   );
 
-  // Effect to trigger username check
   useEffect(() => {
-    setIsChecking(true);
-    debouncedCheck(username);
+    if (username.trim().length >= 3) {
+      setIsChecking(true);
+      debouncedCheck(username);
+    } else {
+      setCheckResult(null);
+      setIsChecking(false);
+    }
   }, [username, debouncedCheck]);
 
-  if (!username.trim() || username.trim().length < 1) {
-    return null;
-  }
-
-  const getStatusIcon = () => {
-    if (isChecking) {
-      return <Loader2 className="w-4 h-4 animate-spin text-blue-500" />;
-    }
-    
-    if (checkResult?.available) {
-      return <Check className="w-4 h-4 text-green-500" />;
-    }
-    
-    if (checkResult && !checkResult.available) {
-      return <X className="w-4 h-4 text-red-500" />;
-    }
-    
-    return null;
-  };
-
-  const getStatusText = () => {
-    if (isChecking) {
-      return 'Checking availability...';
-    }
-    
-    if (error) {
-      return <span className="text-red-600">{error}</span>;
-    }
-    
-    if (checkResult) {
-      return (
-        <span className={checkResult.available ? 'text-green-600' : 'text-red-600'}>
-          {checkResult.message}
-        </span>
-      );
-    }
-    
-    return null;
-  };
+  if (!username.trim() || username.trim().length < 1) return null;
 
   return (
-    <div className={`mt-2 space-y-2 ${className}`} role="status" aria-live="polite">
+    <div className={`mt-2 space-y-2 ${className}`} role="status">
       <div className="flex items-center gap-2">
-        {getStatusIcon()}
+        {isChecking ? (
+          <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+        ) : checkResult?.available ? (
+          <Check className="w-4 h-4 text-green-500" />
+        ) : (
+          <X className="w-4 h-4 text-red-500" />
+        )}
         <span className="text-sm font-medium">
-          {getStatusText()}
+          {isChecking ? 'Checking...' : error ? <span className="text-red-600">{error}</span> : 
+           <span className={checkResult?.available ? 'text-green-600' : 'text-red-600'}>
+             {checkResult?.message || (username.length < 3 ? 'Minimum 3 characters' : '')}
+           </span>}
         </span>
       </div>
 
-      {/* Suggestions for taken usernames */}
-      {checkResult?.suggestions && checkResult.suggestions.length > 0 && (
+      {!isChecking && checkResult && !checkResult.available && checkResult.suggestions && (
         <div className="mt-2">
-          <p className="text-xs text-slate-600 mb-1">Try these suggestions:</p>
+          <p className="text-xs text-slate-600 mb-1">Try these:</p>
           <div className="flex flex-wrap gap-2">
-            {checkResult.suggestions.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded-md transition-colors"
-                onClick={() => {
-                  // This would be connected to a parent component to update the username
-                  console.log('Suggested username:', suggestion);
-                  // In a real implementation, you might emit an event or use a callback
-                }}
-              >
-                {suggestion}
-              </button>
+            {checkResult.suggestions.map((s) => (
+              <span key={s} className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-md">
+                {s}
+              </span>
             ))}
           </div>
         </div>
       )}
-
-      {/* Username requirements */}
-      <div className="text-xs text-slate-500 space-y-0.5 pt-2 border-t border-slate-100">
-        <p className="font-medium mb-1">Username requirements:</p>
-        <ul className="space-y-0.5">
-          <li className="flex items-center">
-            <span className="mr-1">•</span> 3-20 characters
-          </li>
-          <li className="flex items-center">
-            <span className="mr-1">•</span> Letters, numbers, dots, hyphens, and underscores only
-          </li>
-          <li className="flex items-center">
-            <span className="mr-1">•</span> No spaces or special characters
-          </li>
-        </ul>
-      </div>
     </div>
   );
 };
