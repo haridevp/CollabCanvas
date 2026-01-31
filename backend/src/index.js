@@ -1,30 +1,43 @@
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
+const socketIo = require("socket.io");
 const cors = require("cors");
+const mongoose = require("mongoose");
 require("dotenv").config();
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+const authRoutes = require("../routes/auth");
+const roomRoutes = require("../routes/rooms");
+const participantRoutes = require("../routes/participants");
+const roomSocketHandler = require("../sockets/roomSocket");
+const connectDB = require("../config/database");
 
+const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
+const io = socketIo(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+  },
 });
 
+// Middleware
+app.use(cors());
+app.use(express.json());
+connectDB();
+
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/rooms", roomRoutes);
+app.use("/api/participants", participantRoutes);
+
+// Socket.io connection handling
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
+  roomSocketHandler(io, socket);
+
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });
-});
-
-app.get("/", (req, res) => {
-  res.send("Backend is running");
 });
 
 const PORT = process.env.PORT || 5000;
