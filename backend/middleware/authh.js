@@ -11,13 +11,14 @@ const authh = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Finding the user and attaching the full object to req.user
     const user = await User.findById(decoded.id);
 
     if (!user) {
       return res.status(401).json({ error: "Invalid token." });
     }
 
-    req.user = user;
+    req.user = user; 
     next();
   } catch (error) {
     res.status(401).json({ error: "Invalid token." });

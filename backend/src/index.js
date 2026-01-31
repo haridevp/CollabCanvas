@@ -2,45 +2,31 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
-const mongoose = require("mongoose");
 require("dotenv").config();
+const connectDB = require("../config/database");
 
 const authRoutes = require("../routes/auth");
 const roomRoutes = require("../routes/rooms");
-const participantRoutes = require("../routes/participants");
-const roomSocketHandler = require("../sockets/roomSocket");
-const connectDB = require("../config/database");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
-  },
-});
 
-// Middleware
-app.use(cors());
+// UPDATED CORS: Added 5173 and allowed DELETE method
+const corsOptions = {
+  origin: ["http://localhost:3000", "http://localhost:5173"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
+
 connectDB();
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
-app.use("/api/participants", participantRoutes);
-
-// Socket.io connection handling
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
-  roomSocketHandler(io, socket);
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
-});
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

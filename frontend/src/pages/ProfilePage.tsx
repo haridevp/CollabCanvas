@@ -226,34 +226,33 @@ const ProfilePage = () => {
 
     setIsDeleting(true);
 
-    try {
-      const deletionRequest = {
-        email: user?.email || '',
-        password,
-        reason: deletionReason
-      };
+  try {
+    const deletionRequest = {
+      email: user?.email || '',
+      password,
+      reason: deletionReason
+    };
 
-      const result = await requestAccountDeletion(deletionRequest);
+    const result = await requestAccountDeletion(deletionRequest);
 
-      if (result.success) {
-        setPendingDeletion(getPendingDeletion());
-        setShowDeleteConfirm(false);
-        setShowPasswordConfirm(false);
-        setPassword('');
-        setDeleteConfirmationText('');
-        setDeletionReason('');
-        
-        alert(result.message);
-      } else {
-        alert(result.message);
-      }
-    } catch (error) {
-      console.error('Account deletion error:', error);
-      alert('Failed to delete account. Please try again.');
-    } finally {
-      setIsDeleting(false);
+    if (result.success) {
+      // 1. Logic is already handled in service to clearUserData(), 
+      // but we force a redirect here.
+      alert('Your account has been permanently deleted.');
+      
+      // 2. Force navigation to login
+      // Using window.location.href ensures all remaining state is wiped
+      window.location.href = '/login'; 
+    } else {
+      alert(result.message);
     }
-  };
+  } catch (error: any) {
+    console.error('Account deletion error:', error);
+    alert('Failed to delete account. Please try again.');
+  } finally {
+    setIsDeleting(false);
+  }
+};
 
   /**
    * Cancels account deletion
