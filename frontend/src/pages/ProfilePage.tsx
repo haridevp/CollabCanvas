@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import CharacterCounter from '../components/ui/CharacterCounter';
 import { useAuth } from '../services/AuthContext';
 import { Sidebar } from '../components/Sidebar';
 import { User, Shield, Bell, Palette, Camera, Save, Trash2, AlertTriangle, Lock, Key, LogOut, Mail } from 'lucide-react';
@@ -23,6 +24,11 @@ const ProfilePage = () => {
   
   // Active tab state for settings navigation
   const [activeTab, setActiveTab] = useState('personal');
+
+  // Personal info form state
+  const [displayName, setDisplayName] = useState(user?.name || 'User');
+  const [bio, setBio] = useState('');
+  const [displayNameError, setDisplayNameError] = useState('');
 
   // Notifications state
   const [notifications, setNotifications] = useState({ 
@@ -63,9 +69,23 @@ const ProfilePage = () => {
    * In production, this would update user data via API
    */
   const handleSaveChanges = () => {
-    console.log('Saving profile changes');
-    console.log('Notification preferences:', notifications);
-    alert('Profile changes saved successfully!');
+    // Validate display name before saving
+    const isNameValid = validateDisplayName(displayName);
+    if (!isNameValid) {
+      alert('Please fix the errors before saving.');
+      return;
+    } 
+    console.log('Saving profile changes:', {
+      displayName,
+      bio,
+      bioLength: bio.length,
+      notificationPreferences: notifications
+    }); 
+    alert('Profile changes saved successfully!'); 
+    // Update user context if needed
+    if (updateUser) {
+      updateUser({ name: displayName });
+    }
   };
 
   /**
@@ -74,6 +94,27 @@ const ProfilePage = () => {
    */
   const handleProfilePictureUpload = () => {
     console.log('Uploading profile picture');
+  };
+
+  /**
+  * Validates display name according to requirements (3-50 characters)
+  */
+  const validateDisplayName = (name: string): boolean => {
+    if (name.length < 3) {
+      setDisplayNameError('Display name must be at least 3 characters');
+      return false;
+    }
+    if (name.length > 50) {
+      setDisplayNameError('Display name cannot exceed 50 characters');
+      return false;
+    }
+    // Allow letters, numbers, spaces, hyphens, underscores, periods
+    if (!/^[a-zA-Z0-9\s\-_.]+$/.test(name)) {
+      setDisplayNameError('Only letters, numbers, spaces, hyphens, underscores and periods allowed');
+      return false;
+    }
+    setDisplayNameError('');
+    return true;
   };
 
   /**
@@ -283,7 +324,7 @@ const ProfilePage = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-lg text-slate-900 dark:text-white">
-                      {user?.name || 'User'}
+                      {displayName || 'User'}
                     </h3>
                     <p className="text-slate-500 dark:text-slate-400 text-sm">
                       Update your photo and personal details.
@@ -293,18 +334,41 @@ const ProfilePage = () => {
 
                 {/* Personal information form */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Display Name Field */}
                   <div className="space-y-2">
-                    <label htmlFor="displayName" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Display Name
-                    </label>
+                    <div className="flex justify-between items-center">
+                      <label htmlFor="displayName" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        Display Name
+                      </label>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        {displayName.length}/50
+                      </span>
+                    </div>
                     <input 
                       id="displayName"
                       type="text" 
-                      defaultValue={user?.name || "User"} 
-                      className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                      value={displayName}
+                      onChange={(e) => {
+                        setDisplayName(e.target.value);
+                        validateDisplayName(e.target.value);
+                      }}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-700 text-slate-900 dark:text-white ${
+                        displayNameError 
+                          ? 'border-red-500 dark:border-red-500' 
+                          : 'border-slate-200 dark:border-slate-600'
+                      }`}
+                      placeholder="Enter your display name"
                       aria-label="Enter display name"
+                      aria-describedby={displayNameError ? "displayNameError" : undefined}
                     />
+                    {displayNameError && (
+                      <p id="displayNameError" className="text-red-600 dark:text-red-400 text-sm">
+                        {displayNameError}
+                      </p>
+                    )}
                   </div>
+
+                  {/* Email Field (Read-only) */}
                   <div className="space-y-2">
                     <label htmlFor="email" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                       Email Address
@@ -312,22 +376,39 @@ const ProfilePage = () => {
                     <input 
                       id="email"
                       type="email" 
-                      defaultValue={user?.email || "user@example.com"} 
+                      value={user?.email || "user@example.com"} 
                       className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed"
                       disabled 
                       aria-label="Email address (read-only)"
                     />
                   </div>
+
+                  {/* Bio Field */}
                   <div className="md:col-span-2 space-y-2">
-                    <label htmlFor="bio" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Bio
-                    </label>
+                    <div className="flex justify-between items-center">
+                      <label htmlFor="bio" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        Bio
+                      </label>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        Optional, max 500 characters
+                      </span>
+                    </div>
                     <textarea 
                       id="bio"
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
                       rows={3} 
-                      placeholder="Tell us about yourself..." 
+                      placeholder="Tell us about yourself, your interests, or your creative work..." 
                       className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                       aria-label="Enter your bio"
+                      maxLength={500}
+                    />
+                    {/* Character Counter Component */}
+                    <CharacterCounter
+                      currentLength={bio.length}
+                      maxLength={500}
+                      warningThreshold={80}
+                      className="mt-2"
                     />
                   </div>
                 </div>
