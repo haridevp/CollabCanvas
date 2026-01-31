@@ -41,8 +41,8 @@ const roomSchema = new mongoose.Schema({
     default: true,
   },
   drawingData: {
-    type: Object, // Store collaborative drawing state
-    default: {},
+    type: Array, // Store collaborative drawing state as an array of elements
+    default: [],
   },
   createdAt: {
     type: Date,
