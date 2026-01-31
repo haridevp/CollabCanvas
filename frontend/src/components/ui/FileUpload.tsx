@@ -35,9 +35,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
       return false;
     }
 
-    // Check image dimensions (optional)
-    // We'll handle this in the ImageCropper component
-
     setError('');
     return true;
   };

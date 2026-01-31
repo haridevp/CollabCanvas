@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
+const authh = require('../middleware/authh'); 
 
 // 1. Username Availability Check
 router.get('/check-username/:username', async (req, res) => {
@@ -171,6 +172,39 @@ router.post('/reset-password', async (req, res) => {
     res.json({ success: true, message: "Password updated!" });
   } catch (err) {
     res.status(500).json({ success: false, message: "Server error." });
+  }
+});
+
+// --- ACCOUNT DELETION (Requirement 1.5) ---
+router.delete('/delete-account', authh, async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    // Use the user object already fetched by your middleware
+    const user = req.user;
+
+    // 1. Re-verify password for security (Requirement 1.5.2)
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Incorrect password. Account deletion denied." 
+      });
+    }
+
+    // 2. Perform deletion
+    await User.findByIdAndDelete(user._id);
+
+    res.json({ 
+      success: true, 
+      message: "Account permanently deleted. Session cleared." 
+    });
+  } catch (err) {
+    console.error("❌ DELETION ERROR:", err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error during account deletion." 
+    });
   }
 });
 
