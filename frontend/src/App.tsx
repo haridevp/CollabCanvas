@@ -21,7 +21,7 @@ function App() {
     // Wrap entire application with authentication provider
     <AuthProvider>
       {/* React Router for client-side routing */}
-      <Router>
+      <Router basename={import.meta.env.BASE_URL}>
         <Routes>
           {/* Redirect root path to login page */}
           <Route path="/" element={<Navigate to="/login" replace />} />

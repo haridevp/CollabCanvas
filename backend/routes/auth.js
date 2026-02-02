@@ -50,7 +50,8 @@ router.post('/register', async (req, res) => {
 
     await newUser.save();
 
-    const verificationUrl = `http://localhost:5173/verify-email?token=${verificationToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
     
     try {
       await sendEmail({
@@ -132,7 +133,8 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; 
     await user.save();
 
-    const resetUrl = `http://localhost:5173/reset-password?token=${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
 
     try {
       await sendEmail({

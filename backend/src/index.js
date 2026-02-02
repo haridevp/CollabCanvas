@@ -11,14 +11,19 @@ const roomRoutes = require("../routes/rooms");
 const app = express();
 const server = http.createServer(app);
 
-// UPDATED CORS: Added 5173 and allowed DELETE method
-const corsOptions = {
-  origin: ["http://localhost:3000", "http://localhost:5173"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-};
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
-app.use(cors(corsOptions));
+const io = socketIo(server, {
+  cors: {
+    origin: [frontendUrl, "http://localhost:5173", "http://localhost:3000"],
+    methods: ["GET", "POST"],
+  },
+});
+
+// Middleware
+app.use(cors({
+  origin: [frontendUrl, "http://localhost:5173", "http://localhost:3000"]
+}));
 app.use(express.json());
 
 connectDB();
