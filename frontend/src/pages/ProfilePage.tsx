@@ -369,7 +369,7 @@ const ProfilePage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Display Name (2.2.2)
+                      Display Name 
                     </label>
                     <input 
                       type="text" 
@@ -389,7 +389,7 @@ const ProfilePage = () => {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Email (Read Only)
+                      Email 
                     </label>
                     <input 
                       type="email" 
@@ -400,7 +400,7 @@ const ProfilePage = () => {
                   </div>
                   <div className="md:col-span-2 space-y-2">
                     <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Bio (2.2.3)
+                      Bio 
                     </label>
                     <textarea 
                       value={bio} 
@@ -970,7 +970,7 @@ const ProfilePage = () => {
             {/* Save Changes Button */}
             <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end">
               <Button onClick={handleSaveChanges} className="gap-2">
-                <Save size={18} /> Save Changes (2.1.6)
+                <Save size={18} /> Save Changes 
               </Button>
             </div>
           </div>
