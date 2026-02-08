@@ -1,52 +1,56 @@
 # Real-Time Collaborative Digital Canvas
 
-A powerful, real-time collaborative workspace that enables teams to draw, design, and ideate together on an infinite canvas. Built with the MERN stack and Fabric.js, this platform supports seamless real-time synchronization, allowing multiple users to work simultaneously with live cursors, layer management, and a rich set of drawing tools.
+> A powerful, real-time collaborative workspace that enables teams to draw, design, and ideate together on an infinite canvas.
+
+[![Node.js](https://img.shields.io/badge/Node.js-v18%2B-green.svg)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-blue.svg)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+Built with the MERN stack (MongoDB, Express, React, Node.js) and Fabric.js, this platform supports seamless real-time synchronization, allowing multiple users to work simultaneously with live cursors, layer management, and a rich set of drawing tools.
+
+## Table of Contents
+
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+  - [Docker Compose (Recommended)](#docker-compose-recommended)
+  - [Manual Installation](#manual-installation)
+- [Configuration](#configuration)
+  - [Environment Variables](#environment-variables)
+- [Usage](#usage)
+  - [Authentication](#authentication)
+  - [Room Management](#room-management)
+  - [Canvas Tools](#canvas-tools)
+- [Development](#development)
+- [Tech Stack](#tech-stack)
+- [Documentation](#documentation)
+- [Troubleshooting](#troubleshooting)
+- [Team](#team)
 
 ## Features
 
-### 🔐 Authentication & User Management
-- **Secure Login & Registration:** Email/password authentication with bcrypt hashing.
-- **Profile Management:** Customize user profiles, manage personal information, and upload profile pictures.
-- **Security:** Secure session management and password reset functionality.
+*   **🔐 Authentication & Security**: Secure email/password login, profile management, and session handling using JWT and bcrypt.
+*   **🏠 Room Management**: Create private/public rooms, manage participants (kick/ban), and secure access with passwords.
+*   **🎨 Infinite Canvas**: Pan/zoom freely on an expansive workspace powered by Fabric.js.
+*   **⚡ Real-Time Collaboration**: Bi-directional WebSocket syncing for instant updates, live cursors, and active user indicators.
+*   **🛠 Rich Tools**: Freehand brush, shapes (rectangles, circles, arrows), text, and image uploads.
+*   **📚 Layer System**: Professional layer management to reorder, lock, and hide elements.
+*   **⚙️ Customization**: Dark/Light mode, keyboard shortcuts, and export options (PNG/SVG).
 
-### 🏠 Room Management
-- **Collaborative Rooms:** Create, join, and manage private or public rooms.
-- **Room Controls:** Set room visibility, passwords, and manage participants (kick/ban).
-- **Dashboard:** Access recently visited rooms and favorites.
+## Prerequisites
 
-### 🎨 Real-Time Digital Canvas
-- **Infinite Canvas:** Pan and zoom freely on an expansive workspace.
-- **Drawing Tools:** Freehand brush with variable stroke settings, eraser, and shapes (rectangles, circles, lines, arrows).
-- **Text & Media:** Add text boxes and insert images directly onto the canvas.
-- **Layer Management:** Organize artwork with a robust layering system (reorder, lock, toggle visibility).
-- **Manipulation:** Select, move, resize, and rotate objects with transformation handles.
+Before you begin, ensure you have the following installed:
 
-### ⚡ Real-Time Collaboration
-- **Live Sync:** Bi-directional WebSocket communication ensures instant updates for all users.
-- **Presence:** See live remote cursors and active user indicators.
-- **Conflict Resolution:** Smart locking mechanisms to prevent editing conflicts.
+*   **Node.js** (v18 or higher)
+*   **npm** (v9 or higher)
+*   **Docker** & **Docker Compose** (optional, for containerized setup)
+*   **MongoDB** (if running locally without Docker)
 
-### 🛠 Tools & Enhancements
-- **Export:** Save your work as PNG or SVG.
-- **Undo/Redo:** Local history stack for mistake correction.
-- **Chat:** In-room text chat for seamless communication.
-- **Customization:** Theme toggling (Dark/Light mode) and keyboard shortcut configuration.
+## Installation
 
-## Tech Stack
+### Docker Compose (Recommended)
 
-- **Frontend:** React, Vite, Fabric.js, Tailwind CSS
-- **Backend:** Node.js, Express.js, Socket.io
-- **Database:** MongoDB
-- **DevOps:** Docker, GitHub Actions (CI/CD)
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v18+)
-- Docker & Docker Compose
-
-### Installation
+The easiest way to get started is using Docker Compose, which spins up the Frontend, Backend, and MongoDB database automatically.
 
 1.  **Clone the repository:**
     ```bash
@@ -54,42 +58,136 @@ A powerful, real-time collaborative workspace that enables teams to draw, design
     cd Real-Time-Collaborative-Digital-Canvas-and-Creative-Workspace
     ```
 
-2.  **Start with Docker Compose (Recommended):**
+2.  **Start the services:**
     ```bash
     docker compose up --build
     ```
-    - Frontend: http://localhost:3000
-    - Backend: http://localhost:5000
 
-3.  **Manual Setup (Development):**
+3.  **Access the application:**
+    *   **Frontend:** [http://localhost:3000](http://localhost:3000)
+    *   **Backend API:** [http://localhost:5000](http://localhost:5000)
 
-    *Backend:*
+### Manual Installation
+
+If you prefer to run services individually:
+
+#### 1. Backend Setup
+
+```bash
+cd backend
+npm install
+```
+
+Create a `.env` file in the `backend/` directory (see [Configuration](#configuration)).
+
+Start the server:
+```bash
+npm run dev
+# Server runs on http://localhost:5000
+```
+
+#### 2. Frontend Setup
+
+```bash
+cd frontend
+npm install
+```
+
+Start the client:
+```bash
+npm run dev
+# Client runs on http://localhost:5173 (or similar Vite port)
+```
+
+## Configuration
+
+The application requires environment variables to function correctly.
+
+1.  Copy the example configuration:
     ```bash
-    cd backend
-    npm install
-    npm start
+    cp .env.example .env
+    # Or manually create .env in backend/ and frontend/ directories
     ```
 
-    *Frontend:*
-    ```bash
-    cd frontend
-    npm install
-    npm run dev
-    ```
+### Environment Variables
 
-## CI/CD Pipeline
+| Variable | Description | Default / Example |
+| :--- | :--- | :--- |
+| **Backend** | | |
+| `PORT` | API Server Port | `5000` |
+| `MONGO_URI` | MongoDB Connection String | `mongodb://localhost:27017/collaborative-canvas` |
+| `JWT_SECRET` | Secret key for signing tokens | `your_super_secret_key` |
+| `FRONTEND_URL` | URL of the frontend app (CORS) | `http://localhost:3000` |
+| **Frontend** | | |
+| `VITE_API_URL` | Backend API URL | `http://localhost:5000/api` |
 
-This project uses GitHub Actions for Continuous Integration and Deployment.
+## Usage
 
-- **Build & Lint:** Automatically builds the frontend and runs linting checks on every push to `main`.
-- **Docker Build:** Verifies that Docker images for both frontend and backend can be built successfully.
+### Authentication
+*   **Register**: Create a new account with your email and password.
+*   **Login**: Access your dashboard using your credentials.
+*   **Profile**: Update your avatar and personal details in the Profile section.
 
-## Team 12
+### Room Management
+*   **Create Room**: Click "Create Room" on the dashboard. You can set a password for private rooms.
+*   **Join Room**: Enter a Room Code or browse the public gallery.
+*   **Share**: Copy the Room Code or URL to invite others.
 
-- RATAN RAJA
-- HARIDEV P
-- LAKKINENI JATHIN
-- SIDHARTH S NAIR
-- SISTHICK S
+### Canvas Tools
+Once inside a room, use the toolbar on the left:
+*   **Select (V)**: Move, resize, and rotate objects.
+*   **Brush (B)**: Freehand drawing. Adjust size and color in the settings panel.
+*   **Shapes**: Insert rectangles, circles, and lines.
+*   **Text (T)**: Add text labels.
+*   **Layers**: Use the right-side panel to manage object stacking order.
 
-Testing 
+## Development
+
+To contribute or modify the codebase:
+
+**Backend Scripts:**
+*   `npm start`: Runs the server in production mode.
+*   `npm run dev`: Runs the server with `nodemon` for hot-reloading.
+
+**Frontend Scripts:**
+*   `npm run dev`: Starts the Vite development server.
+*   `npm run build`: Compiles the app for production.
+*   `npm run lint`: Runs ESLint checks.
+
+## Tech Stack
+
+*   **Frontend:** [React](https://react.dev/), [Vite](https://vitejs.dev/), [Fabric.js](http://fabricjs.com/), [Tailwind CSS](https://tailwindcss.com/)
+*   **Backend:** [Node.js](https://nodejs.org/), [Express.js](https://expressjs.com/), [Socket.io](https://socket.io/)
+*   **Database:** [MongoDB](https://www.mongodb.com/)
+*   **DevOps:** Docker, GitHub Actions
+
+## Documentation
+
+For more detailed technical documentation, please refer to the following guides:
+
+*   [API Reference](docs/API.md): Details on authentication and user management endpoints.
+*   [WebSocket Events](docs/SOCKETS.md): Comprehensive list of real-time events for collaboration.
+*   [Database Schema](docs/DATABASE.md): Overview of MongoDB collections and models.
+
+## Troubleshooting
+
+**Problem: Connection Refused (MongoDB)**
+*   Ensure MongoDB is running locally (`mongod`) or that the Docker container is up (`docker ps`).
+*   Check if `MONGO_URI` is correct in your `.env` file.
+
+**Problem: CORS Errors**
+*   Verify that `FRONTEND_URL` in the backend `.env` matches the URL your browser is using for the frontend.
+
+**Problem: WebSocket Connection Failed**
+*   Ensure the backend is running and accessible.
+*   Check if `VITE_API_URL` points to the correct backend host.
+
+## Team
+
+**Team 12**
+
+*   RATAN RAJA
+*   HARIDEV P
+*   LAKKINENI JATHIN
+*   SIDHARTH S NAIR
+*   SISTHICK S
