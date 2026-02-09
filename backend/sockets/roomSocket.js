@@ -10,7 +10,6 @@ const drawingBuffer = new Map();
 const FLUSH_INTERVAL = 5000; // 5 seconds
 
 const roomSocketHandler = (io, socket) => {
-  // ... (keep existing lock cleanup code) ...
   // Helper to cleanup locks for a user
   const cleanupUserLocks = (socketId) => {
     roomLocks.forEach((locks, roomId) => {
@@ -21,6 +20,30 @@ const roomSocketHandler = (io, socket) => {
         }
       });
     });
+  };
+
+  // Helper to get full participant list with user details
+  const getParticipantsList = async (roomId) => {
+    try {
+      const participants = await Participant.find({
+        room: roomId,
+        isBanned: false,
+      }).populate("user", "username email avatar");
+
+      return participants.map((p) => ({
+        id: p._id,
+        userId: p.user._id,
+        username: p.user.username,
+        email: p.user.email,
+        avatar: p.user.avatar,
+        role: p.role,
+        joinedAt: p.joinedAt,
+        lastActive: p.lastSeen,
+      }));
+    } catch (error) {
+      console.error("Error getting participants list:", error);
+      return [];
+    }
   };
 
   // Periodic flush of drawing buffer to DB
@@ -64,14 +87,18 @@ const roomSocketHandler = (io, socket) => {
         role: participant.role,
       });
 
+      // Get updated participants list and broadcast
+      const participantsList = await getParticipantsList(roomId);
+      io.to(roomId).emit("participants-updated", { participants: participantsList });
+
       const room = await Room.findById(roomId);
-      
+
       // Combine persistent data with current volatile buffer
       const bufferedData = drawingBuffer.get(roomId) || [];
       const currentDrawingData = [...(room.drawingData || []), ...bufferedData];
-      
+
       const currentLocks = roomLocks.get(roomId) || {};
-      
+
       socket.emit("room-state", {
         room,
         drawingData: currentDrawingData,
@@ -88,6 +115,10 @@ const roomSocketHandler = (io, socket) => {
     socket.leave(roomId);
     cleanupUserLocks(socket.id);
     socket.to(roomId).emit("user-left", { userId });
+
+    // Get updated participants list and broadcast
+    const participantsList = await getParticipantsList(roomId);
+    io.to(roomId).emit("participants-updated", { participants: participantsList });
   });
 
   // Epic 5.3: Connection health monitoring
@@ -178,10 +209,14 @@ const roomSocketHandler = (io, socket) => {
   });
 
   // Handle disconnect
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     if (socket.data && socket.data.roomId) {
       cleanupUserLocks(socket.id);
       socket.to(socket.data.roomId).emit("user-left", { userId: socket.data.userId });
+
+      // Get updated participants list and broadcast
+      const participantsList = await getParticipantsList(socket.data.roomId);
+      io.to(socket.data.roomId).emit("participants-updated", { participants: participantsList });
     }
   });
 };

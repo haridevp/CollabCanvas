@@ -30,6 +30,7 @@ interface ParticipantsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   onParticipantAction?: (action: string, participantId: string) => void;
+  socket?: any;
 }
 
 const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
@@ -38,7 +39,8 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
   currentUserRole,
   isOpen,
   onClose,
-  onParticipantAction
+  onParticipantAction,
+  socket
 }) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +54,23 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
       loadParticipants();
     }
   }, [isOpen, roomId]);
+
+  // Listen for real-time participant updates via Socket.IO
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleParticipantsUpdated = (data: any) => {
+      if (data.participants) {
+        setParticipants(data.participants);
+      }
+    };
+
+    socket.on('participants-updated', handleParticipantsUpdated);
+
+    return () => {
+      socket.off('participants-updated', handleParticipantsUpdated);
+    };
+  }, [socket]);
 
   const loadParticipants = async () => {
     setIsLoading(true);

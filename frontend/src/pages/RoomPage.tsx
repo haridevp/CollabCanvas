@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useState } from 'react';
 import InviteModal from '../components/ui/InviteModal';
+import ParticipantsPanel from '../features/rooms/ParticipantsPanel';
 import { CollaborativeCanvas } from '../features/canvas/CollaborativeCanvas';
 import { Sidebar } from '../components/Sidebar';
 import { Users, MessageSquare, Share2, Copy, Check } from 'lucide-react';
@@ -13,6 +14,8 @@ const RoomPage = () => {
   const { id } = useParams<{ id: string }>();
   const [copied, setCopied] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showParticipantsPanel, setShowParticipantsPanel] = useState(false);
+  const [socket, setSocket] = useState<any>(null);
 
   /**
    * Copies the room ID to clipboard
@@ -47,9 +50,7 @@ const RoomPage = () => {
    * In production, this would show/hide active users
    */
   const handleToggleUserList = () => {
-    // In production: Toggle user list panel
-    // Example: setUserListOpen(!isUserListOpen)
-    console.log('Toggle user list panel');
+    setShowParticipantsPanel(!showParticipantsPanel);
   };
 
   // In a real app, you would fetch room data from an API/context
@@ -195,6 +196,18 @@ const RoomPage = () => {
           roomName={roomData.name}
           isPublic={roomData.isPublic}
           roomPassword={roomData.password}
+        />
+      )}
+
+      {/* Participants Panel */}
+      {id && (
+        <ParticipantsPanel
+          isOpen={showParticipantsPanel}
+          onClose={() => setShowParticipantsPanel(false)}
+          roomId={id}
+          currentUserId="current-user-id"
+          currentUserRole="owner"
+          socket={socket}
         />
       )}
     </div>
