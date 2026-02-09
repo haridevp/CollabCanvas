@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   X, Copy, Check, Mail, Link, Users, Share2, MessageSquare,
-  Facebook, Twitter, Linkedin, MessageCircle,
+  Facebook, Twitter, Linkedin, MessageCircle, Search, Loader2,
 } from 'lucide-react';
 import { Button } from './Button';
+import { searchUsers, inviteUsersToRoom } from '../../utils/authService';
 
 interface InviteModalProps {
   isOpen: boolean;
@@ -24,10 +25,15 @@ const InviteModal: React.FC<InviteModalProps> = ({
   roomPassword
 }) => {
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
-  const [inviteMethod, setInviteMethod] = useState<'link' | 'email' | 'social'>('link');
+  const [inviteMethod, setInviteMethod] = useState<'link' | 'email' | 'users' | 'social'>('link');
   const [emailInput, setEmailInput] = useState('');
   const [emailList, setEmailList] = useState<string[]>([]);
   const [customMessage, setCustomMessage] = useState(`Join me in "${roomName}" on CanvasCollab!`);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSendingInvites, setIsSendingInvites] = useState(false);
 
   const roomLink = `${window.location.origin}/room/${roomId}`;
   const inviteLink = roomPassword 
@@ -36,10 +42,40 @@ const InviteModal: React.FC<InviteModalProps> = ({
 
   const getDefaultMessage = () => `Join me in "${roomName}" on CanvasCollab!`;
 
+  // Debounced user search
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2) {
+        setIsSearching(true);
+        try {
+          const result = await searchUsers(searchQuery);
+          if (result.success && result.users) {
+            const filteredUsers = result.users.filter(
+              user => !selectedUsers.some(selected => selected.id === user.id)
+            );
+            setSearchResults(filteredUsers);
+          }
+        } catch (error) {
+          console.error('Search failed:', error);
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedUsers]);
+
   const resetForm = () => {
     setCopiedItem(null);
     setEmailInput('');
     setEmailList([]);
+    setSearchQuery('');
+    setSearchResults([]);
+    setSelectedUsers([]);
     setCustomMessage(getDefaultMessage());
   };
 
@@ -83,9 +119,39 @@ const InviteModal: React.FC<InviteModalProps> = ({
     console.log('Sending invites to:', emailList);
     console.log('Message:', customMessage);
     console.log('Room link:', inviteLink);
-    
+
     alert(`Invites sent to ${emailList.length} email(s)`);
     setEmailList([]);
+  };
+
+  const toggleUserSelection = (user: any) => {
+    const isSelected = selectedUsers.some(selected => selected.id === user.id);
+    if (isSelected) {
+      setSelectedUsers(selectedUsers.filter(u => u.id !== user.id));
+    } else {
+      setSelectedUsers([...selectedUsers, user]);
+    }
+  };
+
+  const sendUserInvites = async () => {
+    try {
+      setIsSendingInvites(true);
+      const userIds = selectedUsers.map(user => user.id);
+      const response = await inviteUsersToRoom(roomId, userIds);
+
+      if (response.success) {
+        alert(`${response.results.sent} invitation(s) sent successfully!`);
+        setSelectedUsers([]);
+        setSearchQuery('');
+      } else {
+        alert(`Failed to send invites: ${response.message}`);
+      }
+    } catch (error) {
+      console.error('Error sending invites:', error);
+      alert('An error occurred while sending invites');
+    } finally {
+      setIsSendingInvites(false);
+    }
   };
 
   const shareOnSocial = (platform: string) => {
@@ -169,6 +235,17 @@ const InviteModal: React.FC<InviteModalProps> = ({
               Email Invites
             </button>
             <button
+              onClick={() => setInviteMethod('users')}
+              className={`flex-1 py-3 rounded-lg border transition-colors flex items-center justify-center gap-2 ${
+                inviteMethod === 'users'
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Users size={18} />
+              Invite Users
+            </button>
+            <button
               onClick={() => setInviteMethod('social')}
               className={`flex-1 py-3 rounded-lg border transition-colors flex items-center justify-center gap-2 ${
                 inviteMethod === 'social'
@@ -176,7 +253,7 @@ const InviteModal: React.FC<InviteModalProps> = ({
                   : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
-              <Users size={18} />
+              <Share2 size={18} />
               Social Share
             </button>
           </div>
@@ -372,6 +449,124 @@ const InviteModal: React.FC<InviteModalProps> = ({
             </div>
           )}
 
+          {/* User Invites Section */}
+          {inviteMethod === 'users' && (
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Search for Users
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3.5 w-5 h-5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by username or name..."
+                    className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  />
+                  {isSearching && (
+                    <Loader2 className="absolute right-3 top-3.5 w-5 h-5 text-slate-400 animate-spin" />
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  Type at least 2 characters to search
+                </p>
+              </div>
+
+              {/* Search Results */}
+              {searchQuery.trim().length >= 2 && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Available Users ({searchResults.length})
+                  </label>
+                  <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 max-h-64 overflow-y-auto">
+                    {searchResults.length > 0 ? (
+                      <div className="space-y-2">
+                        {searchResults.map((user) => (
+                          <button
+                            key={user.id}
+                            onClick={() => toggleUserSelection(user)}
+                            className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                              selectedUsers.some(u => u.id === user.id)
+                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700'
+                                : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedUsers.some(u => u.id === user.id)}
+                              readOnly
+                              className="w-5 h-5 rounded border-slate-300 cursor-pointer"
+                            />
+                            <div className="flex-1 text-left">
+                              <p className="font-medium text-slate-900 dark:text-white">
+                                {user.displayName || user.username}
+                              </p>
+                              <p className="text-sm text-slate-500 dark:text-slate-400">
+                                @{user.username}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : !isSearching && (
+                      <p className="text-center text-slate-500 dark:text-slate-400 py-8">
+                        No users found
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Selected Users */}
+              {selectedUsers.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Selected Users ({selectedUsers.length})
+                  </label>
+                  <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 max-h-40 overflow-y-auto">
+                    <div className="flex flex-wrap gap-2">
+                      {selectedUsers.map((user) => (
+                        <div
+                          key={user.id}
+                          className="flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 px-3 py-1.5 rounded-full"
+                        >
+                          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                            {user.displayName || user.username}
+                          </span>
+                          <button
+                            onClick={() => toggleUserSelection(user)}
+                            className="text-blue-500 hover:text-red-500"
+                            aria-label={`Remove ${user.username}`}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Send Button */}
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                <Button
+                  onClick={sendUserInvites}
+                  disabled={selectedUsers.length === 0 || isSendingInvites}
+                  className="w-full gap-2"
+                >
+                  {isSendingInvites ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <Users size={18} />
+                  )}
+                  {isSendingInvites ? 'Sending...' : `Send Invites to ${selectedUsers.length} ${selectedUsers.length === 1 ? 'User' : 'Users'}`}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Social Sharing Section */}
           {inviteMethod === 'social' && (
             <div className="space-y-6">
@@ -481,6 +676,7 @@ const InviteModal: React.FC<InviteModalProps> = ({
             <div className="text-sm text-slate-500 dark:text-slate-400">
               {inviteMethod === 'link' && 'Share the link with anyone you want to collaborate with'}
               {inviteMethod === 'email' && 'Invite specific people via email'}
+              {inviteMethod === 'users' && 'Invite other platform users directly'}
               {inviteMethod === 'social' && 'Share with your network on social media'}
             </div>
             <Button onClick={handleClose} variant="outline">

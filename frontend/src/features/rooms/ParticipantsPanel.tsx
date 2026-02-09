@@ -48,6 +48,7 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
   const [filterRole, setFilterRole] = useState<string>('all');
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ action: string; participant: Participant } | null>(null);
 
   useEffect(() => {
     if (isOpen && roomId) {
@@ -87,8 +88,15 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
   };
 
   const handleParticipantAction = async (action: string, participant: Participant) => {
+    // Require confirmation for destructive actions
+    if (action === 'kick' || action === 'ban') {
+      setConfirmAction({ action, participant });
+      return;
+    }
+
+    // For non-destructive actions, execute immediately
     if (participant.userId === currentUserId) return;
-    
+
     try {
       const result = await roomService.manageParticipant(
         roomId,
@@ -97,23 +105,49 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
       );
 
       if (result.success) {
-        if (action === 'kick' || action === 'ban') {
-          setParticipants(prev => prev.filter(p => p.userId !== participant.userId));
-        } else if (action === 'promote') {
-          setParticipants(prev => prev.map(p => 
+        if (action === 'promote') {
+          setParticipants(prev => prev.map(p =>
             p.userId === participant.userId ? { ...p, role: 'moderator' } : p
           ));
         } else if (action === 'demote') {
-          setParticipants(prev => prev.map(p => 
+          setParticipants(prev => prev.map(p =>
             p.userId === participant.userId ? { ...p, role: 'participant' } : p
           ));
         }
-        
+
         if (onParticipantAction) {
           onParticipantAction(action, participant.userId);
         }
       }
-      
+
+      setShowActionMenu(null);
+      setSelectedParticipant(null);
+    } catch (error) {
+      console.error('Failed to perform action:', error);
+    }
+  };
+
+  const confirmAndExecuteAction = async () => {
+    if (!confirmAction) return;
+
+    try {
+      const result = await roomService.manageParticipant(
+        roomId,
+        confirmAction.participant.userId,
+        confirmAction.action as any
+      );
+
+      if (result.success) {
+        if (confirmAction.action === 'kick' || confirmAction.action === 'ban') {
+          setParticipants(prev => prev.filter(p => p.userId !== confirmAction.participant.userId));
+        }
+
+        if (onParticipantAction) {
+          onParticipantAction(confirmAction.action, confirmAction.participant.userId);
+        }
+      }
+
+      setConfirmAction(null);
       setShowActionMenu(null);
       setSelectedParticipant(null);
     } catch (error) {
@@ -419,6 +453,40 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
                 >
                   <MessageSquare size={16} className="mr-2" />
                   Message
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog for Destructive Actions */}
+      {confirmAction && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-sm">
+            <div className="p-6">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2">
+                {confirmAction.action === 'kick' ? 'Kick Participant?' : 'Ban Participant?'}
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+                {confirmAction.action === 'kick'
+                  ? `Are you sure you want to kick ${confirmAction.participant.username}? They can rejoin the room later.`
+                  : `Are you sure you want to ban ${confirmAction.participant.username}? They will be prevented from rejoining until unbanned.`}
+              </p>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setConfirmAction(null)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={confirmAndExecuteAction}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {confirmAction.action === 'kick' ? 'Kick' : 'Ban'}
                 </Button>
               </div>
             </div>

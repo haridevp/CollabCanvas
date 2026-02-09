@@ -186,7 +186,6 @@ const roomSocketHandler = (io, socket) => {
 
   // Kick participant
   socket.on("kick-participant", async ({ roomId, targetUserId, moderatorId }) => {
-    // ... (existing kick logic) ...
     try {
         const moderator = await Participant.findOne({
           user: moderatorId,
@@ -197,14 +196,68 @@ const roomSocketHandler = (io, socket) => {
           return socket.emit("error", { message: "Not authorized" });
         }
 
-        await Participant.findOneAndUpdate(
-          { user: targetUserId, room: roomId },
-          { isBanned: true },
-        );
+        const targetParticipant = await Participant.findOne({
+          user: targetUserId,
+          room: roomId,
+        });
 
+        if (!targetParticipant) {
+          return socket.emit("error", { message: "Participant not found" });
+        }
+
+        // Remove from room
+        await Room.findByIdAndUpdate(roomId, {
+          $pull: { participants: targetParticipant._id },
+        });
+
+        await Participant.findByIdAndDelete(targetParticipant._id);
+
+        // Emit events
         io.to(roomId).emit("participant-kicked", { userId: targetUserId });
+
+        // Update participant list
+        const participantsList = await getParticipantsList(roomId);
+        io.to(roomId).emit("participants-updated", { participants: participantsList });
+
       } catch (error) {
         socket.emit("error", { message: "Failed to kick participant" });
+      }
+  });
+
+  // Ban participant
+  socket.on("ban-participant", async ({ roomId, targetUserId, moderatorId }) => {
+    try {
+        const moderator = await Participant.findOne({
+          user: moderatorId,
+          room: roomId,
+        });
+
+        if (!moderator || !["owner", "moderator"].includes(moderator.role)) {
+          return socket.emit("error", { message: "Not authorized" });
+        }
+
+        const targetParticipant = await Participant.findOne({
+          user: targetUserId,
+          room: roomId,
+        });
+
+        if (!targetParticipant) {
+          return socket.emit("error", { message: "Participant not found" });
+        }
+
+        // Mark as banned
+        targetParticipant.isBanned = true;
+        await targetParticipant.save();
+
+        // Emit events
+        io.to(roomId).emit("participant-banned", { userId: targetUserId });
+
+        // Update participant list
+        const participantsList = await getParticipantsList(roomId);
+        io.to(roomId).emit("participants-updated", { participants: participantsList });
+
+      } catch (error) {
+        socket.emit("error", { message: "Failed to ban participant" });
       }
   });
 

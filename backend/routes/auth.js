@@ -287,4 +287,47 @@ router.put('/update-profile', authh, async (req, res) => {
   }
 });
 
+// Search users by username
+router.get('/search', authh, async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || q.trim().length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Search query must be at least 2 characters"
+      });
+    }
+
+    // Search for users matching the query (case-insensitive)
+    const users = await User.find({
+      $and: [
+        {
+          $or: [
+            { username: { $regex: q, $options: 'i' } },
+            { displayName: { $regex: q, $options: 'i' } }
+          ]
+        },
+        { _id: { $ne: req.user._id } } // Exclude current user
+      ]
+    })
+      .select('_id username displayName email avatar')
+      .limit(20);
+
+    res.json({
+      success: true,
+      users: users.map(user => ({
+        id: user._id,
+        username: user.username,
+        displayName: user.displayName,
+        email: user.email,
+        avatar: user.avatar
+      }))
+    });
+  } catch (err) {
+    console.error("Search error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 module.exports = router;

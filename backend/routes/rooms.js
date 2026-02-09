@@ -7,7 +7,9 @@ const {
   updateRoom,
   deleteRoom,
   leaveRoom,
+  manageParticipant,
   validateRoom,
+  inviteUsers,
 } = require("../controllers/roomController");
 const auth = require("../middleware/authh");
 
@@ -19,6 +21,8 @@ router.get("/public", getPublicRooms);
 router.get("/my-rooms", auth, getMyRooms);
 router.get("/:id/validate", auth, validateRoom);
 router.post("/:id/leave", auth, leaveRoom);
+router.post("/:id/invite", auth, inviteUsers);
+router.post("/:id/participants/:userId", auth, manageParticipant);
 router.put("/:id", auth, updateRoom);
 router.delete("/:id", auth, deleteRoom);
 

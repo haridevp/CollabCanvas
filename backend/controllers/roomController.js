@@ -1,5 +1,7 @@
 const Room = require("../models/Room");
 const Participant = require("../models/Participant");
+const Invitation = require("../models/Invitation");
+const User = require("../models/User");
 const { generateRoomCode } = require("../utils/generateRoomCode");
 
 const createRoom = async (req, res) => {
@@ -252,6 +254,106 @@ const leaveRoom = async (req, res) => {
   }
 };
 
+const manageParticipant = async (req, res) => {
+  try {
+    const { id: roomId, userId } = req.params;
+    const { action } = req.body;
+
+    // Verify requester is in room and has permission
+    const requester = await Participant.findOne({
+      user: req.user._id,
+      room: roomId,
+    });
+
+    if (!requester) {
+      return res.status(403).json({ error: "You are not in this room" });
+    }
+
+    // Find target participant
+    const targetParticipant = await Participant.findOne({
+      user: userId,
+      room: roomId,
+    });
+
+    if (!targetParticipant) {
+      return res.status(404).json({ error: "Participant not found" });
+    }
+
+    // Prevent self-actions
+    if (String(req.user._id) === String(userId)) {
+      return res.status(400).json({ error: "Cannot perform action on yourself" });
+    }
+
+    switch (action) {
+      case "promote":
+        // Only owner can promote
+        if (requester.role !== "owner") {
+          return res.status(403).json({ error: "Only room owner can promote" });
+        }
+        // Can only promote participants, not moderators
+        if (targetParticipant.role !== "participant") {
+          return res.status(400).json({ error: "Can only promote regular participants" });
+        }
+        targetParticipant.role = "moderator";
+        await targetParticipant.save();
+        res.json({ success: true, message: "Participant promoted to moderator" });
+        break;
+
+      case "demote":
+        // Only owner can demote
+        if (requester.role !== "owner") {
+          return res.status(403).json({ error: "Only room owner can demote" });
+        }
+        // Can only demote moderators
+        if (targetParticipant.role !== "moderator") {
+          return res.status(400).json({ error: "Can only demote moderators" });
+        }
+        targetParticipant.role = "participant";
+        await targetParticipant.save();
+        res.json({ success: true, message: "Moderator demoted to participant" });
+        break;
+
+      case "kick":
+        // Owner and moderators can kick
+        if (!["owner", "moderator"].includes(requester.role)) {
+          return res.status(403).json({ error: "Not authorized to kick" });
+        }
+        // Moderators can only kick participants
+        if (requester.role === "moderator" && targetParticipant.role !== "participant") {
+          return res.status(403).json({ error: "Moderators can only kick participants" });
+        }
+        // Remove from room
+        const room = await Room.findById(roomId);
+        room.participants = room.participants.filter(
+          (p) => p.toString() !== targetParticipant._id.toString()
+        );
+        await room.save();
+        await Participant.findByIdAndDelete(targetParticipant._id);
+        res.json({ success: true, message: "Participant kicked" });
+        break;
+
+      case "ban":
+        // Owner and moderators can ban
+        if (!["owner", "moderator"].includes(requester.role)) {
+          return res.status(403).json({ error: "Not authorized to ban" });
+        }
+        // Moderators can only ban participants
+        if (requester.role === "moderator" && targetParticipant.role !== "participant") {
+          return res.status(403).json({ error: "Moderators can only ban participants" });
+        }
+        targetParticipant.isBanned = true;
+        await targetParticipant.save();
+        res.json({ success: true, message: "Participant banned" });
+        break;
+
+      default:
+        res.status(400).json({ error: "Invalid action" });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 const validateRoom = async (req, res) => {
   try {
     const { id } = req.params;
@@ -300,6 +402,116 @@ const validateRoom = async (req, res) => {
   }
 };
 
+const inviteUsers = async (req, res) => {
+  try {
+    const { id: roomId } = req.params;
+    const { userIds } = req.body;
+
+    // Validate input
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No users provided for invitation"
+      });
+    }
+
+    // Get room and verify requester is owner/moderator
+    const room = await Room.findOne({
+      _id: roomId,
+      isActive: true,
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found"
+      });
+    }
+
+    // Check if requester is room owner or moderator
+    const requester = await Participant.findOne({
+      user: req.user._id,
+      room: roomId,
+    });
+
+    if (!requester || !["owner", "moderator"].includes(requester.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "You don't have permission to invite users to this room",
+      });
+    }
+
+    // Get invited users to validate they exist
+    const invitedUsers = await User.find({
+      _id: { $in: userIds },
+    });
+
+    if (invitedUsers.length !== userIds.length) {
+      return res.status(400).json({
+        success: false,
+        message: "One or more users not found",
+      });
+    }
+
+    // Create invitations
+    const invitations = [];
+    const results = { sent: 0, skipped: 0, errors: [] };
+
+    for (const userId of userIds) {
+      try {
+        // Check if user is already a participant
+        const existingParticipant = await Participant.findOne({
+          user: userId,
+          room: roomId,
+        });
+
+        if (existingParticipant) {
+          results.skipped++;
+          continue;
+        }
+
+        // Check if invitation already exists
+        const existingInvitation = await Invitation.findOne({
+          room: roomId,
+          invitedUser: userId,
+          status: "pending",
+        });
+
+        if (existingInvitation) {
+          results.skipped++;
+          continue;
+        }
+
+        // Create new invitation
+        const invitation = new Invitation({
+          room: roomId,
+          invitedUser: userId,
+          invitedBy: req.user._id,
+          emailSent: true, // Assume email will be sent
+        });
+
+        await invitation.save();
+        invitations.push(invitation);
+        results.sent++;
+      } catch (error) {
+        results.errors.push({ userId, error: error.message });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Invitations sent to ${results.sent} user(s)`,
+      results,
+      invitations,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createRoom,
   joinRoom,
@@ -308,5 +520,7 @@ module.exports = {
   updateRoom,
   deleteRoom,
   leaveRoom,
+  manageParticipant,
   validateRoom,
+  inviteUsers,
 };

@@ -65,6 +65,34 @@ export const resetPassword = async (token: string, password: string) => {
   return response.data;
 };
 
+// Search users
+export const searchUsers = async (query: string) => {
+  try {
+    const response = await api.get(`/auth/search?q=${encodeURIComponent(query)}`);
+    return response.data;
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Search failed',
+      users: []
+    };
+  }
+};
+
+// Invite users to room
+export const inviteUsersToRoom = async (roomId: string, userIds: string[]) => {
+  try {
+    const response = await api.post(`/rooms/${roomId}/invite`, { userIds });
+    return response.data;
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Failed to send invites',
+      results: { sent: 0, skipped: 0, errors: [] }
+    };
+  }
+};
+
 // Clear authentication tokens
 export const clearAuthTokens = (): void => {
   // Keep theme preference
