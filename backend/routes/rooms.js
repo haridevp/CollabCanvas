@@ -6,6 +6,7 @@ const {
   getMyRooms,
   updateRoom,
   deleteRoom,
+  leaveRoom,
   validateRoom,
 } = require("../controllers/roomController");
 const auth = require("../middleware/authh");
@@ -17,6 +18,7 @@ router.post("/join", auth, joinRoom);
 router.get("/public", getPublicRooms);
 router.get("/my-rooms", auth, getMyRooms);
 router.get("/:id/validate", auth, validateRoom);
+router.post("/:id/leave", auth, leaveRoom);
 router.put("/:id", auth, updateRoom);
 router.delete("/:id", auth, deleteRoom);
 

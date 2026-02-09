@@ -207,6 +207,51 @@ const deleteRoom = async (req, res) => {
   }
 };
 
+const leaveRoom = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const room = await Room.findOne({
+      _id: id,
+      isActive: true,
+    });
+
+    if (!room) {
+      return res.status(404).json({ error: "Room not found" });
+    }
+
+    // Find the participant record for the current user
+    const participant = await Participant.findOne({
+      user: req.user._id,
+      room: room._id,
+    });
+
+    if (!participant) {
+      return res.status(400).json({ error: "You are not in this room" });
+    }
+
+    // Check if user is the owner - owner cannot leave
+    if (participant.role === "owner") {
+      return res.status(403).json({
+        error: "Room owner cannot leave. Please delete the room instead.",
+      });
+    }
+
+    // Remove participant from room's participants array
+    room.participants = room.participants.filter(
+      (p) => p.toString() !== participant._id.toString()
+    );
+    await room.save();
+
+    // Delete the participant record
+    await Participant.findByIdAndDelete(participant._id);
+
+    res.json({ success: true, message: "Left room successfully" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 const validateRoom = async (req, res) => {
   try {
     const { id } = req.params;
@@ -262,5 +307,6 @@ module.exports = {
   getMyRooms,
   updateRoom,
   deleteRoom,
+  leaveRoom,
   validateRoom,
 };
