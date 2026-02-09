@@ -207,6 +207,54 @@ const deleteRoom = async (req, res) => {
   }
 };
 
+const validateRoom = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const room = await Room.findOne({
+      _id: id,
+      isActive: true,
+    }).populate("owner", "username");
+
+    if (!room) {
+      return res.status(404).json({ error: "Room not found" });
+    }
+
+    // Check if user is already a participant
+    const isParticipant = await Participant.findOne({
+      user: req.user._id,
+      room: room._id,
+    });
+
+    // Check if user is banned
+    const isBanned = await Participant.findOne({
+      user: req.user._id,
+      room: room._id,
+      isBanned: true,
+    });
+
+    if (isBanned) {
+      return res.status(403).json({ error: "You have been banned from this room" });
+    }
+
+    res.json({
+      success: true,
+      room: {
+        id: room._id,
+        name: room.name,
+        description: room.description,
+        visibility: room.visibility,
+        requiresPassword: room.visibility === "private" && !!room.password,
+        owner: room.owner?.username,
+        participantCount: room.participants.length,
+        isAlreadyMember: !!isParticipant,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createRoom,
   joinRoom,
@@ -214,4 +262,5 @@ module.exports = {
   getMyRooms,
   updateRoom,
   deleteRoom,
+  validateRoom,
 };
