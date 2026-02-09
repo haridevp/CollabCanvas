@@ -65,8 +65,8 @@ const joinRoom = async (req, res) => {
 
     // Check password for private rooms
     if (room.visibility === "private" && room.password) {
-      // In production, compare hashed password
-      if (password !== room.password) {
+      const isPasswordValid = await room.comparePassword(password || "");
+      if (!isPasswordValid) {
         return res.status(403).json({ error: "Invalid password" });
       }
     }
