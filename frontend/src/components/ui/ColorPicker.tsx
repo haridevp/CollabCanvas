@@ -201,9 +201,9 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
    */
   useEffect(() => {
     const hsl = hexToHsl(value);
-    setHue(hsl.h);
-    setSaturation(hsl.s);
-    setLightness(hsl.l);
+    setHue(prev => (prev === hsl.h ? prev : hsl.h));
+    setSaturation(prev => (prev === hsl.s ? prev : hsl.s));
+    setLightness(prev => (prev === hsl.l ? prev : hsl.l));
   }, [value]);
 
   /**
