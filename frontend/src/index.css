@@ -1,44 +1,167 @@
-/* Main application stylesheet */
-/* Import Tailwind CSS framework */
+/* 
+ * Main Application Stylesheet
+ * 
+ * Primary stylesheet for the collaborative drawing application.
+ * Contains Tailwind CSS imports, high-contrast theme definitions,
+ * and global CSS custom properties.
+ * 
+ * @file main.css
+ * @version 1.0.0
+ * 
+ * Table of Contents:
+ * 1. Tailwind CSS Import
+ * 2. High Contrast Theme Variables
+ * 3. High Contrast Theme Overrides
+ */
+
+/* ==========================================================================
+   1. Tailwind CSS Import
+   ========================================================================== */
+   
+/* 
+ * Import Tailwind CSS framework
+ * 
+ * Tailwind CSS is a utility-first CSS framework that provides
+ * low-level utility classes for building custom designs.
+ * 
+ * This import statement includes all Tailwind directives:
+ * - @tailwind base: Preflight CSS reset and base styles
+ * - @tailwind components: Component classes
+ * - @tailwind utilities: Utility classes
+ * 
+ * @see {@link https://tailwindcss.com} for Tailwind CSS documentation
+ */
 @import "tailwindcss";
 
-/* High Contrast Theme */
+/* ==========================================================================
+   2. High Contrast Theme Variables
+   ========================================================================== */
+
+/*
+ * High Contrast Theme Definition
+ * 
+ * This theme is designed for users with visual impairments,
+ * providing maximum contrast between foreground and background elements.
+ * Compliant with WCAG AAA contrast ratio requirements.
+ * 
+ * CSS custom properties (variables) define the theme's color palette.
+ * These variables can be referenced throughout the application.
+ * 
+ * Color palette characteristics:
+ * - High contrast (white/black/yellow)
+ * - Reduced eye strain
+ * - Improved readability
+ * - WCAG AAA compliant
+ * 
+ * @see {@link https://www.w3.org/WAI/WCAG21/quickref/#contrast-minimum}
+ *      for WCAG contrast guidelines
+ */
 .high-contrast {
-  --text-primary: #ffffff;
-  --text-secondary: #e5e7eb;
-  --bg-primary: #000000;
-  --bg-secondary: #111827;
-  --bg-tertiary: #1f2937;
-  --border-color: #ffffff;
-  --accent-color: #fbbf24;
-  --accent-hover: #f59e0b;
+  /* Text Colors */
+  --text-primary: #ffffff;       /* Pure white for primary text */
+  --text-secondary: #e5e7eb;     /* Light gray for secondary text */
+  
+  /* Background Colors */
+  --bg-primary: #000000;         /* Pure black for primary backgrounds */
+  --bg-secondary: #111827;       /* Dark blue-gray for secondary backgrounds */
+  --bg-tertiary: #1f2937;        /* Medium blue-gray for tertiary backgrounds */
+  
+  /* Border Colors */
+  --border-color: #ffffff;       /* White borders for maximum visibility */
+  
+  /* Accent Colors */
+  --accent-color: #fbbf24;       /* Bright yellow for interactive elements */
+  --accent-hover: #f59e0b;       /* Darker yellow for hover states */
+  
+  /*
+   * Note: These CSS custom properties can be used in components:
+   * color: var(--text-primary);
+   * background-color: var(--bg-primary);
+   * border-color: var(--border-color);
+   */
 }
 
+/* ==========================================================================
+   3. High Contrast Theme Overrides
+   ========================================================================== */
+
+/*
+ * Tailwind CSS Overrides for High Contrast Theme
+ * 
+ * These rules override Tailwind's default utility classes when
+ * the .high-contrast class is applied to the <html> or <body> element.
+ * 
+ * Each override ensures that the high contrast theme takes precedence
+ * over Tailwind's default styling while maintaining the same utility class names.
+ * 
+ * Structure: .high-contrast .tailwind-class { !important override }
+ * 
+ * The !important declarations ensure theme consistency by overriding
+ * any other competing styles.
+ */
+
+/* 
+ * Background Color Overrides
+ * Converts light backgrounds to dark variants
+ */
 .high-contrast .bg-white {
+  /* Override white backgrounds with pure black */
   background-color: #000000 !important;
 }
 
-.high-contrast .text-slate-500 {
-  color: #e5e7eb !important;
-}
-
-.high-contrast .border-slate-200 {
-  border-color: #ffffff !important;
-}
-
 .high-contrast .bg-slate-100 {
+  /* Override light gray backgrounds with dark blue-gray */
   background-color: #111827 !important;
 }
 
+/* 
+ * Text Color Overrides
+ * Ensures text remains visible against dark backgrounds
+ */
+.high-contrast .text-slate-500 {
+  /* Override medium gray text with light gray for better contrast */
+  color: #e5e7eb !important;
+}
+
+.high-contrast .text-blue-600 {
+  /* Override blue text with bright yellow for high visibility */
+  color: #fbbf24 !important;
+}
+
+/* 
+ * Border Color Overrides
+ * Makes borders clearly visible in high contrast mode
+ */
+.high-contrast .border-slate-200 {
+  /* Override light gray borders with white borders */
+  border-color: #ffffff !important;
+}
+
+/* 
+ * Interactive Element Overrides
+ * Ensures buttons and interactive elements are clearly visible
+ */
 .high-contrast .bg-blue-600 {
+  /* Override blue backgrounds with yellow, text with black */
   background-color: #fbbf24 !important;
   color: #000000 !important;
 }
 
-.high-contrast .text-blue-600 {
-  color: #fbbf24 !important;
-}
-
 .high-contrast .hover\:bg-blue-700:hover {
+  /* Override blue hover states with darker yellow */
   background-color: #f59e0b !important;
 }
+
+/*
+ * Future Override Notes:
+ * 
+ * As the application grows, additional overrides may be needed for:
+ * 1. Form controls (inputs, selects, checkboxes)
+ * 2. Modal and dialog backgrounds
+ * 3. Status indicators (success, warning, error)
+ * 4. Chart and data visualization colors
+ * 5. Icon and SVG fill colors
+ * 
+ * Consider creating a comprehensive accessibility review checklist
+ * to ensure all UI components are properly themed.
+ */
