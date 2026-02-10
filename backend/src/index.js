@@ -4,6 +4,7 @@ const socketIo = require("socket.io");
 const cors = require("cors");
 require("dotenv").config();
 const connectDB = require("../config/database");
+const { errorHandler, AppError } = require("../middleware/errorHandler");
 
 const authRoutes = require("../routes/auth");
 const roomRoutes = require("../routes/rooms");
@@ -27,15 +28,25 @@ io.on("connection", (socket) => {
 });
 
 // Middleware
-app.use(cors({
-  origin: [frontendUrl, "http://localhost:5173", "http://localhost:3000"]
-}));
+app.use(
+  cors({
+    origin: [frontendUrl, "http://localhost:5173", "http://localhost:3000"],
+  }),
+);
 app.use(express.json());
 
 connectDB();
 
 app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
+
+// 404 handler for unknown routes
+app.use((req, res, next) => {
+  next(new AppError(`Route ${req.originalUrl} not found`, 404));
+});
+
+// Global error handling middleware (must be last)
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

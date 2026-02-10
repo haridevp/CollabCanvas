@@ -3,6 +3,7 @@ const Participant = require("../models/Participant");
 const Invitation = require("../models/Invitation");
 const User = require("../models/User");
 const { generateRoomCode } = require("../utils/generateRoomCode");
+const { createCanvas } = require("canvas");
 
 const createRoom = async (req, res) => {
   try {
@@ -512,6 +513,195 @@ const inviteUsers = async (req, res) => {
   }
 };
 
+const exportDrawing = async (req, res) => {
+  try {
+    const { id: roomId } = req.params;
+    const { format = "png" } = req.query;
+
+    // Validate room exists and user is a participant
+    const room = await Room.findOne({
+      _id: roomId,
+      isActive: true,
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        success: false,
+        message: "Room not found",
+      });
+    }
+
+    // Verify user is a participant
+    const participant = await Participant.findOne({
+      user: req.user._id,
+      room: roomId,
+    });
+
+    if (!participant) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not a participant in this room",
+      });
+    }
+
+    // Create canvas with reasonable dimensions
+    const width = 1280;
+    const height = 720;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+
+    // Fill with white background
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+
+    // Helper function to render drawing elements
+    const renderElement = (element) => {
+      ctx.globalAlpha = element.opacity ?? 1;
+
+      switch (element.type) {
+        case "pencil":
+        case "line":
+          if (element.points && element.points.length > 0) {
+            ctx.strokeStyle = element.color;
+            ctx.lineWidth = element.strokeWidth;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+
+            ctx.beginPath();
+            ctx.moveTo(element.points[0].x, element.points[0].y);
+            for (let i = 1; i < element.points.length; i++) {
+              ctx.lineTo(element.points[i].x, element.points[i].y);
+            }
+            ctx.stroke();
+          }
+          break;
+
+        case "eraser":
+          if (element.points && element.points.length > 0) {
+            ctx.clearRect(
+              element.points[0].x - element.strokeWidth / 2,
+              element.points[0].y - element.strokeWidth / 2,
+              element.strokeWidth,
+              element.strokeWidth
+            );
+
+            for (let i = 1; i < element.points.length; i++) {
+              ctx.clearRect(
+                element.points[i].x - element.strokeWidth / 2,
+                element.points[i].y - element.strokeWidth / 2,
+                element.strokeWidth,
+                element.strokeWidth
+              );
+            }
+          }
+          break;
+
+        case "rectangle":
+          ctx.strokeStyle = element.color;
+          ctx.lineWidth = element.strokeWidth;
+          ctx.strokeRect(element.x, element.y, element.width, element.height);
+          break;
+
+        case "circle":
+          ctx.strokeStyle = element.color;
+          ctx.lineWidth = element.strokeWidth;
+          const radius = Math.sqrt(
+            Math.pow(element.width / 2, 2) + Math.pow(element.height / 2, 2)
+          );
+          ctx.beginPath();
+          ctx.arc(
+            element.x + element.width / 2,
+            element.y + element.height / 2,
+            radius,
+            0,
+            Math.PI * 2
+          );
+          ctx.stroke();
+          break;
+
+        case "arrow":
+          if (element.points && element.points.length >= 2) {
+            ctx.strokeStyle = element.color;
+            ctx.lineWidth = element.strokeWidth;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+
+            const start = element.points[0];
+            const end = element.points[element.points.length - 1];
+
+            // Draw line
+            ctx.beginPath();
+            ctx.moveTo(start.x, start.y);
+            ctx.lineTo(end.x, end.y);
+            ctx.stroke();
+
+            // Draw arrowhead
+            const angle = Math.atan2(end.y - start.y, end.x - start.x);
+            const arrowSize = element.strokeWidth * 3;
+
+            ctx.beginPath();
+            ctx.moveTo(end.x, end.y);
+            ctx.lineTo(
+              end.x - arrowSize * Math.cos(angle - Math.PI / 6),
+              end.y - arrowSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.moveTo(end.x, end.y);
+            ctx.lineTo(
+              end.x - arrowSize * Math.cos(angle + Math.PI / 6),
+              end.y - arrowSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.stroke();
+          }
+          break;
+
+        case "text":
+          ctx.fillStyle = element.color;
+          ctx.font = `${element.strokeWidth * 4}px Arial`;
+          ctx.fillText(element.text || "Text", element.x, element.y);
+          break;
+      }
+
+      ctx.globalAlpha = 1;
+    };
+
+    // Render all drawing elements
+    if (room.drawingData && Array.isArray(room.drawingData)) {
+      for (const element of room.drawingData) {
+        try {
+          renderElement(element);
+        } catch (err) {
+          console.error("Error rendering element:", err);
+          // Continue rendering other elements
+        }
+      }
+    }
+
+    // Generate image data based on format
+    let buffer;
+    const filename = `${room.name.replace(/\s+/g, "_")}_${Date.now()}`;
+
+    if (format === "jpeg" || format === "jpg") {
+      buffer = canvas.toBuffer("image/jpeg", { quality: 0.95 });
+      res.setHeader("Content-Type", "image/jpeg");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}.jpg"`);
+    } else {
+      // Default to PNG
+      buffer = canvas.toBuffer("image/png");
+      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}.png"`);
+    }
+
+    res.send(buffer);
+  } catch (error) {
+    console.error("Export error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to export drawing",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createRoom,
   joinRoom,
@@ -523,4 +713,5 @@ module.exports = {
   manageParticipant,
   validateRoom,
   inviteUsers,
+  exportDrawing,
 };

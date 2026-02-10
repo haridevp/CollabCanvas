@@ -93,6 +93,18 @@ export const inviteUsersToRoom = async (roomId: string, userIds: string[]) => {
   }
 };
 
+// Export drawing as image
+export const exportDrawing = async (roomId: string, format: 'png' | 'jpeg' = 'png') => {
+  try {
+    const response = await api.get(`/rooms/${roomId}/export?format=${format}`, {
+      responseType: 'blob'
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to export drawing');
+  }
+};
+
 // Clear authentication tokens
 export const clearAuthTokens = (): void => {
   // Keep theme preference

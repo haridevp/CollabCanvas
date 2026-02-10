@@ -51,10 +51,12 @@ const roomSocketHandler = (io, socket) => {
     for (const [roomId, elements] of drawingBuffer.entries()) {
       if (elements.length > 0) {
         try {
-          const uniqueElements = [...new Map(elements.map(item => [item.id, item])).values()];
-          
+          const uniqueElements = [
+            ...new Map(elements.map((item) => [item.id, item])).values(),
+          ];
+
           await Room.findByIdAndUpdate(roomId, {
-            $push: { drawingData: { $each: uniqueElements } }
+            $push: { drawingData: { $each: uniqueElements } },
           });
           // Clear buffer for this room
           drawingBuffer.set(roomId, []);
@@ -89,7 +91,9 @@ const roomSocketHandler = (io, socket) => {
 
       // Get updated participants list and broadcast
       const participantsList = await getParticipantsList(roomId);
-      io.to(roomId).emit("participants-updated", { participants: participantsList });
+      io.to(roomId).emit("participants-updated", {
+        participants: participantsList,
+      });
 
       const room = await Room.findById(roomId);
 
@@ -102,7 +106,7 @@ const roomSocketHandler = (io, socket) => {
       socket.emit("room-state", {
         room,
         drawingData: currentDrawingData,
-        activeLocks: currentLocks
+        activeLocks: currentLocks,
       });
     } catch (error) {
       console.error(error);
@@ -118,7 +122,9 @@ const roomSocketHandler = (io, socket) => {
 
     // Get updated participants list and broadcast
     const participantsList = await getParticipantsList(roomId);
-    io.to(roomId).emit("participants-updated", { participants: participantsList });
+    io.to(roomId).emit("participants-updated", {
+      participants: participantsList,
+    });
   });
 
   // Epic 5.3: Connection health monitoring
@@ -150,12 +156,16 @@ const roomSocketHandler = (io, socket) => {
     if (!roomLocks.has(roomId)) {
       roomLocks.set(roomId, {});
     }
-    
+
     const roomLocksMap = roomLocks.get(roomId);
     const currentLock = roomLocksMap[objectId];
     const now = Date.now();
 
-    if (currentLock && currentLock.userId !== userId && (now - currentLock.timestamp < LOCK_TIMEOUT)) {
+    if (
+      currentLock &&
+      currentLock.userId !== userId &&
+      now - currentLock.timestamp < LOCK_TIMEOUT
+    ) {
       socket.emit("lock-denied", { objectId, lockedBy: currentLock.userId });
       return;
     }
@@ -166,9 +176,43 @@ const roomSocketHandler = (io, socket) => {
 
   socket.on("release-lock", ({ roomId, objectId, userId }) => {
     const roomLocksMap = roomLocks.get(roomId);
-    if (roomLocksMap && roomLocksMap[objectId] && roomLocksMap[objectId].userId === userId) {
+    if (
+      roomLocksMap &&
+      roomLocksMap[objectId] &&
+      roomLocksMap[objectId].userId === userId
+    ) {
       delete roomLocksMap[objectId];
       io.to(roomId).emit("object-unlocked", { objectId });
+    }
+  });
+
+  // Lock object while drawing (called when user starts drawing)
+  socket.on("lock-object", ({ roomId, elementId, userId, username, color }) => {
+    if (!roomLocks.has(roomId)) {
+      roomLocks.set(roomId, {});
+    }
+
+    const roomLocksMap = roomLocks.get(roomId);
+    roomLocksMap[elementId] = {
+      userId,
+      socketId: socket.id,
+      username,
+      color,
+      timestamp: Date.now(),
+    };
+
+    // Broadcast lock to all users in room
+    io.to(roomId).emit("object-locked", { elementId, userId, username, color });
+  });
+
+  // Unlock object (called when user finishes drawing)
+  socket.on("unlock-object", ({ roomId, elementId }) => {
+    const roomLocksMap = roomLocks.get(roomId);
+    if (roomLocksMap && roomLocksMap[elementId]) {
+      delete roomLocksMap[elementId];
+
+      // Broadcast unlock to all users in room
+      io.to(roomId).emit("object-unlocked", { elementId });
     }
   });
 
@@ -185,8 +229,10 @@ const roomSocketHandler = (io, socket) => {
   });
 
   // Kick participant
-  socket.on("kick-participant", async ({ roomId, targetUserId, moderatorId }) => {
-    try {
+  socket.on(
+    "kick-participant",
+    async ({ roomId, targetUserId, moderatorId }) => {
+      try {
         const moderator = await Participant.findOne({
           user: moderatorId,
           room: roomId,
@@ -217,16 +263,20 @@ const roomSocketHandler = (io, socket) => {
 
         // Update participant list
         const participantsList = await getParticipantsList(roomId);
-        io.to(roomId).emit("participants-updated", { participants: participantsList });
-
+        io.to(roomId).emit("participants-updated", {
+          participants: participantsList,
+        });
       } catch (error) {
         socket.emit("error", { message: "Failed to kick participant" });
       }
-  });
+    },
+  );
 
   // Ban participant
-  socket.on("ban-participant", async ({ roomId, targetUserId, moderatorId }) => {
-    try {
+  socket.on(
+    "ban-participant",
+    async ({ roomId, targetUserId, moderatorId }) => {
+      try {
         const moderator = await Participant.findOne({
           user: moderatorId,
           room: roomId,
@@ -254,22 +304,28 @@ const roomSocketHandler = (io, socket) => {
 
         // Update participant list
         const participantsList = await getParticipantsList(roomId);
-        io.to(roomId).emit("participants-updated", { participants: participantsList });
-
+        io.to(roomId).emit("participants-updated", {
+          participants: participantsList,
+        });
       } catch (error) {
         socket.emit("error", { message: "Failed to ban participant" });
       }
-  });
+    },
+  );
 
   // Handle disconnect
   socket.on("disconnect", async () => {
     if (socket.data && socket.data.roomId) {
       cleanupUserLocks(socket.id);
-      socket.to(socket.data.roomId).emit("user-left", { userId: socket.data.userId });
+      socket
+        .to(socket.data.roomId)
+        .emit("user-left", { userId: socket.data.userId });
 
       // Get updated participants list and broadcast
       const participantsList = await getParticipantsList(socket.data.roomId);
-      io.to(socket.data.roomId).emit("participants-updated", { participants: participantsList });
+      io.to(socket.data.roomId).emit("participants-updated", {
+        participants: participantsList,
+      });
     }
   });
 };
