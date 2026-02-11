@@ -100,11 +100,18 @@ const joinRoom = async (req, res) => {
     // Extract room coordinates and optional password from request
     const { roomCode, password } = req.body;
 
-    // Locate the room by its unique code, ensuring it is still flagged as active
-    const room = await Room.findOne({
-      roomCode,
-      isActive: true,
-    }).populate("owner", "username");
+    // Build a query that accepts both MongoDB ObjectId and short room codes
+    let query = { isActive: true };
+    if (mongoose.Types.ObjectId.isValid(roomCode)) {
+      // If it looks like a valid ObjectId, check both _id and roomCode fields
+      query.$or = [{ _id: roomCode }, { roomCode: roomCode }];
+    } else {
+      // Otherwise, treat it as a short alphanumeric room code
+      query.roomCode = roomCode;
+    }
+
+    // Locate the room, ensuring it is still flagged as active
+    const room = await Room.findOne(query).populate("owner", "username");
 
     // If the room doesn't exist or is closed, return a 404 error
     if (!room) {
@@ -587,6 +594,7 @@ const validateRoom = async (req, res) => {
         id: room._id,
         name: room.name,
         description: room.description,
+        roomCode: room.roomCode,
         visibility: room.visibility,
         // Helper flag to trigger password prompt on the client
         requiresPassword: room.visibility === "private" && !!room.password,

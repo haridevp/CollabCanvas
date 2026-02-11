@@ -107,6 +107,7 @@ function mapBackendRoom(raw: any): Room {
     createdAt: raw.createdAt || new Date().toISOString(),
     updatedAt: raw.updatedAt || new Date().toISOString(),
     thumbnail: raw.thumbnail,
+    roomCode: raw.roomCode,
   };
 }
 

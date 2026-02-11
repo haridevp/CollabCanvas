@@ -79,11 +79,12 @@ const RoomPage = () => {
   }, [id]);
 
   /**
-   * Copies the room ID to clipboard
+   * Copies the room code to clipboard for sharing with other users
    */
-  const copyRoomId = () => {
-    if (id) {
-      navigator.clipboard.writeText(id);
+  const copyRoomCode = () => {
+    const code = roomData?.roomCode || id || '';
+    if (code) {
+      navigator.clipboard.writeText(code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -159,12 +160,12 @@ const RoomPage = () => {
               <h2 className="font-bold text-slate-800 dark:text-white">{roomData.name}</h2>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                  Room ID: <span className="text-blue-600 dark:text-blue-400 font-semibold">{id}</span>
+                  Room Code: <span className="text-blue-600 dark:text-blue-400 font-semibold">{roomData.roomCode || id}</span>
                 </span>
                 <button 
-                  onClick={copyRoomId}
+                  onClick={copyRoomCode}
                   className="flex items-center gap-1 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 px-2 py-1 rounded font-mono text-slate-600 dark:text-slate-300 transition-colors"
-                  aria-label={copied ? "Room ID copied" : "Copy room ID"}
+                  aria-label={copied ? "Room code copied" : "Copy room code"}
                 >
                   {copied ? (
                     <>
@@ -234,10 +235,10 @@ const RoomPage = () => {
         <div className="md:hidden px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800">
           <div className="flex items-center justify-between">
             <span className="text-sm text-blue-700 dark:text-blue-300">
-              Room ID: <span className="font-mono font-semibold">{id}</span>
+              Room Code: <span className="font-mono font-semibold">{roomData.roomCode || id}</span>
             </span>
             <button 
-              onClick={copyRoomId}
+              onClick={copyRoomCode}
               className="text-xs bg-blue-100 dark:bg-blue-800 hover:bg-blue-200 dark:hover:bg-blue-700 px-2 py-1 rounded text-blue-700 dark:text-blue-300 transition-colors flex items-center gap-1"
             >
               {copied ? <Check size={12} /> : <Copy size={12} />}
