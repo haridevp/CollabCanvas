@@ -93,7 +93,7 @@ const sendWithSMTP = async (options) => {
 
   // Log the connection attempt details (excluding password) for server logs
   console.log(`Attempting to send email via SMTP (${smtpHost}:${smtpPort}) from: ${smtpUser} to: ${options.email}`);
-  
+
   // Initialize the Nodemailer transporter with detailed connection settings
   const transporter = nodemailer.createTransport({
     // Set SMTP host
@@ -101,11 +101,11 @@ const sendWithSMTP = async (options) => {
     // Set SMTP port
     port: smtpPort,
     // Use startTLS (secure: false for port 587)
-    secure: smtpPort === 465, 
+    secure: smtpPort === 465,
     // Set connection timeout to 10 seconds
-    connectionTimeout: 10000, 
+    connectionTimeout: 10000,
     // Set socket inactivity timeout to 10 seconds
-    socketTimeout: 10000, 
+    socketTimeout: 10000,
     // Allow legacy SSL support if needed by the provider
     tls: {
       // Let Node.js negotiate the best cipher automatically
@@ -116,9 +116,9 @@ const sendWithSMTP = async (options) => {
     // Enable debug mode to see full communication logs
     debug: true,
     // Force IPv4 to prevent delays from IPv6 lookup failures
-    socket: {
-      family: 4
-    },
+    // socket: {
+    //   family: 4
+    // },
     // Set authentication credentials
     auth: {
       user: smtpUser,
@@ -156,7 +156,7 @@ const sendWithSMTP = async (options) => {
     // Log full error details if email delivery fails
     console.error("Error sending email:", error);
     // Re-throw the error to allow the calling function to handle it
-    throw error; 
+    throw error;
   }
 };
 

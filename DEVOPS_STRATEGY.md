@@ -1,84 +1,266 @@
-# DevOps Strategy - CollabCanvas
+# CollabCanvas DevOps Strategy
 
-This document outlines the DevOps strategy for the CollabCanvas project, including the CI/CD pipeline, deployment architecture, and quality assurance checks.
+This document outlines the DevOps strategy for CollabCanvas, including CI/CD pipelines, deployment workflows, testing strategies, and infrastructure configuration.
 
-## 1. System Architecture Diagram
+## Table of Contents
+
+- [Architecture Overview](#architecture-overview)
+- [Component Summary](#component-summary)
+- [CI/CD Pipeline](#cicd-pipeline)
+- [Deployment Strategy](#deployment-strategy)
+- [Testing Strategy](#testing-strategy)
+- [Tools and Platforms](#tools-and-platforms)
+- [Environment Configuration](#environment-configuration)
+- [Monitoring and Observability](#monitoring-and-observability)
+
+## Architecture Overview
 
 ```mermaid
-graph TD
-    subgraph "Local Development"
-        Dev[Developer] --> Git[Local Git]
+flowchart TB
+    subgraph "Source Control"
+        GH[("GitHub Repository<br/>/CollabCanvas")]
     end
 
-    subgraph "Source Control (GitHub)"
-        Git --> GitHub[CollabCanvas Repository]
+    subgraph "CI/CD Pipeline"
+        GHA["GitHub Actions"]
+        LINT["Linting (ESLint)"]
+        TEST["Unit Tests (Jest)"]
+        BUILD_FE["Frontend Build (Vite)"]
+        BUILD_BE["Backend Build Check"]
     end
 
-    subgraph "CI Pipeline (GitHub Actions)"
-        GitHub --> CI[CI Workflow]
-        CI --> FE_Build[Frontend: Lint, Test, Build]
-        CI --> BE_Build[Backend: Install, Build Docker]
-        CI --> Sec[Security Scan: npm audit]
+    subgraph "Deployment Targets"
+        subgraph "Production"
+            GHP["GitHub Pages<br/>(Frontend)"]
+            RENDER["Render Web Service<br/>(Backend)"]
+            ATLAS["MongoDB Atlas<br/>(Database)"]
+        end
     end
 
-    subgraph "CD Pipeline (GitHub Actions)"
-        FE_Build --> FE_Deploy[Deploy to GitHub Pages/Vercel]
-        BE_Build --> DockerPush[Push Image to Docker Hub/ECR]
-        DockerPush --> BE_Deploy[Deploy to AWS ECS/App Runner]
-    end
-
-    subgraph "Production Infrastructure"
-        FE_Deploy --> User((End User))
-        BE_Deploy --> LB[Load Balancer]
-        LB --> BE_Container[Backend Container]
-        BE_Container --> MongoDB[MongoDB Atlas]
-    end
-
-    subgraph "Monitoring & Feedback"
-        BE_Container --> Sentry[Sentry Error Tracking]
-        BE_Container --> Prom[Prometheus/Grafana]
-    end
+    GH --> GHA
+    GHA --> LINT
+    LINT --> TEST
+    TEST --> BUILD_FE & BUILD_BE
+    BUILD_FE --> GHP
+    BUILD_BE -.-> RENDER
+    
+    GHP -- "HTTPS / WSS" --> RENDER
+    RENDER -- "TCP" --> ATLAS
 ```
 
-## 2. Component Strategy
+## Component Summary
 
-| Component | Source Code Repo | Deployment Location | Pre-deployment Checks | Tools & Libraries |
-| :--- | :--- | :--- | :--- | :--- |
-| **Frontend** | `/frontend` | GitHub Pages (Current) / Vercel (Proposed) | Linting, Unit Tests, Production Build | React, Vite, ESLint, Jest/Vitest, GitHub Actions |
-| **Backend** | `/backend` | AWS App Runner / DigitalOcean App Platform | Unit Tests, Integration Tests, Docker Build | Node.js, Express, Docker, Supertest, GitHub Actions |
-| **Database** | Config in `/backend/config` | MongoDB Atlas (Managed Service) | Schema Validation, Connectivity Tests | Mongoose, MongoDB Atlas |
-| **Infrastructure** | Root `docker-compose.yml` | Container Orchestrator (Managed) | Docker Build Check, Config Linting | Docker, Docker Compose, GitHub Actions |
+| Component | Source Path | Deployment Location | Technology |
+|-----------|-------------------|---------------------|------------|
+| **Frontend** | `/frontend` | GitHub Pages | React 19, Vite, TypeScript |
+| **Backend** | `/backend` | Render Web Service | Node.js, Express, Socket.io |
+| **Database** | N/A | MongoDB Atlas | MongoDB |
+| **Infrastructure** | `docker-compose.yml` | Local Dev / CI Check | Docker, Docker Compose |
 
-## 3. CI/CD Workflow Detail
+## CI/CD Pipeline
 
-### Continuous Integration (CI)
-Triggered on every Pull Request and Push to `main`.
-- **Frontend Checks**:
-    - `npm run lint`: Ensures code style consistency.
-    - `npm test`: Runs Vitest suite for component logic.
-    - `npm run build`: Ensures the application compiles for production.
-- **Backend Checks**:
-    - `npm install`: Verifies dependency resolution (including native canvas libs).
-    - `npm test`: (To be implemented) Unit and API integration tests.
-    - `docker compose build`: Verifies containerization of services.
-- **Security**:
-    - `npm audit`: Checks for known vulnerabilities in dependencies.
+### Pipeline Architecture
 
-### Continuous Deployment (CD)
-Triggered on successful merge to `main`.
-- **Frontend**: Automated deployment to GitHub Pages via `JamesIves/github-pages-deploy-action`.
-- **Backend**: 
-    1. Build Docker image.
-    2. Tag with commit SHA and `latest`.
-    3. Push to Container Registry (e.g., Docker Hub or AWS ECR).
-    4. Trigger redeploy on the hosting platform (e.g., AWS App Runner service update).
+```mermaid
+flowchart LR
+    subgraph "Trigger"
+        PR["Pull Request"]
+        PUSH["Push to main"]
+    end
 
-## 4. Environment Management
-- **Development**: Local environment using `docker-compose up`.
-- **Staging**: Parallel GitHub Pages environment for frontend; isolated staging cluster for backend.
-- **Production**: High-availability managed containers with MongoDB Atlas.
+    subgraph "Frontend Pipeline"
+        F_INSTALL["npm install"]
+        F_LINT["ESLint"]
+        F_BUILD["Vite Build"]
+        F_DEPLOY["Deploy to GH Pages"]
+    end
 
-## 5. Monitoring and Observability
-- **Error Tracking**: Integration with **Sentry** for real-time frontend and backend error reporting.
-- **Logs**: Centralized logging using **CloudWatch** (AWS) or **Logtail**.
-- **Performance**: **Prometheus** and **Grafana** for monitoring system resources and Socket.io performance.
+    subgraph "Backend Pipeline"
+        B_INSTALL["npm install"]
+        B_DEPS["Sys Deps (Canvas)"]
+        B_DOCKER["Docker Build Check"]
+        B_RENDER["Render Auto-Deploy"]
+    end
+
+    PR --> F_INSTALL & B_INSTALL
+    F_INSTALL --> F_LINT --> F_BUILD
+    B_INSTALL --> B_DEPS --> B_DOCKER
+    
+    PUSH --> F_DEPLOY
+    PUSH -.-> B_RENDER
+```
+
+### GitHub Actions Workflows
+
+#### CI Pipeline (`.github/workflows/ci.yml`)
+
+```yaml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install Dependencies
+      run: |
+        cd frontend
+        npm install
+    - name: Lint
+      run: |
+        cd frontend
+        npm run lint
+    - name: Build
+      run: |
+        cd frontend
+        npm run build
+
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get install -y build-essential libcairo2-dev ...
+    - name: Install Dependencies
+      run: |
+        cd backend
+        npm install
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [build-backend, build-frontend]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build Docker Images
+      run: docker compose build
+```
+
+#### Frontend Deploy (`.github/workflows/deploy.yml`)
+
+```yaml
+name: Deploy Frontend to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install and Build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }} 
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+          cp dist/index.html dist/404.html
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: frontend/dist
+          branch: gh-pages
+```
+
+## Deployment Strategy
+
+### Deployment Locations by Environment
+
+| Environment | Frontend | Backend | Database |
+|-------------|------------|-----------------|----------|
+| **Development** | localhost:5173 (Vite) | localhost:5000 (Node) | MongoDB Atlas (Dev) |
+| **Production** | GitHub Pages | Render Web Service | MongoDB Atlas (Prod) |
+
+### Backend Deployment (Render)
+
+The backend is deployed to **Render** as a Web Service.
+- **Build Command:** `npm install`
+- **Start Command:** `npm start`
+- **Auto-Deploy:** Enabled for `main` branch pushes.
+- **Environment Variables:** Managed via Render Dashboard.
+
+## Testing Strategy
+
+### Pre-Deployment Checks
+
+#### Frontend
+
+| Check Type | Tool | Command | When |
+|------------|------|---------|------|
+| **Linting** | ESLint | `npm run lint` | Every CI run |
+| **Unit Tests** | Jest | `npm test` | Every CI run (Local) |
+| **Build Validation** | Vite | `npm run build` | Every CI run |
+| **Type Checking** | TSC | (Implicit in build) | Every CI run |
+
+#### Backend
+
+| Check Type | Tool | Command | When |
+|------------|------|---------|------|
+| **Dependency Check** | npm | `npm install` | Every CI run |
+| **Docker Build** | Docker | `docker compose build` | Every CI run |
+| **API Tests** | Jest/Supertest | `npm test` | Planned |
+
+## Tools and Platforms
+
+### Development Tools
+
+| Category | Tool | Purpose |
+|----------|------|---------|
+| **Runtime (Frontend)** | Node.js / Browser | Runtime environment |
+| **Runtime (Backend)** | Node.js v18+ | JavaScript runtime |
+| **Linting** | ESLint | Code quality and style |
+| **Testing** | Jest | Unit testing |
+| **Build Tool** | Vite | Frontend bundler |
+| **Containerization** | Docker | Local consistency |
+
+### CI/CD & Infrastructure
+
+| Platform | Purpose |
+|----------|---------|
+| **GitHub Actions** | CI automation and Frontend CD |
+| **GitHub Pages** | Static site hosting (Frontend) |
+| **Render** | Backend hosting (Web Service) |
+| **MongoDB Atlas** | Managed Database Service |
+
+## Environment Configuration
+
+### Required Secrets
+
+```bash
+# Frontend (GitHub Secrets)
+VITE_API_URL              # URL of the deployed backend
+
+# Backend (Render Environment Variables)
+PORT=5000
+MONGO_URI=...            # Connection string for MongoDB Atlas
+JWT_SECRET=...           # Secret for token signing
+FRONTEND_URL=...         # URL of the deployed frontend (for CORS)
+EMAIL_USER=...           # For sending invites (Nodemailer)
+EMAIL_PASS=...
+```
+
+## Monitoring and Observability
+
+### Strategies
+
+| Metric | Source | Tool |
+|--------|--------|------|
+| **Application Logs** | Backend | Render Logs / Console |
+| **Build Logs** | CI/CD | GitHub Actions Logs |
+| **Uptime** | HTTP Check | Render Dashboard / UptimeRobot |
+| **Errors** | Exceptions | Sentry (Recommended) |
+
+### Health Checks
+
+A simple health check endpoint should be available to verify backend status.
+- **Endpoint:** `GET /health` (Recommended to add)
+- **Response:** `200 OK`
