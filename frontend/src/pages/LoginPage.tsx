@@ -3,9 +3,9 @@ import { LogIn, Mail, Lock, AlertCircle, Eye, EyeOff, Globe, Clock, MapPin } fro
 import { Button } from '../components/ui/Button';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../services/AuthContext';
-import { 
-  loginWithEmailPassword, 
-  getDeviceType 
+import {
+  loginWithEmailPassword,
+  getDeviceType
 } from '../utils/authService';
 
 /**
@@ -54,7 +54,7 @@ const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Form state management
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -92,8 +92,8 @@ const LoginPage: React.FC = () => {
    */
   useEffect(() => {
     const activities = JSON.parse(localStorage.getItem('login_activities') || '[]');
-    setRecentActivities(activities.slice(0, 3)); 
-    
+    setRecentActivities(activities.slice(0, 3));
+
     // Load remembered email from localStorage
     const rememberedEmail = localStorage.getItem('remembered_email');
     if (rememberedEmail) {
@@ -123,55 +123,102 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
-    
+
     // Basic UI Validation
     if (!email.trim() || !password.trim()) {
-      setError({ 
-        title: 'Input Error', 
-        message: 'Please enter both email and password', 
-        type: 'error' 
+      setError({
+        title: 'Input Error',
+        message: 'Please enter both email and password',
+        type: 'error'
       });
       setIsLoading(false);
       return;
     }
-    
+
     try {
       const activityData = {
         deviceType: getDeviceType(),
         ipAddress: 'Auto-detected by server' // TODO: Implement actual IP detection
       };
-      
+
       // Call the backend authentication service
       const result = await loginWithEmailPassword({ email, password }, activityData);
-      
+
       if (result.success && result.token && result.user) {
         // Sync with AuthContext (token, userData)
         login(result.token, result.user);
-        
+
         // Handle "Remember Me" functionality
         if (rememberMe) {
           localStorage.setItem('remembered_email', email);
         } else {
           localStorage.removeItem('remembered_email');
         }
-        
+
         // Navigate to dashboard or intended destination
         const from = location.state?.from?.pathname || '/dashboard';
         navigate(from, { replace: true });
       } else {
-        setError({ 
-          title: 'Login Failed', 
-          message: result.message || 'Invalid credentials', 
-          type: 'error' 
+        // Display the specific error message from the backend
+        setError({
+          title: 'Login Failed',
+          message: result.message || 'An error occurred during login',
+          type: 'error'
         });
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      setError({ 
-        title: 'Connection Error', 
-        message: 'Could not connect to the server. Please check your connection and try again.', 
-        type: 'error' 
-      });
+
+      // Check if we have a response from the server
+      if (err.response) {
+        // Server responded with an error status
+        const statusCode = err.response.status;
+        const errorMessage = err.response.data?.message;
+
+        if (statusCode === 401) {
+          // Unauthorized - Invalid credentials
+          setError({
+            title: 'Authentication Failed',
+            message: errorMessage || 'Invalid email or password',
+            type: 'error'
+          });
+        } else if (statusCode === 403) {
+          // Forbidden - Email not verified
+          setError({
+            title: 'Email Not Verified',
+            message: errorMessage || 'Please verify your email before logging in',
+            type: 'error'
+          });
+        } else if (statusCode === 500) {
+          // Server Error
+          setError({
+            title: 'Server Error',
+            message: errorMessage || 'An error occurred on the server. Please try again later.',
+            type: 'error'
+          });
+        } else {
+          // Other error codes
+          setError({
+            title: 'Login Failed',
+            message: errorMessage || 'An unexpected error occurred',
+            type: 'error'
+          });
+        }
+      } else if (err.request) {
+        // Request was made but no response received (network error)
+        setError({
+          title: 'Connection Error',
+          message: 'Could not connect to the server. Please check your internet connection and try again.',
+          type: 'error'
+        });
+      } else {
+        // Something else happened
+        setError({
+          title: 'Error',
+          message: 'An unexpected error occurred. Please try again.',
+          type: 'error'
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -213,11 +260,11 @@ const LoginPage: React.FC = () => {
       </div>
       <div className="flex gap-4 mt-2 text-xs text-slate-500">
         <span className="flex items-center gap-1">
-          <Globe size={14} aria-hidden="true" /> 
+          <Globe size={14} aria-hidden="true" />
           {activity.ipAddress}
         </span>
         <span className="flex items-center gap-1">
-          <MapPin size={14} aria-hidden="true" /> 
+          <MapPin size={14} aria-hidden="true" />
           {activity.deviceType}
         </span>
       </div>
@@ -227,11 +274,11 @@ const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
       <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-8">
-        
+
         {/* Left column - Login form */}
         <div className="lg:w-1/2">
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
-            
+
             {/* Header Section */}
             <div className="text-center mb-8">
               <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -243,12 +290,11 @@ const LoginPage: React.FC = () => {
 
             {/* Error/Success message display */}
             {error && (
-              <div 
-                className={`mb-6 p-4 rounded-lg border ${
-                  error.type === 'error' 
-                    ? 'bg-red-50 border-red-200 text-red-800' 
+              <div
+                className={`mb-6 p-4 rounded-lg border ${error.type === 'error'
+                    ? 'bg-red-50 border-red-200 text-red-800'
                     : 'bg-green-50 border-green-200 text-green-800'
-                }`}
+                  }`}
                 role="alert"
                 aria-live="polite"
               >
@@ -270,15 +316,15 @@ const LoginPage: React.FC = () => {
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail 
-                    className="absolute left-3 top-3 text-slate-400" 
-                    size={20} 
-                    aria-hidden="true" 
+                  <Mail
+                    className="absolute left-3 top-3 text-slate-400"
+                    size={20}
+                    aria-hidden="true"
                   />
-                  <input 
+                  <input
                     id="email"
-                    type="email" 
-                    placeholder="Email" 
+                    type="email"
+                    placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
@@ -295,8 +341,8 @@ const LoginPage: React.FC = () => {
                   <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                     Password
                   </label>
-                  <Link 
-                    to="/forgot-password" 
+                  <Link
+                    to="/forgot-password"
                     className="text-sm text-blue-600 hover:underline"
                     aria-label="Forgot password? Click to reset"
                   >
@@ -304,15 +350,15 @@ const LoginPage: React.FC = () => {
                   </Link>
                 </div>
                 <div className="relative">
-                  <Lock 
-                    className="absolute left-3 top-3 text-slate-400" 
-                    size={20} 
-                    aria-hidden="true" 
+                  <Lock
+                    className="absolute left-3 top-3 text-slate-400"
+                    size={20}
+                    aria-hidden="true"
                   />
-                  <input 
+                  <input
                     id="password"
-                    type={showPassword ? "text" : "password"} 
-                    placeholder="Enter password" 
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-10 pr-12 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
@@ -334,9 +380,9 @@ const LoginPage: React.FC = () => {
 
               {/* Remember Me Checkbox */}
               <div className="flex items-center">
-                <input 
-                  id="remember" 
-                  type="checkbox" 
+                <input
+                  id="remember"
+                  type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
@@ -348,9 +394,9 @@ const LoginPage: React.FC = () => {
               </div>
 
               {/* Submit Button */}
-              <Button 
-                type="submit" 
-                className="w-full py-3" 
+              <Button
+                type="submit"
+                className="w-full py-3"
                 isLoading={isLoading}
                 aria-label={isLoading ? "Signing in..." : "Sign in to account"}
               >
@@ -361,8 +407,8 @@ const LoginPage: React.FC = () => {
             {/* Registration Link */}
             <p className="text-center mt-8 text-slate-600">
               New here?{' '}
-              <Link 
-                to="/register" 
+              <Link
+                to="/register"
                 className="text-blue-600 font-semibold hover:underline"
                 aria-label="Create a new account"
               >
@@ -380,7 +426,7 @@ const LoginPage: React.FC = () => {
               <Clock className="text-blue-600" size={24} aria-hidden="true" />
               <h2 className="text-xl font-bold text-slate-900">Recent Login Activity</h2>
             </div>
-            
+
             {/* Activity List */}
             {recentActivities.length > 0 ? (
               <div className="space-y-4">
@@ -391,7 +437,7 @@ const LoginPage: React.FC = () => {
                 <p className="text-slate-500">No recent activity found.</p>
               </div>
             )}
-            
+
             {/* Security Tips Section */}
             <div className="mt-12 pt-6 border-t border-slate-200">
               <h3 className="font-semibold text-slate-900 mb-3">Security Tips</h3>
