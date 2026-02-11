@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import {
   Sun,
   Moon,
@@ -7,18 +7,10 @@ import {
   Check,
   Palette as PaletteIcon
 } from 'lucide-react';
-import { getStoredTheme, setStoredTheme, applyTheme } from '../../utils/theme';
+import { setStoredTheme, applyTheme } from '../../utils/theme';
 
-/**
- * Supported theme types for the application
- *
- * @typedef {'light' | 'dark' | 'system' | 'high-contrast'} ThemeType
- */
 export type ThemeType = 'light' | 'dark' | 'system' | 'high-contrast';
 
-/**
- * Interface defining a theme option for display and selection
- */
 interface ThemeOption {
   id: ThemeType;
   name: string;
@@ -27,29 +19,17 @@ interface ThemeOption {
   color: string;
 }
 
-/**
- * Interface defining the properties for the ThemeSelector component
- */
 interface ThemeSelectorProps {
-  /** Currently active theme */
   currentTheme: ThemeType;
-  /** Callback when theme changes */
   onThemeChange: (theme: ThemeType) => void;
-  /** Additional CSS classes for the container */
   className?: string;
 }
 
-/**
- * ThemeSelector Component
- */
 const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   currentTheme,
   onThemeChange,
   className = ''
 }) => {
-  /**
-   * Array of available theme options with metadata
-   */
   const themeOptions: ThemeOption[] = [
     {
       id: 'light',
@@ -82,52 +62,25 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   ];
 
   /**
-   * Local UI state (what user currently selected in this component)
-   * Initialized from prop, storage, or fallback.
-   */
-  const [selectedTheme, setSelectedTheme] = useState<ThemeType>(() => {
-    return currentTheme || (getStoredTheme() as ThemeType) || 'system';
-  });
-
-  /**
-   * IMPORTANT:
-   * ESLint rule `react-hooks/set-state-in-effect` forbids syncing state in useEffect.
-   * So we sync state safely during render using a ref guard.
-   */
-  const prevThemeRef = useRef<ThemeType | null>(null);
-
-  if (currentTheme && prevThemeRef.current !== currentTheme) {
-    prevThemeRef.current = currentTheme;
-    setSelectedTheme(currentTheme);
-  }
-
-  /**
-   * Apply theme + persist when selection changes
+   * Apply + persist theme whenever currentTheme changes
    */
   useEffect(() => {
-    applyTheme(selectedTheme);
-    setStoredTheme(selectedTheme);
-  }, [selectedTheme]);
+    applyTheme(currentTheme);
+    setStoredTheme(currentTheme);
+  }, [currentTheme]);
 
-  /**
-   * Handle theme selection by user
-   */
   const handleThemeSelect = (theme: ThemeType): void => {
-    setSelectedTheme(theme);
     onThemeChange(theme);
   };
 
-  /**
-   * Reset theme selection to system default
-   */
   const resetToDefault = (): void => {
-    const defaultTheme: ThemeType = 'system';
-    handleThemeSelect(defaultTheme);
+    handleThemeSelect('system');
   };
+
+  const selectedTheme = currentTheme;
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Header section with title and reset button */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <PaletteIcon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
@@ -145,7 +98,6 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
         </button>
       </div>
 
-      {/* Theme selection grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {themeOptions.map((theme) => (
           <button
@@ -161,7 +113,6 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                {/* Theme icon */}
                 <div className={`p-2 rounded-lg ${theme.color} text-white`}>
                   {theme.icon}
                 </div>
@@ -172,7 +123,6 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                       {theme.name}
                     </span>
 
-                    {/* Checkmark for selected theme */}
                     {selectedTheme === theme.id && (
                       <Check
                         className="w-4 h-4 text-green-600"
@@ -188,10 +138,8 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
               </div>
             </div>
 
-            {/* Visual theme preview */}
             <div className="mt-3 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
               <div className="flex h-12">
-                {/* Sidebar preview area */}
                 <div
                   className={`w-1/4 ${
                     theme.id === 'light'
@@ -205,7 +153,6 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                   aria-hidden="true"
                 />
 
-                {/* Main content preview area */}
                 <div
                   className={`flex-1 ${
                     theme.id === 'light'
@@ -219,7 +166,6 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                   aria-hidden="true"
                 >
                   <div className="flex items-center gap-2 p-2">
-                    {/* UI element preview */}
                     <div
                       className={`w-2 h-2 rounded-full ${
                         theme.id === 'high-contrast'
@@ -244,7 +190,6 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
               </div>
             </div>
 
-            {/* Active theme indicator badge */}
             {selectedTheme === theme.id && (
               <div className="absolute -top-2 -right-2" aria-hidden="true">
                 <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
@@ -256,7 +201,6 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
         ))}
       </div>
 
-      {/* Current theme indicator panel */}
       <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
         <div className="flex items-center justify-between">
           <div>
@@ -268,13 +212,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
             </p>
           </div>
 
-          <div
-            className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-slate-700 rounded-full border border-slate-200 dark:border-slate-600"
-            aria-label={`Current theme: ${
-              themeOptions.find((t) => t.id === selectedTheme)?.name
-            }`}
-          >
-            {/* Theme color dot */}
+          <div className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-slate-700 rounded-full border border-slate-200 dark:border-slate-600">
             <div
               className={`w-2 h-2 rounded-full ${
                 selectedTheme === 'light'
