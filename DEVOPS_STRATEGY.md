@@ -28,7 +28,7 @@ graph TD
 
     subgraph "Production Infrastructure"
         FE_Deploy --> User((End User))
-        BE_Deploy --> BE_Container[Backend Service (Render)]
+        BE_Deploy --> BE_Container["Backend Service (Render)"]
         BE_Container --> MongoDB[MongoDB Atlas]
     end
 
