@@ -45,7 +45,7 @@ The process described here has several goals:
 - Fix problems that are important to users.
 - Engage the community in working toward the best possible CollabCanvas.
 
-1.  Fork the repo and create your branch from `main`.
+1.  Fork the repo (or create a new branch if you are a collaborator) from `main`. Recommended naming: `feature/name` or `fix/issue`.
 2.  If you've added code that should be tested, add tests.
 3.  If you've changed APIs, update the documentation.
 4.  Ensure the test suite passes.
