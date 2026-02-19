@@ -5,10 +5,13 @@ import ColorPicker from '../../components/ui/ColorPicker';
 import type { DrawingElement, Point, BrushConfig } from '../../types/canvas';
 import BrushSettings from '../../components/ui/BrushSettings';
 import type { BrushType, StrokeStyle } from '../../types/canvas';
+import TextEditor from '../../components/ui/TextEditor';
+import type { TextFormat, TextElement } from '../../types/canvas';
 import { useUndoRedo } from '../../hooks/useUndoRedo';
 import {
   Square, Circle, Edit2, Trash2, Grid, Minus, Plus,
-  Eraser, MinusCircle, PlusCircle, Zap, ZapOff, Download, RotateCcw, RotateCw
+  Eraser, MinusCircle, PlusCircle, Zap, ZapOff, Download, RotateCcw, RotateCw,
+  Type, Minus as LineIcon, ArrowRight
 } from 'lucide-react';
 
 
@@ -246,6 +249,20 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const containerRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
 
+  // Text Input
+  const [isEditingText, setIsEditingText] = useState<boolean>(false);
+  const [textPosition, setTextPosition] = useState<Point | null>(null);
+  const [editingTextElement, setEditingTextElement] = useState<TextElement | null>(null);
+  const defaultTextFormat: TextFormat = {
+    fontFamily: 'Arial',
+    fontSize: 16,
+    fontWeight: 'normal',
+    fontStyle: 'normal',
+    textDecoration: 'none',
+    textAlign: 'left',
+    color: '#000000'
+  };
+
   // Drawing state
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const {
@@ -261,7 +278,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     null,
   );
   const [tool, setTool] = useState<
-    "pencil" | "rectangle" | "circle" | "eraser"
+    "pencil" | "rectangle" | "circle" | "line" | "arrow" | "text" | "eraser" | "select"
   >("pencil");
   const [lockedObjects, setLockedObjects] = useState<
     Record<string, { userId: string; username: string; color: string }>
@@ -425,13 +442,14 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const drawGrid = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number): void => {
     if (!showGrid) return;
 
-    const gridSize = 20;
+    const gridSize = 20 * zoomLevel;
     ctx.strokeStyle = 'rgba(229, 231, 235, 0.5)';
     ctx.lineWidth = 1;
 
     // Apply zoom transformation for grid
     ctx.save();
     ctx.translate(panOffset.x * zoomLevel, panOffset.y * zoomLevel);
+    ctx.scale(zoomLevel, zoomLevel);
 
     // Draw vertical grid lines
     for (let x = 0; x <= width; x += gridSize) {
@@ -521,6 +539,22 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             const radius =
               Math.sqrt(Math.pow(el.width, 2) + Math.pow(el.height, 2)) / dpr;
             ctx.arc(el.x / dpr, el.y / dpr, Math.abs(radius), 0, 2 * Math.PI);
+          }
+          break;
+
+        case "line":
+        case "arrow":
+          if (el.points && el.points.length === 2) {
+            const [start, end] = el.points;
+            ctx.beginPath();
+            ctx.moveTo(start.x / dpr, start.y / dpr);
+            ctx.lineTo(end.x / dpr, end.y / dpr);
+            ctx.stroke();
+
+            // Draw arrowhead if it's an arrow
+            if (el.type === 'arrow') {
+              drawArrowhead(ctx, start, end, el.strokeWidth * 3, dpr);
+            }
           }
           break;
       }
@@ -629,6 +663,49 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             for (let i = 1; i < el.points.length; i++) {
               ctx.lineTo(el.points[i].x / dpr, el.points[i].y / dpr);
             }
+          }
+          break;
+
+        case "text":
+          if (el.type === 'text') {
+            const textEl = el as TextElement;
+            ctx.save();
+
+            // Set text properties
+            ctx.font = `${textEl.format.fontStyle} ${textEl.format.fontWeight} ${textEl.format.fontSize}px ${textEl.format.fontFamily}`;
+            ctx.fillStyle = textEl.format.color;
+            ctx.textAlign = textEl.format.textAlign;
+            ctx.textBaseline = 'top';
+
+            // Calculate x position based on alignment
+            let x = textEl.x! / dpr;
+            if (textEl.format.textAlign === 'center') {
+              // For center alignment, we'd need text width - simplified for now
+            } else if (textEl.format.textAlign === 'right') {
+              // For right alignment, we'd need text width - simplified for now
+            }
+
+            // Draw text with decoration
+            const lines = textEl.text.split('\n');
+            let y = textEl.y! / dpr;
+
+            lines.forEach((line, index) => {
+              ctx.fillText(line, x, y + (index * textEl.format.fontSize * 1.2));
+
+              // Draw underline if needed
+              if (textEl.format.textDecoration === 'underline') {
+                const metrics = ctx.measureText(line);
+                const lineY = y + (index * textEl.format.fontSize * 1.2) + 2;
+                ctx.beginPath();
+                ctx.strokeStyle = textEl.format.color;
+                ctx.lineWidth = 1;
+                ctx.moveTo(x, lineY);
+                ctx.lineTo(x + metrics.width, lineY);
+                ctx.stroke();
+              }
+            });
+
+            ctx.restore();
           }
           break;
       }
@@ -770,6 +847,72 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   };
 
   /**
+ * Draw arrowhead at the end of a line
+ */
+  const drawArrowhead = (
+    ctx: CanvasRenderingContext2D,
+    start: Point,
+    end: Point,
+    size: number,
+    dpr: number
+  ): void => {
+    const angle = Math.atan2(end.y - start.y, end.x - start.x);
+    const arrowSize = size / dpr;
+
+    const x = end.x / dpr;
+    const y = end.y / dpr;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-arrowSize, -arrowSize / 2);
+    ctx.lineTo(-arrowSize, arrowSize / 2);
+    ctx.closePath();
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.globalAlpha = ctx.globalAlpha;
+    ctx.fill();
+    ctx.restore();
+  };
+
+  /**
+ * Handle saving text from text editor
+ */
+  const handleTextSave = useCallback((text: string, format: TextFormat): void => {
+    if (!textPosition) return;
+
+    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+
+    const textElement: TextElement = {
+      id,
+      type: 'text',
+      text,
+      format,
+      x: textPosition.x,
+      y: textPosition.y,
+      color: format.color,
+      strokeWidth: 0, // Text doesn't use stroke width
+      opacity: 1,
+    };
+
+    // Add to history and emit to server
+    setElements([...elements, textElement]);
+
+    if (socketRef.current && resolvedRoomIdRef.current) {
+      socketRef.current.emit("drawing-update", {
+        roomId: resolvedRoomIdRef.current,
+        element: textElement,
+        saveToDb: true,
+      });
+    }
+
+    // Reset text editing state
+    setIsEditingText(false);
+    setTextPosition(null);
+  }, [elements, setElements, textPosition]);
+
+  /**
    * Start drawing operation at the specified mouse position
    * 
    * @function startDrawing
@@ -777,6 +920,17 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
    * @dependencies tool, color, strokeWidth, opacity, getCanvasCoordinates
    */
   const startDrawing = useCallback((e: React.MouseEvent): void => {
+    // "select" and "text" are not drawing tools — they have their own handlers
+    if (tool === 'select') return;
+
+    if (tool === 'text') {
+      const point = getCanvasCoordinates(e.clientX, e.clientY);
+      setTextPosition(point);
+      setIsEditingText(true);
+      setEditingTextElement(null);
+      return;
+    }
+
     const point = getCanvasCoordinates(e.clientX, e.clientY);
     setIsDrawing(true);
     lastPointRef.current = point;
@@ -906,7 +1060,28 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           });
         }
       }
-    } else {
+    }
+    else if (tool === "line" || tool === "arrow") {
+      // Check if line has length
+      if (currentElement.points && currentElement.points.length === 2) {
+        const [start, end] = currentElement.points;
+        const distance = Math.sqrt(
+          Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2)
+        );
+        if (distance > 5) { // Minimum 5px length
+          setElements((prev) => [...prev, currentElement]);
+          if (socketRef.current && resolvedRoomIdRef.current) {
+            socketRef.current.emit("drawing-update", {
+              roomId: resolvedRoomIdRef.current,
+              element: currentElement,
+              saveToDb: true,
+              userId: user.id || user._id,
+            });
+          }
+        }
+      }
+    }
+    else {
       // For shapes, check if they have valid dimensions
       if (
         Math.abs(currentElement.width || 0) > 1 ||
@@ -1092,6 +1267,47 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     redrawCanvas();
   }, [redrawCanvas]);
 
+  /**
+   * Handle keyboard events for tool selection and undo/redo
+   * 
+   * @effect
+   * @dependencies undo, redo
+   */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if typing in input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Tool shortcuts
+      const key = e.key.toLowerCase();
+      switch (key) {
+        case 'p': setTool('pencil'); e.preventDefault(); break;
+        case 'r': setTool('rectangle'); e.preventDefault(); break;
+        case 'c': setTool('circle'); e.preventDefault(); break;
+        case 'l': setTool('line'); e.preventDefault(); break;
+        case 'a': setTool('arrow'); e.preventDefault(); break;
+        case 't': setTool('text'); e.preventDefault(); break;
+        case 'e': setTool('eraser'); e.preventDefault(); break;
+        case 'g': setShowGrid(prev => !prev); e.preventDefault(); break;
+      }
+
+      // Undo/Redo
+      if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
+
   return (
     <div
       ref={containerRef}
@@ -1142,6 +1358,28 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             <Circle size={20} />
           </button>
           <button
+            onClick={() => setTool('line')}
+            className={`p-2 rounded-lg transition-colors ${tool === 'line'
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
+            aria-label="Line tool"
+            title="Line Tool (L)"
+          >
+            <Minus size={20} />
+          </button>
+          <button
+            onClick={() => setTool('arrow')}
+            className={`p-2 rounded-lg transition-colors ${tool === 'arrow'
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
+            aria-label="Arrow tool"
+            title="Arrow Tool (A)"
+          >
+            <ArrowRight size={20} />
+          </button>
+          <button
             onClick={() => setTool('eraser')}
             className={`p-2 rounded-lg transition-colors ${tool === 'eraser'
               ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
@@ -1152,6 +1390,18 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             aria-pressed={tool === 'eraser'}
           >
             <Eraser size={20} />
+          </button>
+          <button
+            onClick={() => setTool('text')}
+            className={`p-2 rounded-lg transition-colors ${tool === 'text'
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
+            aria-label="Text tool"
+            title="Text Tool (T)"
+            aria-pressed={tool === 'text'}
+          >
+            <Type size={20} />
           </button>
         </div>
 
@@ -1375,6 +1625,57 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           </div>
         );
       })}
+      {/* Text Editor Overlay */}
+      {isEditingText && textPosition && (
+        <TextEditor
+          initialText=""
+          initialFormat={defaultTextFormat}
+          position={{
+            x: textPosition.x / (window.devicePixelRatio || 1) * zoomLevel + panOffset.x * zoomLevel,
+            y: textPosition.y / (window.devicePixelRatio || 1) * zoomLevel + panOffset.y * zoomLevel
+          }}
+          onSave={handleTextSave}
+          onCancel={() => {
+            setIsEditingText(false);
+            setTextPosition(null);
+          }}
+        />
+      )}
+
+      {/* For editing existing text (to be implemented later) */}
+      {editingTextElement && (
+        <TextEditor
+          initialText={editingTextElement.text}
+          initialFormat={editingTextElement.format}
+          position={{
+            x: editingTextElement.x! / (window.devicePixelRatio || 1) * zoomLevel + panOffset.x * zoomLevel,
+            y: editingTextElement.y! / (window.devicePixelRatio || 1) * zoomLevel + panOffset.y * zoomLevel
+          }}
+          onSave={(text, format) => {
+            // Update existing text element
+            const updatedElement = {
+              ...editingTextElement,
+              text,
+              format
+            };
+
+            setElements(elements.map(el =>
+              el.id === editingTextElement.id ? updatedElement : el
+            ));
+
+            if (socketRef.current && resolvedRoomIdRef.current) {
+              socketRef.current.emit("drawing-update", {
+                roomId: resolvedRoomIdRef.current,
+                element: updatedElement,
+                saveToDb: true,
+              });
+            }
+
+            setEditingTextElement(null);
+          }}
+          onCancel={() => setEditingTextElement(null)}
+        />
+      )}
     </div>
   );
 };

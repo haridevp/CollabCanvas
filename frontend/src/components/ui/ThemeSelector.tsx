@@ -103,11 +103,10 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
           <button
             key={theme.id}
             onClick={() => handleThemeSelect(theme.id)}
-            className={`relative p-4 rounded-xl border-2 text-left transition-all ${
-              selectedTheme === theme.id
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-            }`}
+            className={`relative p-4 rounded-xl border-2 text-left transition-all ${selectedTheme === theme.id
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+              : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+              }`}
             aria-label={`Select ${theme.name} theme`}
             aria-pressed={selectedTheme === theme.id}
           >
@@ -141,48 +140,44 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
             <div className="mt-3 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
               <div className="flex h-12">
                 <div
-                  className={`w-1/4 ${
-                    theme.id === 'light'
-                      ? 'bg-slate-100'
-                      : theme.id === 'dark'
-                        ? 'bg-slate-800'
-                        : theme.id === 'high-contrast'
-                          ? 'bg-slate-900'
-                          : 'bg-slate-100 dark:bg-slate-800'
-                  }`}
+                  className={`w-1/4 ${theme.id === 'light'
+                    ? 'bg-slate-100'
+                    : theme.id === 'dark'
+                      ? 'bg-slate-800'
+                      : theme.id === 'high-contrast'
+                        ? 'bg-slate-900'
+                        : 'bg-slate-100 dark:bg-slate-800'
+                    }`}
                   aria-hidden="true"
                 />
 
                 <div
-                  className={`flex-1 ${
-                    theme.id === 'light'
-                      ? 'bg-white'
-                      : theme.id === 'dark'
-                        ? 'bg-slate-900'
-                        : theme.id === 'high-contrast'
-                          ? 'bg-black'
-                          : 'bg-white dark:bg-slate-900'
-                  }`}
+                  className={`flex-1 ${theme.id === 'light'
+                    ? 'bg-white'
+                    : theme.id === 'dark'
+                      ? 'bg-slate-900'
+                      : theme.id === 'high-contrast'
+                        ? 'bg-black'
+                        : 'bg-white dark:bg-slate-900'
+                    }`}
                   aria-hidden="true"
                 >
                   <div className="flex items-center gap-2 p-2">
                     <div
-                      className={`w-2 h-2 rounded-full ${
-                        theme.id === 'high-contrast'
-                          ? 'bg-yellow-400'
-                          : 'bg-blue-500'
-                      }`}
+                      className={`w-2 h-2 rounded-full ${theme.id === 'high-contrast'
+                        ? 'bg-yellow-400'
+                        : 'bg-blue-500'
+                        }`}
                     />
                     <div
-                      className={`h-2 rounded ${
-                        theme.id === 'light'
-                          ? 'bg-slate-200'
-                          : theme.id === 'dark'
-                            ? 'bg-slate-700'
-                            : theme.id === 'high-contrast'
-                              ? 'bg-white'
-                              : 'bg-slate-200 dark:bg-slate-700'
-                      }`}
+                      className={`h-2 rounded ${theme.id === 'light'
+                        ? 'bg-slate-200'
+                        : theme.id === 'dark'
+                          ? 'bg-slate-700'
+                          : theme.id === 'high-contrast'
+                            ? 'bg-white'
+                            : 'bg-slate-200 dark:bg-slate-700'
+                        }`}
                       style={{ width: '60%' }}
                     />
                   </div>
@@ -214,15 +209,14 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 
           <div className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-slate-700 rounded-full border border-slate-200 dark:border-slate-600">
             <div
-              className={`w-2 h-2 rounded-full ${
-                selectedTheme === 'light'
-                  ? 'bg-yellow-500'
-                  : selectedTheme === 'dark'
-                    ? 'bg-indigo-600'
-                    : selectedTheme === 'system'
-                      ? 'bg-slate-600'
-                      : 'bg-orange-600'
-              }`}
+              className={`w-2 h-2 rounded-full ${selectedTheme === 'light'
+                ? 'bg-yellow-500'
+                : selectedTheme === 'dark'
+                  ? 'bg-indigo-600'
+                  : selectedTheme === 'system'
+                    ? 'bg-slate-600'
+                    : 'bg-orange-600'
+                }`}
             />
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {themeOptions.find((t) => t.id === selectedTheme)?.name}
