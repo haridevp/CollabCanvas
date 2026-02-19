@@ -8,12 +8,15 @@ import TextEditor from '../../components/ui/TextEditor';
 import { useUndoRedo } from '../../hooks/useUndoRedo';
 import ImageUploader from '../../components/ui/ImageUploader';
 import { useSelection } from '../../hooks/useSelection';
+import { useClipboard } from '../../hooks/useClipboard';
+import { ContextMenu } from '../../components/ui/ContextMenu';
 import {
   Square, Circle, Edit2, Trash2, Grid, Minus, Plus,
   Eraser, MinusCircle, PlusCircle, Zap, ZapOff, Download, RotateCcw, RotateCw,
   Type, Minus as LineIcon, ArrowRight, Image as ImageIcon, Move, Copy, Scissors,
-  ArrowUp, ArrowDown, Trash
+  ArrowUp, ArrowDown, Trash, Clipboard
 } from 'lucide-react';
+
 
 /**
  * Brush Engine for freehand drawing with smoothing and pressure simulation
@@ -326,6 +329,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
   const {
     selection,
+    setSelection,
     transform,
     dragBox,
     handleSelectionStart,
@@ -342,6 +346,35 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     sendToBack,
     findElementAtPoint
   } = useSelection(elements, setElements, zoomLevel, panOffset);
+
+  const {
+    copyToClipboard,
+    cutToClipboard,
+    pasteFromClipboard,
+    hasClipboardContent
+  } = useClipboard(
+    elements,
+    setElements,
+    selection.selectedIds,
+    clearSelection,
+    (newSelection) => setSelection({
+      selectedIds: newSelection.selectedIds,
+      isMultiSelect: newSelection.isMultiSelect
+    })
+  );
+
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  /**
+ * Handle context menu (right-click)
+ */
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+
+    // Only show context menu in select tool
+    if (tool === 'select') {
+      setContextMenu({ x: e.clientX, y: e.clientY });
+    }
+  }, [tool]);
 
   // Resolved room ID (canonical MongoDB _id returned by the backend socket)
   const resolvedRoomIdRef = useRef<string | undefined>(roomId);
@@ -1538,7 +1571,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
    * @dependencies undo, redo
    */
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
       // Don't trigger if typing in input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
@@ -1547,7 +1580,12 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       // Tool shortcuts
       const key = e.key.toLowerCase();
       switch (key) {
-        case 'v': setTool('select'); e.preventDefault(); break;
+        case 'v':
+          if (!e.ctrlKey && !e.metaKey) { // Only if not Ctrl+V
+            setTool('select');
+            e.preventDefault();
+          }
+          break;
         case 'p': setTool('pencil'); e.preventDefault(); break;
         case 'r': setTool('rectangle'); e.preventDefault(); break;
         case 'c': setTool('circle'); e.preventDefault(); break;
@@ -1559,6 +1597,26 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         case 'g': setShowGrid(prev => !prev); e.preventDefault(); break;
       }
 
+      // Clipboard operations (with Ctrl/Cmd)
+      if (e.ctrlKey || e.metaKey) {
+        switch (key) {
+          case 'c':
+            e.preventDefault();
+            copyToClipboard();
+            break;
+          case 'x':
+            e.preventDefault();
+            cutToClipboard();
+            break;
+          case 'v':
+            e.preventDefault();
+            // Get mouse position for paste location
+            // You might want to pass the current cursor position here
+            pasteFromClipboard(20, 20);
+            break;
+        }
+      }
+
       // Selection operations
       if (selection.selectedIds.length > 0) {
         // Delete
@@ -1567,31 +1625,19 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           deleteSelected();
         }
 
-        // Duplicate
-        if (e.ctrlKey && e.key === 'd') {
+        // Duplicate (Ctrl+D)
+        if (e.ctrlKey && key === 'd') {
           e.preventDefault();
           duplicateSelected();
-        }
-
-        // Copy
-        if (e.ctrlKey && e.key === 'c') {
-          e.preventDefault();
-          // TODO: Implement copy
-        }
-
-        // Paste
-        if (e.ctrlKey && e.key === 'v') {
-          e.preventDefault();
-          // TODO: Implement paste
         }
       }
 
       // Undo/Redo
-      if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+      if (e.ctrlKey && key === 'z' && !e.shiftKey) {
         e.preventDefault();
         undo();
       }
-      if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
+      if ((e.ctrlKey && key === 'y') || (e.ctrlKey && e.shiftKey && key === 'z')) {
         e.preventDefault();
         redo();
       }
@@ -1599,7 +1645,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selection.selectedIds, deleteSelected, duplicateSelected, undo, redo]);
+  }, [selection.selectedIds, deleteSelected, duplicateSelected, undo, redo, copyToClipboard, cutToClipboard, pasteFromClipboard]);
 
   return (
     <div
@@ -1907,6 +1953,38 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       {/* Selection toolbar - shown when objects are selected */}
       {selection.selectedIds.length > 0 && (
         <div className="absolute top-24 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 flex items-center gap-2 z-20">
+          {/* Copy button */}
+          <button
+            onClick={() => copyToClipboard()}
+            className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+            title="Copy (Ctrl+C)"
+          >
+            <Copy size={18} />
+          </button>
+
+          {/* Cut button */}
+          <button
+            onClick={() => cutToClipboard()}
+            className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+            title="Cut (Ctrl+X)"
+          >
+            <Scissors size={18} />
+          </button>
+
+          {/* Paste button (if clipboard has content) */}
+          {hasClipboardContent() && (
+            <button
+              onClick={() => pasteFromClipboard(20, 20)}
+              className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              title="Paste (Ctrl+V)"
+            >
+              <Clipboard size={18} />
+            </button>
+          )}
+
+          <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
+
+          {/* Duplicate button */}
           <button
             onClick={duplicateSelected}
             className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
@@ -1914,6 +1992,8 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           >
             <Copy size={18} />
           </button>
+
+          {/* Delete button */}
           <button
             onClick={deleteSelected}
             className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
@@ -1921,7 +2001,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           >
             <Trash size={18} />
           </button>
+
           <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
+
+          {/* Layer controls */}
           <button
             onClick={bringToFront}
             className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
@@ -1936,8 +2019,11 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           >
             <ArrowDown size={18} />
           </button>
+
           <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
-          <span className="text-sm text-slate-600 dark:text-slate-400">
+
+          {/* Selection count */}
+          <span className="text-sm text-slate-600 dark:text-slate-400 px-2">
             {selection.selectedIds.length} {selection.selectedIds.length === 1 ? 'object' : 'objects'} selected
           </span>
         </div>
@@ -1958,7 +2044,9 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         onMouseMove={draw}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className="absolute top-0 left-0 w-full h-full bg-white dark:bg-slate-900 cursor-crosshair"
+        onContextMenu={handleContextMenu}
+        className={`absolute top-0 left-0 w-full h-full bg-white dark:bg-slate-900 ${tool === 'select' ? 'cursor-default' : 'cursor-crosshair'
+          }`}
         aria-label="Collaborative drawing canvas"
         title="Drawing area - Click and drag to draw"
       />
@@ -2078,6 +2166,23 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             />
           </div>
         </div>
+      )}
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+          onCopy={copyToClipboard}
+          onCut={cutToClipboard}
+          onPaste={() => pasteFromClipboard(20, 20)}
+          onDelete={deleteSelected}
+          onBringToFront={bringToFront}
+          onSendToBack={sendToBack}
+          hasSelection={selection.selectedIds.length > 0}
+          hasClipboard={hasClipboardContent()}
+        />
       )}
     </div>
   );

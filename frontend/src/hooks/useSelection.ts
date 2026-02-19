@@ -440,6 +440,7 @@ export function useSelection(
 
     return {
         selection,
+        setSelection,
         transform,
         dragBox: dragBoxRef.current,
         handleSelectionStart,
