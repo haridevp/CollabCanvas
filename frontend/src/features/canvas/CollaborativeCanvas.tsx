@@ -5,10 +5,12 @@ import ColorPicker from '../../components/ui/ColorPicker';
 import type { DrawingElement, Point, BrushConfig } from '../../types/canvas';
 import BrushSettings from '../../components/ui/BrushSettings';
 import type { BrushType, StrokeStyle } from '../../types/canvas';
-import { 
-  Square, Circle, Edit2, Trash2, Grid, Minus, Plus, 
-  Eraser, MinusCircle, PlusCircle, Zap, ZapOff, Download 
+import { useUndoRedo } from '../../hooks/useUndoRedo';
+import {
+  Square, Circle, Edit2, Trash2, Grid, Minus, Plus,
+  Eraser, MinusCircle, PlusCircle, Zap, ZapOff, Download, RotateCcw, RotateCw
 } from 'lucide-react';
+
 
 /**
  * Brush Engine for freehand drawing with smoothing and pressure simulation
@@ -41,22 +43,22 @@ import {
 class BrushEngine {
   /** Raw points captured from input device */
   private points: Point[] = [];
-  
+
   /** Smoothed points after processing */
   private smoothedPoints: Point[] = [];
-  
+
   /** Smoothing intensity factor (0-1) */
   private smoothingFactor: number = 0.5;
-  
+
   /** Current pressure value (0-1) */
   private pressure: number = 1;
-  
+
   /** Last calculated stroke width for smooth transitions */
   private lastWidth: number = 3;
-  
+
   /** Current brush configuration */
   private config: BrushConfig;
-  
+
   /**
    * Create a new BrushEngine instance
    * 
@@ -77,7 +79,7 @@ class BrushEngine {
   addPoint(point: Point, pressure: number = 1): void {
     this.points.push(point);
     this.pressure = pressure;
-    
+
     // Apply smoothing algorithm to the accumulated points
     this.applySmoothing();
   }
@@ -103,7 +105,7 @@ class BrushEngine {
       let sumX = 0;
       let sumY = 0;
       let count = 0;
-      
+
       // Apply moving average kernel around current point
       for (let j = -kernelSize; j <= kernelSize; j++) {
         const idx = i + j;
@@ -113,7 +115,7 @@ class BrushEngine {
           count++;
         }
       }
-      
+
       // Calculate smoothed point position
       smoothed.push({
         x: sumX / count,
@@ -142,10 +144,10 @@ class BrushEngine {
 
     // Simulate pressure: slower movement = thicker stroke
     const pressureFactor = Math.max(0.1, Math.min(2, 1 / (velocity + 0.1)));
-    const width = this.config.minWidth + 
-                 (this.config.maxWidth - this.config.minWidth) * 
-                 pressureFactor * this.pressure;
-    
+    const width = this.config.minWidth +
+      (this.config.maxWidth - this.config.minWidth) *
+      pressureFactor * this.pressure;
+
     // Smooth width transitions for more natural appearance
     this.lastWidth = this.lastWidth * 0.7 + width * 0.3;
     return this.lastWidth;
@@ -238,7 +240,7 @@ interface CollaborativeCanvasProps {
  */
 export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanvasProps) => {
   const { user } = useAuth();
-  
+
   // Canvas references
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -246,7 +248,15 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
   // Drawing state
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
-  const [elements, setElements] = useState<DrawingElement[]>([]);
+  const {
+    present: elements,
+    setState: setElements,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    replaceState: replaceElements
+  } = useUndoRedo<DrawingElement[]>([]);
   const [currentElement, setCurrentElement] = useState<DrawingElement | null>(
     null,
   );
@@ -276,7 +286,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number; y: number; username: string }>>({});
   const [isExporting, setIsExporting] = useState<boolean>(false);
-  
+
   // Brush engine instance
   const brushEngineRef = useRef<BrushEngine | null>(null);
   const lastPointRef = useRef<Point | null>(null);
@@ -325,19 +335,22 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     });
 
     // Handle drawing updates from other users
-    socket.on('drawing-update', (data) => {
+    socket.on("drawing-update", (data: { element?: DrawingElement }) => {
       if (data.element) {
-        setElements(prev => {
-          const exists = prev.find(el => el.id === data.element.id);
+        setElements((prev: DrawingElement[]) => {
+          const exists = prev.find((el: DrawingElement) => el.id === data.element!.id);
+
           if (exists) {
-            // Update existing element
-            return prev.map(el => el.id === data.element.id ? data.element : el);
+            return prev.map((el: DrawingElement) =>
+              el.id === data.element!.id ? data.element! : el
+            );
           }
-          // Add new element
-          return [...prev, data.element];
+
+          return [...prev, data.element!];
         });
       }
     });
+
 
     // Handle canvas clear events
     socket.on('canvas-cleared', () => {
@@ -372,6 +385,24 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     };
   }, [roomId, user]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Undo: Ctrl+Z
+      if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      // Redo: Ctrl+Y or Ctrl+Shift+Z
+      if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
+
   /**
    * Initialize brush engine with current configuration
    * 
@@ -394,16 +425,16 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
    */
   const drawGrid = useCallback((ctx: CanvasRenderingContext2D, width: number, height: number): void => {
     if (!showGrid) return;
-    
+
     const gridSize = 20 * zoomLevel;
     ctx.strokeStyle = 'rgba(229, 231, 235, 0.5)';
     ctx.lineWidth = 1;
-    
+
     // Apply zoom transformation for grid
     ctx.save();
     ctx.translate(panOffset.x * zoomLevel, panOffset.y * zoomLevel);
     ctx.scale(zoomLevel, zoomLevel);
-    
+
     // Draw vertical grid lines
     for (let x = 0; x <= width; x += gridSize) {
       ctx.beginPath();
@@ -411,7 +442,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       ctx.lineTo(x, height);
       ctx.stroke();
     }
-    
+
     // Draw horizontal grid lines
     for (let y = 0; y <= height; y += gridSize) {
       ctx.beginPath();
@@ -419,7 +450,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       ctx.lineTo(width, y);
       ctx.stroke();
     }
-    
+
     ctx.restore();
   }, [showGrid, zoomLevel, panOffset]);
 
@@ -432,8 +463,8 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
    * @param {number} dpr - Device pixel ratio
    */
   const redrawCanvasForExport = useCallback((
-    ctx: CanvasRenderingContext2D, 
-    elementsToDraw: DrawingElement[], 
+    ctx: CanvasRenderingContext2D,
+    elementsToDraw: DrawingElement[],
     dpr: number
   ): void => {
     elementsToDraw.forEach((el) => {
@@ -512,10 +543,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    
+
     // Clear entire canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     // Draw grid background
     drawGrid(ctx, canvas.width, canvas.height);
 
@@ -525,7 +556,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     ctx.scale(1 / dpr, 1 / dpr);
     ctx.translate(panOffset.x * zoomLevel * dpr, panOffset.y * zoomLevel * dpr);
     ctx.scale(zoomLevel, zoomLevel);
-    
+
     // Enable anti-aliasing for smoother edges
     if (brushConfig.antiAliasing) {
       ctx.imageSmoothingEnabled = true;
@@ -591,7 +622,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             ctx.arc(el.x / dpr, el.y / dpr, Math.abs(radius), 0, 2 * Math.PI);
           }
           break;
-          
+
         case 'eraser':
           // Eraser is implemented as a white pencil stroke
           ctx.strokeStyle = '#ffffff';
@@ -815,7 +846,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
       // Simulate pressure based on velocity (slower = higher pressure)
       const pressure = Math.max(0.1, Math.min(1, 100 / (velocity + 10)));
-      
+
       // Add point with simulated pressure to brush engine
       brushEngineRef.current.addPoint(point, pressure);
 
@@ -866,7 +897,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     // Only add to elements if it's a valid drawing
     if (tool === "pencil" || tool === "eraser") {
       if (brushEngineRef.current?.hasPoints()) {
-        setElements((prev) => [...prev, currentElement]);
+        setElements([...elements, currentElement]); // Use setState instead of setElements
         if (socketRef.current && resolvedRoomIdRef.current) {
           socketRef.current.emit("drawing-update", {
             roomId: resolvedRoomIdRef.current,
@@ -881,7 +912,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         Math.abs(currentElement.width || 0) > 1 ||
         Math.abs(currentElement.height || 0) > 1
       ) {
-        setElements((prev) => [...prev, currentElement]);
+        setElements([...elements, currentElement]); // Use setState instead of setElements
         if (socketRef.current && resolvedRoomIdRef.current) {
           socketRef.current.emit("drawing-update", {
             roomId: resolvedRoomIdRef.current,
@@ -979,34 +1010,34 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     if (!canvas) return;
 
     setIsExporting(true);
-    
+
     try {
       // Create a temporary canvas for export
       const exportCanvas = document.createElement('canvas');
       const ctx = exportCanvas.getContext('2d');
-      
+
       if (!ctx) return;
-      
+
       // Set export canvas size
       exportCanvas.width = canvas.width;
       exportCanvas.height = canvas.height;
-      
+
       // Draw white background
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-      
+
       // Apply the same transformations and draw all elements
       ctx.save();
       const dpr = window.devicePixelRatio || 1;
       ctx.scale(1 / dpr, 1 / dpr);
       ctx.translate(panOffset.x * zoomLevel * dpr, panOffset.y * zoomLevel * dpr);
       ctx.scale(zoomLevel, zoomLevel);
-      
+
       // Redraw all elements
       redrawCanvasForExport(ctx, elements, dpr);
-      
+
       ctx.restore();
-      
+
       // Convert to data URL and trigger download
       const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
       const dataUrl = exportCanvas.toDataURL(mimeType, 1.0);
@@ -1014,7 +1045,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       link.href = dataUrl;
       link.download = `canvas-export-${Date.now()}.${format}`;
       link.click();
-      
+
     } catch (error) {
       console.error('Export failed:', error);
     } finally {
@@ -1026,12 +1057,12 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
    * Handle zoom in operation
    */
   const handleZoomIn = (): void => setZoomLevel(prev => Math.min(prev + 0.25, 3));
-  
+
   /**
    * Handle zoom out operation
    */
   const handleZoomOut = (): void => setZoomLevel(prev => Math.max(prev - 0.25, 0.5));
-  
+
   /**
    * Reset zoom and pan to default values
    */
@@ -1061,64 +1092,60 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   }, [redrawCanvas]);
 
   return (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       className="relative w-full h-full bg-slate-100 overflow-hidden dark:bg-slate-900"
     >
       {/* Enhanced toolbar */}
-      <div 
+      <div
         className="absolute top-4 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 px-4 py-2 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 flex items-center gap-4 z-10"
         role="toolbar"
         aria-label="Drawing tools"
       >
         {/* Drawing tools */}
         <div className="flex border-r border-slate-200 dark:border-slate-700 pr-4 gap-1">
-          <button 
-            onClick={() => setTool('pencil')} 
-            className={`p-2 rounded-lg transition-colors ${
-              tool === 'pencil' 
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-            }`}
+          <button
+            onClick={() => setTool('pencil')}
+            className={`p-2 rounded-lg transition-colors ${tool === 'pencil'
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
             aria-label="Pencil tool"
             title="Pencil Tool"
             aria-pressed={tool === 'pencil'}
           >
             <Edit2 size={20} />
           </button>
-          <button 
-            onClick={() => setTool('rectangle')} 
-            className={`p-2 rounded-lg transition-colors ${
-              tool === 'rectangle' 
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-            }`}
+          <button
+            onClick={() => setTool('rectangle')}
+            className={`p-2 rounded-lg transition-colors ${tool === 'rectangle'
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
             aria-label="Rectangle tool"
             title="Rectangle Tool"
             aria-pressed={tool === 'rectangle'}
           >
             <Square size={20} />
           </button>
-          <button 
-            onClick={() => setTool('circle')} 
-            className={`p-2 rounded-lg transition-colors ${
-              tool === 'circle' 
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-            }`}
+          <button
+            onClick={() => setTool('circle')}
+            className={`p-2 rounded-lg transition-colors ${tool === 'circle'
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
             aria-label="Circle tool"
             title="Circle Tool"
             aria-pressed={tool === 'circle'}
           >
             <Circle size={20} />
           </button>
-          <button 
-            onClick={() => setTool('eraser')} 
-            className={`p-2 rounded-lg transition-colors ${
-              tool === 'eraser' 
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-            }`}
+          <button
+            onClick={() => setTool('eraser')}
+            className={`p-2 rounded-lg transition-colors ${tool === 'eraser'
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
             aria-label="Eraser tool"
             title="Eraser Tool"
             aria-pressed={tool === 'eraser'}
@@ -1154,13 +1181,12 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         {/* Brush settings */}
         <div className="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-4">
           <div className="flex flex-col items-center">
-            <button 
+            <button
               onClick={() => updateBrushConfig({ pressureSensitive: !brushConfig.pressureSensitive })}
-              className={`p-1.5 rounded ${
-                brushConfig.pressureSensitive 
-                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
-                  : 'text-slate-600 dark:text-slate-400'
-              }`}
+              className={`p-1.5 rounded ${brushConfig.pressureSensitive
+                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                : 'text-slate-600 dark:text-slate-400'
+                }`}
               aria-label={brushConfig.pressureSensitive ? "Disable pressure sensitivity" : "Enable pressure sensitivity"}
               title="Pressure Sensitivity"
               aria-pressed={brushConfig.pressureSensitive}
@@ -1192,15 +1218,44 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           </div>
         </div>
 
+        {/* Undo Redo controls */}
+        <div className="flex items-center gap-1 border-r border-slate-200 dark:border-slate-700 pr-4">
+          <button
+            onClick={undo}
+            disabled={!canUndo}
+            className={`p-2 rounded-lg transition-colors ${canUndo
+              ? 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              : 'text-slate-300 dark:text-slate-600 cursor-not-allowed'
+              }`}
+            aria-label="Undo (Ctrl+Z)"
+            title="Undo (Ctrl+Z)"
+            disabled={!canUndo}
+          >
+            <RotateCcw size={20} />
+          </button>
+          <button
+            onClick={redo}
+            disabled={!canRedo}
+            className={`p-2 rounded-lg transition-colors ${canRedo
+              ? 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              : 'text-slate-300 dark:text-slate-600 cursor-not-allowed'
+              }`}
+            aria-label="Redo (Ctrl+Y)"
+            title="Redo (Ctrl+Y)"
+            disabled={!canRedo}
+          >
+            <RotateCw size={20} />
+          </button>
+        </div>
+
         {/* Canvas controls */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowGrid(!showGrid)}
-            className={`p-2 rounded-lg transition-colors ${
-              showGrid 
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-            }`}
+            className={`p-2 rounded-lg transition-colors ${showGrid
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
             aria-label={showGrid ? "Hide grid" : "Show grid"}
             title="Toggle Grid"
             aria-pressed={showGrid}
@@ -1247,7 +1302,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             if (socketRef.current && roomId) {
               socketRef.current.emit("clear-canvas", { roomId });
             }
-          }} 
+          }}
           className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
           aria-label="Clear all drawings"
           title="Clear Canvas"
@@ -1313,7 +1368,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           >
             {/* Custom cursor SVG */}
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z" fill="#3B82F6" stroke="white"/>
+              <path d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z" fill="#3B82F6" stroke="white" />
             </svg>
             <div className="ml-3 px-1.5 py-0.5 bg-blue-500 text-white text-[10px] rounded shadow-sm whitespace-nowrap">
               {pos.username}
