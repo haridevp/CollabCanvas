@@ -2,6 +2,27 @@ import { useState, useCallback, useRef } from 'react';
 import type { Point, DrawingElement, ImageElement, SelectionState, TransformHandles } from '../types/canvas';
 
 /**
+ * Calculate distance from point to line segment
+ */
+const distanceToLineSegment = (p: Point, a: Point, b: Point): number => {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const lenSq = dx * dx + dy * dy;
+
+    if (lenSq === 0) return Math.sqrt((p.x - a.x) ** 2 + (p.y - a.y) ** 2);
+
+    let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq;
+    t = Math.max(0, Math.min(1, t));
+
+    const proj = {
+        x: a.x + t * dx,
+        y: a.y + t * dy
+    };
+
+    return Math.sqrt((p.x - proj.x) ** 2 + (p.y - proj.y) ** 2);
+};
+
+/**
  * Custom hook for managing object selection and transformation
  * 
  * @param elements - Array of drawing elements
@@ -27,7 +48,7 @@ export function useSelection(
 
     const selectionRef = useRef<HTMLDivElement>(null);
     const dragStartRef = useRef<Point | null>(null);
-    const dragBoxRef = useRef<{ start: Point; end: Point } | null>(null);
+    const [dragBox, setDragBox] = useState<{ start: Point; end: Point } | null>(null);
 
     /**
      * Check if a point is inside an element
@@ -94,27 +115,6 @@ export function useSelection(
     }, []);
 
     /**
-     * Calculate distance from point to line segment
-     */
-    const distanceToLineSegment = (p: Point, a: Point, b: Point): number => {
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const lenSq = dx * dx + dy * dy;
-
-        if (lenSq === 0) return Math.sqrt((p.x - a.x) ** 2 + (p.y - a.y) ** 2);
-
-        let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq;
-        t = Math.max(0, Math.min(1, t));
-
-        const proj = {
-            x: a.x + t * dx,
-            y: a.y + t * dy
-        };
-
-        return Math.sqrt((p.x - proj.x) ** 2 + (p.y - proj.y) ** 2);
-    };
-
-    /**
      * Find element at given coordinates
      */
     const findElementAtPoint = useCallback((point: Point): DrawingElement | null => {
@@ -161,7 +161,7 @@ export function useSelection(
             } else {
                 // Start drag box selection
                 dragStartRef.current = point;
-                dragBoxRef.current = { start: point, end: point };
+                setDragBox({ start: point, end: point });
                 setSelection({ selectedIds: [], isMultiSelect: false });
             }
         }
@@ -172,10 +172,10 @@ export function useSelection(
      */
     const handleDragBox = useCallback((point: Point) => {
         if (dragStartRef.current) {
-            dragBoxRef.current = {
+            setDragBox({
                 start: dragStartRef.current,
                 end: point
-            };
+            });
         }
     }, []);
 
@@ -183,8 +183,8 @@ export function useSelection(
      * Complete drag box selection
      */
     const handleSelectionEnd = useCallback((point: Point) => {
-        if (dragBoxRef.current) {
-            const { start, end } = dragBoxRef.current;
+        if (dragBox) {
+            const { start, end } = dragBox;
 
             // Calculate box bounds
             const box = {
@@ -214,10 +214,10 @@ export function useSelection(
                 isMultiSelect: selectedIds.length > 1
             });
 
-            dragBoxRef.current = null;
+            setDragBox(null);
             dragStartRef.current = null;
         }
-    }, [elements]);
+    }, [elements, dragBox]);
 
     /**
      * Start moving selected objects
@@ -442,7 +442,7 @@ export function useSelection(
         selection,
         setSelection,
         transform,
-        dragBox: dragBoxRef.current,
+        dragBox,
         handleSelectionStart,
         handleDragBox,
         handleSelectionEnd,

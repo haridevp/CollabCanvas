@@ -43,7 +43,14 @@ try {
 }
 
 // Define the list of origins permitted to access this API
-const allowedOrigins = [frontendOrigin, frontendUrl, "http://localhost:5173", "http://localhost:3000", "https://haridevp.dev"];
+const allowedOrigins = [
+  frontendOrigin, 
+  frontendUrl, 
+  "http://localhost:5173", 
+  "http://localhost:3000", 
+  "https://haridevp.dev",
+  "https://sid-error.github.io"
+];
 
 /**
  * Socket.io initialization with CORS configuration.

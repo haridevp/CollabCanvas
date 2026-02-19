@@ -87,16 +87,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
     const containerRef = useRef<HTMLDivElement>(null);
 
     /**
-     * Auto-focus textarea and adjust size on mount
-     */
-    useEffect(() => {
-        if (textareaRef.current) {
-            textareaRef.current.focus();
-            adjustTextareaSize();
-        }
-    }, []);
-
-    /**
      * Adjust textarea size based on content
      */
     const adjustTextareaSize = (): void => {
@@ -106,6 +96,16 @@ const TextEditor: React.FC<TextEditorProps> = ({
             textareaRef.current.style.width = `${Math.max(200, textareaRef.current.scrollWidth)}px`;
         }
     };
+
+    /**
+     * Auto-focus textarea and adjust size on mount
+     */
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.focus();
+            adjustTextareaSize();
+        }
+    }, []);
 
     /**
      * Handle text change

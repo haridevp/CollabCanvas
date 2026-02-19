@@ -736,7 +736,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             ctx.textBaseline = 'top';
 
             // Calculate x position based on alignment
-            let x = textEl.x! / dpr;
+            const x = textEl.x! / dpr;
             if (textEl.format.textAlign === 'center') {
               // For center alignment, we'd need text width - simplified for now
             } else if (textEl.format.textAlign === 'right') {
@@ -745,7 +745,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
             // Draw text with decoration
             const lines = textEl.text.split('\n');
-            let y = textEl.y! / dpr;
+            const y = textEl.y! / dpr;
 
             lines.forEach((line, index) => {
               ctx.fillText(line, x, y + (index * textEl.format.fontSize * 1.2));
@@ -1001,7 +1001,6 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     ctx.lineTo(-arrowSize, arrowSize / 2);
     ctx.closePath();
     ctx.fillStyle = ctx.strokeStyle;
-    ctx.globalAlpha = ctx.globalAlpha;
     ctx.fill();
     ctx.restore();
   };
