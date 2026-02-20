@@ -341,7 +341,6 @@ const handleGoogleSuccess = async (credentialResponse: any) => {
                 </div>
               </div>
 
-              // Find the GoogleOAuthProvider wrapper in your return statement and update it:
               <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
                 <div className="mt-6">
                   <GoogleLogin 
