@@ -13,6 +13,7 @@ import { ContextMenu } from '../../components/ui/ContextMenu';
 import { useLayers } from '../../hooks/useLayers';
 import { LayerPanel } from '../../components/ui/LayerPanel';
 import { useObjectLocks } from '../../hooks/useObjectLocks';
+import { getToolIcon, getToolLabel, getToolColor } from '../../utils/toolIcons';
 import {
   Square, Circle, Edit2, Trash2, Grid, Minus, Plus, X, Lock,
   Eraser, MinusCircle, PlusCircle, Zap, ZapOff, Download, RotateCcw, RotateCw,
@@ -311,7 +312,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const [showGrid, setShowGrid] = useState<boolean>(false);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number; y: number; username: string }>>({});
+  const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number; y: number; username: string; tool?: string; color?: string }>>({});
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
   // Brush engine instance
@@ -466,11 +467,17 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       replaceElements([]);
     });
 
-    // Track remote user cursors
-    socket.on('cursor-update', ({ userId, x, y, username }) => {
+    // Track remote user cursors with tool info
+    socket.on('cursor-update', ({ userId, x, y, username, tool, color }) => {
       setRemoteCursors(prev => ({
         ...prev,
-        [userId]: { x, y, username: username || 'User' }
+        [userId]: {
+          x,
+          y,
+          username: username || 'User',
+          tool: tool || 'select',
+          color: color || '#3b82f6'
+        }
       }));
     });
 
@@ -1270,7 +1277,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     const { clientX, clientY } = e;
     const point = getCanvasCoordinates(clientX, clientY);
 
-    // Emit cursor movement
+    // Emit cursor movement with tool information
     if (socketRef.current && resolvedRoomIdRef.current && user) {
       socketRef.current.emit("cursor-move", {
         roomId: resolvedRoomIdRef.current,
@@ -1278,6 +1285,8 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         y: point.y,
         userId: user.id || user._id,
         username: user.username || user.fullName,
+        tool: tool, // Send current tool
+        color: color // Send user's current color for visual variety
       });
     }
 
@@ -2184,6 +2193,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       {Object.entries(remoteCursors).map(([id, pos]) => {
         // Don't show current user's cursor
         if (id === (user?.id || user?._id)) return null;
+
+        const ToolIcon = getToolIcon(pos.tool || 'select');
+        const toolColor = pos.color || getToolColor(pos.tool || 'select');
+
         return (
           <div
             key={id}
@@ -2194,16 +2207,28 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             }}
             aria-label={`${pos.username}'s cursor`}
           >
-            {/* Custom cursor SVG */}
+            {/* Custom cursor SVG with user's color */}
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z" fill="#3B82F6" stroke="white" />
+              <path d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z" fill={toolColor} stroke="white" />
             </svg>
-            <div className="ml-3 px-1.5 py-0.5 bg-blue-500 text-white text-[10px] rounded shadow-sm whitespace-nowrap">
-              {pos.username}
+
+            {/* Tooltip with username and tool */}
+            <div
+              className="ml-3 px-2 py-1 rounded shadow-sm whitespace-nowrap flex items-center gap-1.5"
+              style={{ backgroundColor: toolColor }}
+            >
+              <ToolIcon size={12} className="text-white" />
+              <span className="text-white text-[10px] font-medium">
+                {pos.username}
+              </span>
+              <span className="text-white/80 text-[8px]">
+                {getToolLabel(pos.tool || 'select')}
+              </span>
             </div>
           </div>
         );
       })}
+
       {/* Text Editor Overlay */}
       {isEditingText && textPosition && (
         <TextEditor
