@@ -15,10 +15,8 @@
     "docs": "typedoc"
   },
   "dependencies": {
-    "@react-oauth/google": "^0.13.4",
-    "@tailwindcss/postcss": "^4.1.18",
-    "axios": "^1.13.5",
     "@gsap/react": "^2.1.2",
+    "@react-oauth/google": "^0.13.4",
     "@tailwindcss/postcss": "^4.1.18",
     "axios": "^1.13.4",
     "class-variance-authority": "^0.7.1",
