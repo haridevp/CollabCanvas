@@ -16,6 +16,8 @@ import { useObjectLocks } from '../../hooks/useObjectLocks';
 import { getToolIcon, getToolLabel, getToolColor } from '../../utils/toolIcons';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { NetworkStatus } from '../../components/ui/NetworkStatus';
+import { useAutoSave } from '../../hooks/useAutoSave';
+import { SaveIndicator } from '../../components/ui/SaveIndicator';
 import {
   Square, Circle, Edit2, Trash2, Grid, Minus, Plus, X, Lock,
   Eraser, MinusCircle, PlusCircle, Zap, ZapOff, Download, RotateCcw, RotateCw,
@@ -422,6 +424,47 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     queueAction: queueAction // From useNetworkStatus
   });
 
+  const {
+    lastSaveTime,
+    isAutoSaveEnabled,
+    toggleAutoSave,
+    manualSave,
+    unsavedChanges,
+    isSaving: isAutoSaving,
+    lastError: saveError,
+    resetTimer
+  } = useAutoSave({
+    elements,
+    roomId: resolvedRoomIdRef.current,
+    enabled: true,
+    interval: 30000, // 30 seconds
+    onSave: async (elementsToSave, roomId) => {
+      // Custom save implementation
+      if (socketRef.current) {
+        socketRef.current.emit('save-canvas', {
+          roomId,
+          elements: elementsToSave,
+          timestamp: Date.now()
+        });
+      }
+    },
+    onSaveSuccess: (timestamp) => {
+      console.log('Canvas saved at', new Date(timestamp).toLocaleTimeString());
+    },
+    onSaveError: (error) => {
+      console.error('Save failed:', error);
+    },
+    showNotifications: true
+  });
+
+  /**
+ * Reset save timer when drawing actions are performed
+ */
+  const resetSaveTimer = useCallback(() => {
+    // Call the resetTimer from useAutoSave hook
+    resetTimer();
+  }, [resetTimer]);
+
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   /**
  * Handle context menu (right-click)
@@ -465,7 +508,6 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         replaceElements(drawingData);
       }
     });
-
 
     // Handle drawing updates from other users
     socket.on("drawing-update", (data: { element?: DrawingElement; userId?: string }) => {
@@ -511,6 +553,25 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       });
     });
 
+    // Handle save confirmation from server
+    socket.on('save-confirmed', ({ timestamp }) => {
+      console.log('Save confirmed by server', new Date(timestamp).toLocaleTimeString());
+      // You can optionally update lastSaveTime here if needed
+      // This is already handled by useAutoSave's onSaveSuccess
+    });
+
+    // Handle save error from server
+    socket.on('save-error', ({ error }) => {
+      console.error('Server save error:', error);
+      // You could show a toast notification here
+    });
+
+    // Handle auto-save trigger from server (if server requests a save)
+    socket.on('request-save', () => {
+      console.log('Server requested save');
+      manualSave();
+    });
+
     // Expose the socket to the parent component
     if (onSocketReady) {
       onSocketReady(socket);
@@ -533,6 +594,11 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
         e.preventDefault();
         redo();
+      }
+      // Save: Ctrl+S
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        manualSave();
       }
     };
 
@@ -1096,6 +1162,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
     // Add to history and emit to server
     setElements([...elements, textElement]);
+    resetSaveTimer();
 
     if (socketRef.current && resolvedRoomIdRef.current) {
       socketRef.current.emit("drawing-update", {
@@ -1146,6 +1213,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
     // Add to history and emit to server
     setElements([...elements, imageElement]);
+    resetSaveTimer();
 
     if (socketRef.current && resolvedRoomIdRef.current) {
       socketRef.current.emit("drawing-update", {
@@ -1169,6 +1237,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
    * @dependencies tool, color, strokeWidth, opacity, getCanvasCoordinates
    */
   const startDrawing = useCallback((e: React.MouseEvent): void => {
+    resetSaveTimer();
     const point = getCanvasCoordinates(e.clientX, e.clientY);
 
     // ----------------------------------
@@ -1295,6 +1364,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
    * @param {React.MouseEvent} e - Mouse move event
    */
   const draw = useCallback((e: React.MouseEvent): void => {
+    resetSaveTimer();
     const { clientX, clientY } = e;
     const point = getCanvasCoordinates(clientX, clientY);
 
@@ -1528,6 +1598,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       };
 
       setElements((prev) => [...prev, elementWithLayer]);
+      resetSaveTimer();
 
       if (socketRef.current && resolvedRoomIdRef.current) {
         socketRef.current.emit("drawing-update", {
@@ -2233,6 +2304,19 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             )}
           </span>
         )}
+      </div>
+
+      {/* Save Indicator - positioned above the network status */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+        <SaveIndicator
+          lastSaveTime={lastSaveTime}
+          unsavedChanges={unsavedChanges}
+          isSaving={isAutoSaving}
+          error={saveError}
+          onManualSave={manualSave}
+          onToggleAutoSave={toggleAutoSave}
+          isAutoSaveEnabled={isAutoSaveEnabled}
+        />
       </div>
 
       {/* Network Status Indicator */}
