@@ -22,6 +22,8 @@ interface UseObjectLocksProps {
     username: string | undefined;
     userColor?: string;
     lockTimeout?: number; // milliseconds before auto-release
+    isConnected?: boolean; // Add this for offline support
+    queueAction?: (type: string, data: any) => string; // Add this for offline queue
 }
 
 /**
@@ -36,7 +38,9 @@ export function useObjectLocks({
     userId,
     username,
     userColor = '#3b82f6',
-    lockTimeout = 30000 // 30 seconds default
+    lockTimeout = 30000, // 30 seconds default
+    isConnected = true,
+    queueAction
 }: UseObjectLocksProps) {
     const [lockedObjects, setLockedObjects] = useState<Record<string, LockInfo>>({});
     const [myLocks, setMyLocks] = useState<Set<string>>(new Set());
@@ -58,15 +62,21 @@ export function useObjectLocks({
      * Release a lock on an object
      */
     const releaseLock = useCallback((elementId: string, isAutoRelease: boolean = false) => {
-        if (!socket || !roomId || !userId) return;
+        if (!roomId || !userId) return;
 
         if (myLocks.has(elementId)) {
-            socket.emit('release-lock', {
+            const releaseData = {
                 roomId,
                 elementId,
                 userId,
                 isAutoRelease
-            });
+            };
+
+            if (socket && isConnected) {
+                socket.emit('release-lock', releaseData);
+            } else if (queueAction) {
+                queueAction('release-lock', releaseData);
+            }
 
             // Optimistically update local state
             setMyLocks(prev => {
@@ -77,7 +87,7 @@ export function useObjectLocks({
 
             clearLockTimeout(elementId);
         }
-    }, [socket, roomId, userId, myLocks, clearLockTimeout]);
+    }, [socket, roomId, userId, myLocks, clearLockTimeout, isConnected, queueAction]);
 
     /**
      * Set timeout to auto-release a lock
@@ -91,13 +101,13 @@ export function useObjectLocks({
                 releaseLock(elementId, true); // true = auto-release
             }
         }, lockTimeout);
-    }, [lockTimeout, myLocks, releaseLock]);
+    }, [lockTimeout, myLocks]);
 
     /**
      * Request a lock on an object
      */
     const requestLock = useCallback((elementId: string) => {
-        if (!socket || !roomId || !userId) return false;
+        if (!roomId || !userId) return false;
 
         // Don't request if already locked by self
         if (myLocks.has(elementId)) {
@@ -106,16 +116,27 @@ export function useObjectLocks({
             return true;
         }
 
-        socket.emit('request-lock', {
+        const lockData = {
             roomId,
             elementId,
             userId,
             username,
             color: userColor
-        });
+        };
+
+        if (socket && isConnected) {
+            socket.emit('request-lock', lockData);
+        } else if (queueAction) {
+            // Queue for when we're back online
+            queueAction('request-lock', lockData);
+        }
 
         return true;
-    }, [socket, roomId, userId, username, userColor, myLocks, setLockTimeout]);
+    }, [socket, roomId, userId, username, userColor, myLocks, setLockTimeout, isConnected, queueAction]);
+
+    /**
+     * Release a lock on an object
+     */
 
     /**
      * Release all locks held by current user

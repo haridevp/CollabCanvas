@@ -14,6 +14,8 @@ import { useLayers } from '../../hooks/useLayers';
 import { LayerPanel } from '../../components/ui/LayerPanel';
 import { useObjectLocks } from '../../hooks/useObjectLocks';
 import { getToolIcon, getToolLabel, getToolColor } from '../../utils/toolIcons';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { NetworkStatus } from '../../components/ui/NetworkStatus';
 import {
   Square, Circle, Edit2, Trash2, Grid, Minus, Plus, X, Lock,
   Eraser, MinusCircle, PlusCircle, Zap, ZapOff, Download, RotateCcw, RotateCw,
@@ -329,7 +331,6 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     lineJoin: "round",
   });
 
-
   const {
     selection,
     setSelection,
@@ -386,6 +387,24 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   } = useLayers(elements, setElements);
 
   const {
+    isOnline,
+    isConnected,
+    latency,
+    packetLoss,
+    actionQueue,
+    isSyncing,
+    queueAction,
+    processQueue,
+    clearQueue,
+    getQueueStatus
+  } = useNetworkStatus(socketRef.current, () => {
+    // On reconnect callback
+    console.log('Connection restored, processing queue...');
+    processQueue();
+  });
+
+  const {
+    lockedObjects,
     myLocks,
     requestLock,
     releaseLock,
@@ -397,8 +416,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     roomId: resolvedRoomIdRef.current,
     userId: user?.id || user?._id,
     username: user?.username || user?.fullName,
-    userColor: color, // Use current brush color for visual distinction
-    lockTimeout: 30000 // 30 seconds
+    userColor: color,
+    lockTimeout: 30000,
+    isConnected: isConnected, // From useNetworkStatus
+    queueAction: queueAction // From useNetworkStatus
   });
 
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
@@ -1277,91 +1298,145 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     const { clientX, clientY } = e;
     const point = getCanvasCoordinates(clientX, clientY);
 
+    const currentTime = Date.now();
+
+    // --------------------------------------------------
     // Emit cursor movement with tool information
-    if (socketRef.current && resolvedRoomIdRef.current && user) {
-      socketRef.current.emit("cursor-move", {
+    // --------------------------------------------------
+    if (user) {
+      const cursorData = {
         roomId: resolvedRoomIdRef.current,
         x: point.x,
         y: point.y,
         userId: user.id || user._id,
         username: user.username || user.fullName,
-        tool: tool, // Send current tool
-        color: color // Send user's current color for visual variety
-      });
+        tool: tool,
+        color: color,
+      };
+
+      if (socketRef.current && resolvedRoomIdRef.current && isConnected) {
+        socketRef.current.emit("cursor-move", cursorData);
+      } else {
+        // Optional: Usually DO NOT queue high-frequency cursor events
+        // queueAction("cursor-move", cursorData);
+      }
     }
 
-    // Handle selection drag box
-    if (tool === 'select' && dragBox && !transform.isTransforming) {
+    // --------------------------------------------------
+    // Selection Drag Box
+    // --------------------------------------------------
+    if (tool === "select" && dragBox && !transform.isTransforming) {
       handleDragBox(point);
       redrawCanvas();
       return;
     }
 
-    // Handle transformation
+    // --------------------------------------------------
+    // Transformation
+    // --------------------------------------------------
     if (transform.isTransforming) {
       handleTransform(point);
       redrawCanvas();
       return;
     }
 
-    // Handle drawing
+    // --------------------------------------------------
+    // Drawing Guard
+    // --------------------------------------------------
     if (!isDrawing || !currentElement) return;
 
-    const currentTime = Date.now();
     const timeDelta = currentTime - lastTimeRef.current;
 
+    // --------------------------------------------------
+    // Pencil / Eraser (Brush Engine)
+    // --------------------------------------------------
     if ((tool === "pencil" || tool === "eraser") && brushEngineRef.current) {
-      // Calculate velocity for pressure simulation
       const velocity = calculateVelocity(
         point,
         lastPointRef.current!,
-        timeDelta,
+        timeDelta
       );
 
-      // Simulate pressure based on velocity (slower = higher pressure)
+      // Simulated pressure (slower movement = thicker stroke)
       const pressure = Math.max(0.1, Math.min(1, 100 / (velocity + 10)));
 
-      // Add point with simulated pressure to brush engine
       brushEngineRef.current.addPoint(point, pressure);
 
-      // Update current element with brush engine points
       const updatedElement: DrawingElement = {
         ...currentElement,
         points: brushEngineRef.current.getPoints(),
-        strokeWidth: brushEngineRef.current.calculateStrokeWidth(velocity),
+        strokeWidth:
+          brushEngineRef.current.calculateStrokeWidth(velocity),
       };
 
       setCurrentElement(updatedElement);
       redrawCanvas();
 
-      // Emit real-time update to other users (throttled to 50ms)
-      if (socketRef.current && resolvedRoomIdRef.current && currentTime - lastEmitTimeRef.current > 50) {
-        socketRef.current.emit("drawing-update", {
+      // ----------------------------------------------
+      // Throttled Real-time Emit (50ms)
+      // ----------------------------------------------
+      if (
+        socketRef.current &&
+        resolvedRoomIdRef.current &&
+        currentTime - lastEmitTimeRef.current > 50
+      ) {
+        const payload = {
           roomId: resolvedRoomIdRef.current,
           element: updatedElement,
-          userId: user.id || user._id,
+          userId: user?.id || user?._id,
           saveToDb: false,
-        });
+        };
+
+        if (isConnected) {
+          socketRef.current.emit("drawing-update", payload);
+        } else {
+          queueAction("drawing-update", payload);
+        }
+
         lastEmitTimeRef.current = currentTime;
       }
     }
+
+    // --------------------------------------------------
+    // Shape Tools (Rect, Circle, Line, Arrow)
+    // --------------------------------------------------
     else {
-      // Update shape dimensions for shape tools
       const updatedElement: DrawingElement = {
         ...currentElement,
         width: point.x - (currentElement.x || 0),
         height: point.y - (currentElement.y || 0),
-        points: (currentElement.type === 'line' || currentElement.type === 'arrow')
-          ? [{ x: currentElement.x!, y: currentElement.y! }, point]
-          : undefined,
+        points:
+          currentElement.type === "line" ||
+            currentElement.type === "arrow"
+            ? [
+              { x: currentElement.x!, y: currentElement.y! },
+              point,
+            ]
+            : undefined,
       };
+
       setCurrentElement(updatedElement);
       redrawCanvas();
+
+      // Optional: You can also throttle emit shapes in real-time if needed
     }
 
     lastPointRef.current = point;
     lastTimeRef.current = currentTime;
-  }, [isDrawing, currentElement, tool, user, getCanvasCoordinates, transform, handleTransform, handleDragBox, dragBox]);
+  }, [
+    isDrawing,
+    currentElement,
+    tool,
+    user,
+    color,
+    isConnected,
+    dragBox,
+    transform,
+    getCanvasCoordinates,
+    handleTransform,
+    handleDragBox,
+    redrawCanvas,
+  ]);
 
   /**
    * Mouse Handle (up)
@@ -1951,7 +2026,11 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           onClick={() => {
             setElements([]);
             if (socketRef.current && resolvedRoomIdRef.current) {
-              socketRef.current.emit("clear-canvas", { roomId: resolvedRoomIdRef.current });
+              if (isConnected) {
+                socketRef.current.emit("clear-canvas", { roomId: resolvedRoomIdRef.current });
+              } else {
+                queueAction('clear-canvas', { roomId: resolvedRoomIdRef.current });
+              }
             }
           }}
           className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
@@ -2155,6 +2234,22 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           </span>
         )}
       </div>
+
+      {/* Network Status Indicator */}
+      <NetworkStatus
+        isOnline={isOnline}
+        isConnected={isConnected}
+        latency={latency}
+        packetLoss={packetLoss}
+        queueLength={actionQueue.length}
+        isSyncing={isSyncing}
+        onRetry={() => {
+          if (socketRef.current && !isConnected) {
+            socketRef.current.connect();
+          }
+        }}
+        onSync={processQueue}
+      />
 
       {/* Main drawing canvas */}
       <canvas
