@@ -1,6 +1,53 @@
 import api from '../api/axios';
 
 /**
+ * Common response interface for authentication APIs
+ */
+export interface AuthResponse {
+  success: boolean;
+  message: string;
+  token?: string;
+  user?: {
+    id: string;
+    username: string;
+    email: string;
+    fullName?: string;
+    displayName?: string;
+    avatar?: string | null;
+    bio?: string;
+  };
+}
+
+/**
+ * Interface for user search results
+ */
+export interface SearchUser {
+  id: string;
+  username: string;
+  displayName?: string;
+  email?: string;
+  avatarUrl?: string;
+}
+
+/**
+ * Response interface for user search API
+ */
+export interface SearchResponse extends AuthResponse {
+  users: SearchUser[];
+}
+
+/**
+ * Response interface for room invitations
+ */
+export interface InviteResponse extends AuthResponse {
+  results: {
+    sent: number;
+    skipped: number;
+    errors: string[];
+  };
+}
+
+/**
  * Authentication Service
  * 
  * Service functions for handling user authentication, registration,
@@ -15,7 +62,7 @@ import api from '../api/axios';
  * @async
  * @function registerUser
  * @param {unknown} userData - User registration data including email, password, username, etc.
- * @returns {Promise<unknown>} Response data from the registration API
+ * @returns {Promise<AuthResponse>} Response data from the registration API
  * 
  * @example
  * ```typescript
@@ -30,7 +77,7 @@ import api from '../api/axios';
  * }
  * ```
  */
-export const registerUser = async (userData: unknown): Promise<unknown> => {
+export const registerUser = async (userData: unknown): Promise<AuthResponse> => {
   const response = await api.post('/auth/register', userData);
   return response.data;
 };
@@ -42,7 +89,7 @@ export const registerUser = async (userData: unknown): Promise<unknown> => {
  * @function loginWithEmailPassword
  * @param {unknown} credentials - Login credentials containing email and password
  * @param {unknown} activityData - Additional activity tracking data (device info, location, etc.)
- * @returns {Promise<unknown>} Response data containing authentication token and user info
+ * @returns {Promise<AuthResponse>} Response data containing authentication token and user info
  * 
  * @example
  * ```typescript
@@ -56,7 +103,7 @@ export const registerUser = async (userData: unknown): Promise<unknown> => {
  * }
  * ```
  */
-export const loginWithEmailPassword = async (credentials: unknown, activityData: unknown): Promise<unknown> => {
+export const loginWithEmailPassword = async (credentials: unknown, activityData: unknown): Promise<AuthResponse> => {
   const response = await api.post('/auth/login', { ...credentials as object, activityData });
   return response.data;
 };
@@ -67,7 +114,7 @@ export const loginWithEmailPassword = async (credentials: unknown, activityData:
  * @async
  * @function checkUsernameAvailability
  * @param {string} username - Username to check for availability
- * @returns {Promise<unknown>} Response indicating if username is available
+ * @returns {Promise<AuthResponse>} Response indicating if username is available
  * 
  * @example
  * ```typescript
@@ -79,7 +126,7 @@ export const loginWithEmailPassword = async (credentials: unknown, activityData:
  * }
  * ```
  */
-export const checkUsernameAvailability = async (username: string): Promise<unknown> => {
+export const checkUsernameAvailability = async (username: string): Promise<AuthResponse> => {
   const response = await api.get(`/auth/check-username/${username}`);
   return response.data;
 };
@@ -93,7 +140,7 @@ export const checkUsernameAvailability = async (username: string): Promise<unkno
  * @param {string} [profileData.displayName] - New display name
  * @param {string} [profileData.bio] - New biography/description
  * @param {string | null} [profileData.avatar] - New avatar URL or null to remove
- * @returns {Promise<unknown>} Response indicating success or failure
+ * @returns {Promise<AuthResponse>} Response indicating success or failure
  * 
  * @example
  * ```typescript
@@ -108,7 +155,7 @@ export const updateProfile = async (profileData: {
   displayName?: string;
   bio?: string;
   avatar?: string | null;
-}): Promise<unknown> => {
+}): Promise<AuthResponse> => {
   try {
     const response = await api.put('/auth/update-profile', profileData);
     return response.data;
@@ -127,7 +174,7 @@ export const updateProfile = async (profileData: {
  * @async
  * @function verifyEmailToken
  * @param {string} token - Email verification token sent to user's email
- * @returns {Promise<unknown>} Response indicating verification success or failure
+ * @returns {Promise<AuthResponse>} Response indicating verification success or failure
  * 
  * @example
  * ```typescript
@@ -137,13 +184,16 @@ export const updateProfile = async (profileData: {
  * }
  * ```
  */
-export const verifyEmailToken = async (token: string): Promise<unknown> => {
+export const verifyEmailToken = async (token: string): Promise<AuthResponse> => {
   try {
     const response = await api.post('/auth/verify-email', { token });
     return response.data;
   } catch (error: unknown) {
-    const err = error as { response?: { data?: { message?: string } } };
-    return err.response?.data || { success: false, message: "Verification failed" };
+    const err = error as { response?: { data?: { message?: string, success?: boolean } } };
+    return {
+      success: err.response?.data?.success ?? false,
+      message: err.response?.data?.message || "Verification failed"
+    };
   }
 };
 
@@ -172,7 +222,7 @@ export const getDeviceType = (): string => {
  * @async
  * @function forgotPassword
  * @param {string} email - User's email address to send reset instructions
- * @returns {Promise<unknown>} Response indicating if reset email was sent
+ * @returns {Promise<AuthResponse>} Response indicating if reset email was sent
  * 
  * @example
  * ```typescript
@@ -182,14 +232,14 @@ export const getDeviceType = (): string => {
  * }
  * ```
  */
-export const forgotPassword = async (email: string): Promise<unknown> => {
+export const forgotPassword = async (email: string): Promise<AuthResponse> => {
   try {
     const response = await api.post('/auth/forgot-password', { email });
     return response.data;
   } catch (error: unknown) {
-    const err = error as { response?: { data?: { message?: string } } };
+    const err = error as { response?: { data?: { message?: string, success?: boolean } } };
     return {
-      success: false,
+      success: err.response?.data?.success ?? false,
       message: err.response?.data?.message || 'Failed to send reset email. Please try again.',
     };
   }
@@ -202,7 +252,7 @@ export const forgotPassword = async (email: string): Promise<unknown> => {
  * @function resetPassword
  * @param {string} token - Password reset token from email
  * @param {string} password - New password to set
- * @returns {Promise<unknown>} Response indicating if password was reset successfully
+ * @returns {Promise<AuthResponse>} Response indicating if password was reset successfully
  * 
  * @example
  * ```typescript
@@ -212,14 +262,14 @@ export const forgotPassword = async (email: string): Promise<unknown> => {
  * }
  * ```
  */
-export const resetPassword = async (token: string, password: string): Promise<unknown> => {
+export const resetPassword = async (token: string, password: string): Promise<AuthResponse> => {
   try {
     const response = await api.post('/auth/reset-password', { token, password });
     return response.data;
   } catch (error: unknown) {
-    const err = error as { response?: { data?: { message?: string } } };
+    const err = error as { response?: { data?: { message?: string, success?: boolean } } };
     return {
-      success: false,
+      success: err.response?.data?.success ?? false,
       message: err.response?.data?.message || 'Failed to reset password. Please try again.',
     };
   }
@@ -231,7 +281,7 @@ export const resetPassword = async (token: string, password: string): Promise<un
  * @async
  * @function searchUsers
  * @param {string} query - Search query string
- * @returns {Promise<unknown>} Response containing search results
+ * @returns {Promise<SearchResponse>} Response containing search results
  * 
  * @example
  * ```typescript
@@ -241,14 +291,14 @@ export const resetPassword = async (token: string, password: string): Promise<un
  * }
  * ```
  */
-export const searchUsers = async (query: string): Promise<unknown> => {
+export const searchUsers = async (query: string): Promise<SearchResponse> => {
   try {
     const response = await api.get(`/auth/search?q=${encodeURIComponent(query)}`);
     return response.data;
   } catch (error: unknown) {
-    const err = error as { response?: { data?: { message?: string } } };
+    const err = error as { response?: { data?: { message?: string, success?: boolean } } };
     return {
-      success: false,
+      success: err.response?.data?.success ?? false,
       message: err.response?.data?.message || 'Search failed',
       users: []
     };
@@ -262,7 +312,7 @@ export const searchUsers = async (query: string): Promise<unknown> => {
  * @function inviteUsersToRoom
  * @param {string} roomId - ID of the room to invite users to
  * @param {string[]} userIds - Array of user IDs to invite
- * @returns {Promise<unknown>} Response indicating invitation results
+ * @returns {Promise<InviteResponse>} Response indicating invitation results
  * 
  * @example
  * ```typescript
@@ -272,14 +322,14 @@ export const searchUsers = async (query: string): Promise<unknown> => {
  * }
  * ```
  */
-export const inviteUsersToRoom = async (roomId: string, userIds: string[]): Promise<unknown> => {
+export const inviteUsersToRoom = async (roomId: string, userIds: string[]): Promise<InviteResponse> => {
   try {
     const response = await api.post(`/rooms/${roomId}/invite`, { userIds });
     return response.data;
   } catch (error: unknown) {
-    const err = error as { response?: { data?: { message?: string } } };
+    const err = error as { response?: { data?: { message?: string, success?: boolean } } };
     return {
-      success: false,
+      success: err.response?.data?.success ?? false,
       message: err.response?.data?.message || 'Failed to send invites',
       results: { sent: 0, skipped: 0, errors: [] }
     };

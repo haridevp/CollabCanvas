@@ -10,8 +10,20 @@ import ImageUploader from '../../components/ui/ImageUploader';
 import { useSelection } from '../../hooks/useSelection';
 import { useClipboard } from '../../hooks/useClipboard';
 import { ContextMenu } from '../../components/ui/ContextMenu';
+import { useLayers } from '../../hooks/useLayers';
+import { LayerPanel } from '../../components/ui/LayerPanel';
+import { useObjectLocks } from '../../hooks/useObjectLocks';
+import { getToolIcon, getToolLabel, getToolColor } from '../../utils/toolIcons';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { NetworkStatus } from '../../components/ui/NetworkStatus';
+import { useAutoSave } from '../../hooks/useAutoSave';
+import { SaveIndicator } from '../../components/ui/SaveIndicator';
+import { SpatialIndex } from '../../utils/spatialIndex';
+import { compressDrawingData, decompressDrawingData, shouldCompress } from '../../utils/payloadCompression';
+import { getVisibleElements, getViewportStats } from '../../utils/viewportCulling';
+import { isPointInElement } from '../../utils/geometry';
 import {
-  Square, Circle, Edit2, Trash2, Grid, Minus, Plus,
+  Square, Circle, Edit2, Trash2, Grid, Minus, Plus, X, Lock,
   Eraser, MinusCircle, PlusCircle, Zap, ZapOff, Download, RotateCcw, RotateCw,
   Type, Minus as LineIcon, ArrowRight, Image as ImageIcon, Move, Copy, Scissors,
   ArrowUp, ArrowDown, Trash, Clipboard
@@ -252,6 +264,16 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const containerRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
 
+  // Resolved room ID (canonical MongoDB _id returned by the backend socket)
+  const resolvedRoomIdRef = useRef<string | undefined>(roomId);
+
+  // Performance optimization refs
+  const spatialIndexRef = useRef<SpatialIndex | null>(null);
+  const lastRenderTimeRef = useRef<number>(0);
+  const renderCountRef = useRef<number>(0);
+  const [showPerfStats, setShowPerfStats] = useState<boolean>(false);
+  const [visibleElementCount, setVisibleElementCount] = useState<number>(0);
+
   // Text Input
   const [isEditingText, setIsEditingText] = useState<boolean>(false);
   const [textPosition, setTextPosition] = useState<Point | null>(null);
@@ -283,9 +305,6 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const [tool, setTool] = useState<
     "pencil" | "rectangle" | "circle" | "line" | "arrow" | "text" | "eraser" | "select" | "image"
   >("pencil");
-  const [lockedObjects, setLockedObjects] = useState<
-    Record<string, { userId: string; username: string; color: string }>
-  >({});
 
   // Image Uploading State
   const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
@@ -309,7 +328,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const [showGrid, setShowGrid] = useState<boolean>(false);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number; y: number; username: string }>>({});
+  const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number; y: number; username: string; tool?: string; color?: string }>>({});
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
   // Brush engine instance
@@ -325,7 +344,6 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     lineCap: "round",
     lineJoin: "round",
   });
-
 
   const {
     selection,
@@ -344,7 +362,6 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     duplicateSelected,
     bringToFront,
     sendToBack,
-    findElementAtPoint
   } = useSelection(elements, setElements, zoomLevel, panOffset);
 
   const {
@@ -363,6 +380,127 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     })
   );
 
+  const {
+    layerState,
+    createLayer,
+    deleteLayer,
+    duplicateLayer,
+    toggleLayerVisibility,
+    toggleLayerLock,
+    setActiveLayer,
+    renameLayer,
+    setLayerOpacity,
+    setLayerBlendMode,
+    reorderLayers,
+    mergeLayerDown,
+    getLayerElements,
+    isLayerEditable,
+    updateLayerElementCounts,
+    setLayerState
+  } = useLayers(elements, setElements);
+
+  const {
+    isOnline,
+    isConnected,
+    latency,
+    packetLoss,
+    actionQueue,
+    isSyncing,
+    queueAction,
+    processQueue,
+    clearQueue,
+    getQueueStatus
+  } = useNetworkStatus(socketRef.current, () => {
+    // On reconnect callback
+    console.log('Connection restored, processing queue...');
+    processQueue();
+  });
+
+  const {
+    lockedObjects,
+    myLocks,
+    requestLock,
+    releaseLock,
+    isLocked,
+    isLockedByMe,
+    getLockInfo
+  } = useObjectLocks({
+    socket: socketRef.current,
+    roomId: resolvedRoomIdRef.current,
+    userId: user?.id || user?._id,
+    username: user?.username || user?.fullName,
+    userColor: color,
+    lockTimeout: 30000,
+    isConnected: isConnected, // From useNetworkStatus
+    queueAction: queueAction // From useNetworkStatus
+  });
+
+  const {
+    lastSaveTime,
+    isAutoSaveEnabled,
+    toggleAutoSave,
+    manualSave,
+    unsavedChanges,
+    isSaving: isAutoSaving,
+    lastError: saveError,
+    resetTimer
+  } = useAutoSave({
+    elements,
+    roomId: resolvedRoomIdRef.current,
+    enabled: true,
+    interval: 30000, // 30 seconds
+    onSave: async (elementsToSave, roomId) => {
+      // Custom save implementation
+      if (socketRef.current) {
+        socketRef.current.emit('save-canvas', {
+          roomId,
+          elements: elementsToSave,
+          timestamp: Date.now()
+        });
+      }
+    },
+    onSaveSuccess: (timestamp) => {
+      console.log('Canvas saved at', new Date(timestamp).toLocaleTimeString());
+    },
+    onSaveError: (error) => {
+      console.error('Save failed:', error);
+    },
+    showNotifications: true
+  });
+
+  const findElementAtPoint = useCallback((point: Point): DrawingElement | null => {
+    // First try using spatial index for speed
+    if (spatialIndexRef.current) {
+      const candidates = spatialIndexRef.current.queryPoint(point, 10);
+
+      // Test candidates in reverse order (top-most first)
+      for (let i = candidates.length - 1; i >= 0; i--) {
+        const el = candidates[i];
+        if (isPointInElement(point, el)) {
+          return el;
+        }
+      }
+    }
+
+    // Fallback to linear search from useSelection's version
+    // We need to import isPointInElement from useSelection or reimplement it
+    for (let i = elements.length - 1; i >= 0; i--) {
+      if (isPointInElement(point, elements[i])) {
+        return elements[i];
+      }
+    }
+
+    return null;
+  }, [elements, spatialIndexRef]);
+
+  /**
+ * Reset save timer when drawing actions are performed
+ */
+  const resetSaveTimer = useCallback(() => {
+    // Call the resetTimer from useAutoSave hook
+    resetTimer();
+  }, [resetTimer]);
+
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   /**
  * Handle context menu (right-click)
@@ -376,8 +514,25 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     }
   }, [tool]);
 
-  // Resolved room ID (canonical MongoDB _id returned by the backend socket)
-  const resolvedRoomIdRef = useRef<string | undefined>(roomId);
+  // Update spatial index when elements change
+  useEffect(() => {
+    if (!spatialIndexRef.current) {
+      spatialIndexRef.current = new SpatialIndex(100);
+    }
+
+    const index = spatialIndexRef.current;
+    index.clear();
+
+    // Insert all elements into spatial index
+    elements.forEach(el => {
+      index.insert(el);
+    });
+
+    // Log stats in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Spatial index stats:', index.getStats());
+    }
+  }, [elements]);
 
   /**
    * Initialize WebSocket connection for real-time collaboration
@@ -409,20 +564,30 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       }
     });
 
-
     // Handle drawing updates from other users
-    socket.on("drawing-update", (data: { element?: DrawingElement; userId?: string }) => {
-      if (!data.element) return;
+    // Handle drawing updates from other users
+    socket.on("drawing-update", (data: any) => {
+      let element: DrawingElement | undefined;
+
+      // Handle compressed data
+      if (data.compressed && data.elements) {
+        const decompressed = decompressDrawingData(data.elements);
+        element = decompressed[0];
+      } else {
+        element = data.element;
+      }
+
+      if (!element) return;
 
       const myId = user.id || user._id;
-      if (data.userId === myId) return; // ✅ ignore self
+      if (data.userId === myId) return;
 
       replaceElements((prev) => {
-        const exists = prev.find((el) => el.id === data.element!.id);
+        const exists = prev.find((el) => el.id === element!.id);
         if (exists) {
-          return prev.map((el) => (el.id === data.element!.id ? data.element! : el));
+          return prev.map((el) => (el.id === element!.id ? element! : el));
         }
-        return [...prev, data.element!];
+        return [...prev, element!];
       });
     });
 
@@ -431,11 +596,17 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       replaceElements([]);
     });
 
-    // Track remote user cursors
-    socket.on('cursor-update', ({ userId, x, y, username }) => {
+    // Track remote user cursors with tool info
+    socket.on('cursor-update', ({ userId, x, y, username, tool, color }) => {
       setRemoteCursors(prev => ({
         ...prev,
-        [userId]: { x, y, username: username || 'User' }
+        [userId]: {
+          x,
+          y,
+          username: username || 'User',
+          tool: tool || 'select',
+          color: color || '#3b82f6'
+        }
       }));
     });
 
@@ -446,6 +617,25 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         delete next[userId];
         return next;
       });
+    });
+
+    // Handle save confirmation from server
+    socket.on('save-confirmed', ({ timestamp }) => {
+      console.log('Save confirmed by server', new Date(timestamp).toLocaleTimeString());
+      // You can optionally update lastSaveTime here if needed
+      // This is already handled by useAutoSave's onSaveSuccess
+    });
+
+    // Handle save error from server
+    socket.on('save-error', ({ error }) => {
+      console.error('Server save error:', error);
+      // You could show a toast notification here
+    });
+
+    // Handle auto-save trigger from server (if server requests a save)
+    socket.on('request-save', () => {
+      console.log('Server requested save');
+      manualSave();
     });
 
     // Expose the socket to the parent component
@@ -470,6 +660,11 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
         e.preventDefault();
         redo();
+      }
+      // Save: Ctrl+S
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        manualSave();
       }
     };
 
@@ -542,6 +737,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     dpr: number
   ): void => {
     elementsToDraw.forEach((el) => {
+      ctx.save();
       ctx.beginPath();
       ctx.strokeStyle = el.color;
       ctx.lineWidth = el.strokeWidth;
@@ -563,11 +759,16 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       switch (el.type) {
         case "pencil":
         case "eraser":
+          if (el.type === "eraser") {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.strokeStyle = "rgba(0,0,0,1)";
+          }
           if (el.points && el.points.length > 1) {
             ctx.moveTo(el.points[0].x / dpr, el.points[0].y / dpr);
             for (let i = 1; i < el.points.length; i++) {
               ctx.lineTo(el.points[i].x / dpr, el.points[i].y / dpr);
             }
+            ctx.stroke();
           }
           break;
 
@@ -594,9 +795,9 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             el.width !== undefined &&
             el.height !== undefined
           ) {
-            const radius =
-              Math.sqrt(Math.pow(el.width, 2) + Math.pow(el.height, 2)) / dpr;
+            const radius = Math.sqrt(el.width ** 2 + el.height ** 2) / dpr;
             ctx.arc(el.x / dpr, el.y / dpr, Math.abs(radius), 0, 2 * Math.PI);
+            ctx.stroke();
           }
           break;
 
@@ -604,7 +805,6 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         case "arrow":
           if (el.points && el.points.length === 2) {
             const [start, end] = el.points;
-            ctx.beginPath();
             ctx.moveTo(start.x / dpr, start.y / dpr);
             ctx.lineTo(end.x / dpr, end.y / dpr);
             ctx.stroke();
@@ -615,9 +815,45 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             }
           }
           break;
-      }
 
-      ctx.stroke();
+        case "text": {
+          const textEl = el as TextElement;
+          ctx.font = `${textEl.format.fontStyle} ${textEl.format.fontWeight} ${textEl.format.fontSize}px ${textEl.format.fontFamily}`;
+          ctx.fillStyle = textEl.format.color;
+          ctx.textAlign = textEl.format.textAlign;
+          ctx.textBaseline = "top";
+
+          const lines = textEl.text.split("\n");
+          const x = textEl.x! / dpr;
+          const y = textEl.y! / dpr;
+
+          lines.forEach((line, index) => {
+            ctx.fillText(
+              line,
+              x,
+              y + index * textEl.format.fontSize * 1.2
+            );
+          });
+          break;
+        }
+
+        case "image": {
+          const imageEl = el as ImageElement;
+          const img = new Image();
+          img.src = imageEl.src;
+          if (img.complete) {
+            ctx.drawImage(
+              img,
+              imageEl.x! / dpr,
+              imageEl.y! / dpr,
+              imageEl.width / dpr,
+              imageEl.height / dpr
+            );
+          }
+          break;
+        }
+      }
+      ctx.restore();
     });
   }, []);
 
@@ -634,266 +870,88 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Clear entire canvas
+    // Performance tracking
+    const startTime = performance.now();
+    renderCountRef.current++;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw grid background
     drawGrid(ctx, canvas.width, canvas.height);
 
-    // Apply transformations for elements
     ctx.save();
     const dpr = window.devicePixelRatio || 1;
+
     ctx.scale(1 / dpr, 1 / dpr);
     ctx.translate(panOffset.x * zoomLevel * dpr, panOffset.y * zoomLevel * dpr);
     ctx.scale(zoomLevel, zoomLevel);
 
-    // Enable anti-aliasing for smoother edges
     if (brushConfig.antiAliasing) {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
     }
 
-    // Draw all saved elements
-    elements.forEach((el) => {
-      ctx.beginPath();
-      ctx.strokeStyle = el.color;
-      ctx.lineWidth = el.strokeWidth;
-      ctx.lineCap = el.strokeStyle?.lineCap || "round";
-      ctx.lineJoin = el.strokeStyle?.lineJoin || "round";
-      ctx.globalAlpha = el.opacity || 1;
+    // ================================
+    // VIEWPORT CULLING
+    // ================================
+    const viewport = {
+      x: -panOffset.x,
+      y: -panOffset.y,
+      width: canvas.width / (zoomLevel * dpr),
+      height: canvas.height / (zoomLevel * dpr),
+      zoom: zoomLevel
+    };
 
-      // Apply dash pattern from strokeStyle
-      if (el.strokeStyle?.dashArray && el.strokeStyle.dashArray.length > 0) {
-        ctx.setLineDash(el.strokeStyle.dashArray);
-      } else if (el.strokeStyle?.type === 'dashed') {
-        ctx.setLineDash([5, 5]);
-      } else if (el.strokeStyle?.type === 'dotted') {
-        ctx.setLineDash([1, 3]);
-      } else {
-        ctx.setLineDash([]);
-      }
+    // Get visible elements
+    const visibleElements = getVisibleElements(elements, viewport);
+    setVisibleElementCount(visibleElements.length);
 
-      // Handle different element types
-      switch (el.type) {
-        case "pencil":
-          if (el.points && el.points.length > 1) {
-            ctx.moveTo(el.points[0].x / dpr, el.points[0].y / dpr);
-            for (let i = 1; i < el.points.length; i++) {
-              ctx.lineTo(el.points[i].x / dpr, el.points[i].y / dpr);
-            }
-          }
-          break;
+    // ================================
+    // LAYER-AWARE RENDERING
+    // ================================
 
-        case "rectangle":
-          if (
-            el.x !== undefined &&
-            el.y !== undefined &&
-            el.width !== undefined &&
-            el.height !== undefined
-          ) {
-            ctx.strokeRect(
-              el.x / dpr,
-              el.y / dpr,
-              el.width / dpr,
-              el.height / dpr,
-            );
-          }
-          break;
+    const sortedLayers = [...layerState.layers].sort(
+      (a, b) => a.index - b.index
+    );
 
-        case "circle":
-          if (
-            el.x !== undefined &&
-            el.y !== undefined &&
-            el.width !== undefined &&
-            el.height !== undefined
-          ) {
-            const radius =
-              Math.sqrt(Math.pow(el.width, 2) + Math.pow(el.height, 2)) / dpr;
-            ctx.arc(el.x / dpr, el.y / dpr, Math.abs(radius), 0, 2 * Math.PI);
-          }
-          break;
+    const drawSingleElement = (el: DrawingElement, layerOpacity: number = 1) => {
+      // ... (keep your existing drawing code)
+    };
 
-        case 'eraser':
-          // Eraser is implemented as a white pencil stroke
-          ctx.strokeStyle = '#ffffff';
-          if (el.points && el.points.length > 1) {
-            ctx.moveTo(el.points[0].x / dpr, el.points[0].y / dpr);
-            for (let i = 1; i < el.points.length; i++) {
-              ctx.lineTo(el.points[i].x / dpr, el.points[i].y / dpr);
-            }
-          }
-          break;
+    sortedLayers.forEach((layer) => {
+      if (!layer.visible) return;
 
-        case "text":
-          if (el.type === 'text') {
-            const textEl = el as TextElement;
-            ctx.save();
+      // Only render elements that are in visible layers AND in viewport
+      const layerElements = visibleElements.filter(
+        (el) => el.layerId === layer.id
+      );
 
-            // Set text properties
-            ctx.font = `${textEl.format.fontStyle} ${textEl.format.fontWeight} ${textEl.format.fontSize}px ${textEl.format.fontFamily}`;
-            ctx.fillStyle = textEl.format.color;
-            ctx.textAlign = textEl.format.textAlign;
-            ctx.textBaseline = 'top';
-
-            // Calculate x position based on alignment
-            const x = textEl.x! / dpr;
-            if (textEl.format.textAlign === 'center') {
-              // For center alignment, we'd need text width - simplified for now
-            } else if (textEl.format.textAlign === 'right') {
-              // For right alignment, we'd need text width - simplified for now
-            }
-
-            // Draw text with decoration
-            const lines = textEl.text.split('\n');
-            const y = textEl.y! / dpr;
-
-            lines.forEach((line, index) => {
-              ctx.fillText(line, x, y + (index * textEl.format.fontSize * 1.2));
-
-              // Draw underline if needed
-              if (textEl.format.textDecoration === 'underline') {
-                const metrics = ctx.measureText(line);
-                const lineY = y + (index * textEl.format.fontSize * 1.2) + 2;
-                ctx.beginPath();
-                ctx.strokeStyle = textEl.format.color;
-                ctx.lineWidth = 1;
-                ctx.moveTo(x, lineY);
-                ctx.lineTo(x + metrics.width, lineY);
-                ctx.stroke();
-              }
-            });
-
-            ctx.restore();
-          }
-          break;
-
-        case "image":
-          if (el.type === 'image') {
-            const imageEl = el as ImageElement;
-
-            // Create or get cached image
-            const img = new Image();
-            img.src = imageEl.src;
-
-            // Draw image with proper positioning
-            ctx.drawImage(
-              img,
-              imageEl.x! / dpr,
-              imageEl.y! / dpr,
-              imageEl.width / dpr,
-              imageEl.height / dpr
-            );
-
-            // Draw resize handles if selected (to be implemented later)
-            if (selectedObjectId === imageEl.id) {
-              ctx.save();
-              ctx.strokeStyle = '#3b82f6';
-              ctx.lineWidth = 2 / zoomLevel;
-              ctx.setLineDash([5 / zoomLevel, 5 / zoomLevel]);
-              ctx.strokeRect(
-                imageEl.x! / dpr,
-                imageEl.y! / dpr,
-                imageEl.width / dpr,
-                imageEl.height / dpr
-              );
-
-              // Draw resize handles at corners
-              const handleSize = 8 / zoomLevel;
-              ctx.fillStyle = '#3b82f6';
-              ctx.setLineDash([]);
-
-              // Top-left
-              ctx.fillRect(
-                imageEl.x! / dpr - handleSize / 2,
-                imageEl.y! / dpr - handleSize / 2,
-                handleSize,
-                handleSize
-              );
-
-              // Top-right
-              ctx.fillRect(
-                (imageEl.x! + imageEl.width) / dpr - handleSize / 2,
-                imageEl.y! / dpr - handleSize / 2,
-                handleSize,
-                handleSize
-              );
-
-              // Bottom-left
-              ctx.fillRect(
-                imageEl.x! / dpr - handleSize / 2,
-                (imageEl.y! + imageEl.height) / dpr - handleSize / 2,
-                handleSize,
-                handleSize
-              );
-
-              // Bottom-right
-              ctx.fillRect(
-                (imageEl.x! + imageEl.width) / dpr - handleSize / 2,
-                (imageEl.y! + imageEl.height) / dpr - handleSize / 2,
-                handleSize,
-                handleSize
-              );
-
-              ctx.restore();
-            }
-          }
-          break;
-      }
-
-      ctx.stroke();
-
-      // Draw lock indicator if object is locked
-      if (lockedObjects[el.id]) {
-        const lockInfo = lockedObjects[el.id];
-        ctx.save();
-        ctx.globalAlpha = 1;
-
-        // Get element bounds for lock badge placement
-        let bx = 0,
-          by = 0;
-        const bw = 20,
-          bh = 20;
-        if (el.type === "pencil" || el.type === "eraser") {
-          if (el.points && el.points.length > 0) {
-            bx = el.points[0].x / dpr - 15;
-            by = el.points[0].y / dpr - 15;
-          }
-        } else {
-          bx = (el.x || 0) / dpr - 15;
-          by = (el.y || 0) / dpr - 15;
-        }
-
-        // Draw lock badge background with user color
-        ctx.fillStyle = lockInfo.color;
-        ctx.globalAlpha = 0.9;
-        ctx.fillRect(bx, by, bw, bh);
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(bx, by, bw, bh);
-
-        // Draw lock icon (simple unicode lock 🔒)
-        ctx.fillStyle = "white";
-        ctx.font = "bold 12px Arial";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.globalAlpha = 1;
-        ctx.fillText("🔒", bx + bw / 2, by + bh / 2);
-
-        ctx.restore();
-      }
+      layerElements.forEach((el) => {
+        drawSingleElement(el, layer.opacity);
+      });
     });
 
+    if (currentElement) {
+      drawSingleElement(currentElement, 1);
+    }
+
     ctx.restore();
+
+    // Performance tracking
+    const renderTime = performance.now() - startTime;
+    lastRenderTimeRef.current = renderTime;
+
+    if (process.env.NODE_ENV === 'development' && renderTime > 16) {
+      console.warn(`Slow render: ${renderTime.toFixed(2)}ms (${visibleElements.length} elements)`);
+    }
   }, [
     elements,
-    canvasSize,
+    currentElement,
+    layerState.layers,
     zoomLevel,
     panOffset,
     drawGrid,
     brushConfig.antiAliasing,
-    lockedObjects,
   ]);
-
   /**
    * Update canvas size on container resize
    * 
@@ -1027,6 +1085,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
     // Add to history and emit to server
     setElements([...elements, textElement]);
+    resetSaveTimer();
 
     if (socketRef.current && resolvedRoomIdRef.current) {
       socketRef.current.emit("drawing-update", {
@@ -1039,7 +1098,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     // Reset text editing state
     setIsEditingText(false);
     setTextPosition(null);
-  }, [elements, setElements, textPosition]);
+  }, [elements, setElements, textPosition, resetSaveTimer]);
 
   /**
  * Handle image upload and placement on canvas
@@ -1077,6 +1136,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
     // Add to history and emit to server
     setElements([...elements, imageElement]);
+    resetSaveTimer();
 
     if (socketRef.current && resolvedRoomIdRef.current) {
       socketRef.current.emit("drawing-update", {
@@ -1090,7 +1150,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     setIsUploadingImage(false);
     setImagePosition(null);
     setTool('select'); // Switch to select tool after placing image
-  }, [elements, setElements, imagePosition]);
+  }, [elements, setElements, imagePosition, resetSaveTimer]);
 
   /**
    * Start drawing operation at the specified mouse position
@@ -1100,65 +1160,126 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
    * @dependencies tool, color, strokeWidth, opacity, getCanvasCoordinates
    */
   const startDrawing = useCallback((e: React.MouseEvent): void => {
+    resetSaveTimer();
     const point = getCanvasCoordinates(e.clientX, e.clientY);
 
-    // Handle select tool
-    if (tool === 'select') {
-      handleSelectionStart(e, point);
+    // ----------------------------------
+    // Validate active layer
+    // ----------------------------------
+    if (!layerState.activeLayerId) return;
 
-      // Check if we clicked on an element to start moving
-      const element = findElementAtPoint(point);
-      if (element && selection.selectedIds.includes(element.id)) {
-        // Start move operation
-        startMove(e, point);
-      }
+    if (!isLayerEditable(layerState.activeLayerId)) {
       return;
     }
 
-    // Handle text tool
-    if (tool === 'text') {
+    // ----------------------------------
+    // SELECT TOOL
+    // ----------------------------------
+    if (tool === "select") {
+      handleSelectionStart(e, point);
+
+      const element = findElementAtPoint(point);
+
+      if (element) {
+        // Block interaction if locked by someone else
+        if (isLocked(element.id) && !isLockedByMe(element.id)) {
+          return;
+        }
+
+        // Request lock before modifying
+        requestLock(element.id);
+
+        if (selection.selectedIds.includes(element.id)) {
+          startMove(e, point);
+        }
+      }
+
+      return;
+    }
+
+    // ----------------------------------
+    // TEXT TOOL
+    // ----------------------------------
+    if (tool === "text") {
       setTextPosition(point);
       setIsEditingText(true);
       setEditingTextElement(null);
       return;
     }
 
-    // Handle image tool
-    if (tool === 'image') {
+    // ----------------------------------
+    // IMAGE TOOL
+    // ----------------------------------
+    if (tool === "image") {
       setImagePosition(point);
       setIsUploadingImage(true);
       return;
     }
 
+    // ----------------------------------
+    // DRAWING TOOLS
+    // ----------------------------------
+
     setIsDrawing(true);
     lastPointRef.current = point;
     lastTimeRef.current = Date.now();
 
-    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const id = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substr(2, 5)}`;
 
-    const newElement: DrawingElement = (tool === 'pencil' || tool === 'eraser') ? {
+    const baseElement = {
       id,
       type: tool,
-      points: [point],
-      color: tool === 'eraser' ? '#ffffff' : color,
+      color: tool === "eraser" ? "#ffffff" : color,
       strokeWidth,
       opacity,
       strokeStyle: { ...strokeStyle },
-    } : {
-      id,
-      type: tool,
-      x: point.x,
-      y: point.y,
-      width: 0,
-      height: 0,
-      color,
-      strokeWidth,
-      opacity,
-      strokeStyle: { ...strokeStyle },
+      layerId: layerState.activeLayerId, // ✅ Assign layer HERE
     };
 
+    const newElement: DrawingElement =
+      tool === "pencil" || tool === "eraser"
+        ? {
+          ...baseElement,
+          points: [point],
+        }
+        : {
+          ...baseElement,
+          x: point.x,
+          y: point.y,
+          width: 0,
+          height: 0,
+          points:
+            tool === "line" || tool === "arrow"
+              ? [point, point]
+              : undefined,
+        };
+
+    // ----------------------------------
+    // Lock the element BEFORE editing
+    // ----------------------------------
+    requestLock(id);
+
     setCurrentElement(newElement);
-  }, [tool, color, strokeWidth, opacity, strokeStyle, getCanvasCoordinates, handleSelectionStart, findElementAtPoint, selection.selectedIds, startMove]);
+  }, [
+    tool,
+    color,
+    strokeWidth,
+    opacity,
+    strokeStyle,
+    getCanvasCoordinates,
+    handleSelectionStart,
+    findElementAtPoint,
+    selection.selectedIds,
+    startMove,
+    layerState.activeLayerId,
+    isLayerEditable,
+    isLocked,
+    isLockedByMe,
+    requestLock,
+    resetSaveTimer,
+  ]);
 
   /**
    * Update drawing while mouse moves
@@ -1167,164 +1288,159 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
    * @param {React.MouseEvent} e - Mouse move event
    */
   const draw = useCallback((e: React.MouseEvent): void => {
+    resetSaveTimer();
     const { clientX, clientY } = e;
     const point = getCanvasCoordinates(clientX, clientY);
 
-    // Emit cursor movement
-    if (socketRef.current && resolvedRoomIdRef.current && user) {
-      socketRef.current.emit("cursor-move", {
+    const currentTime = Date.now();
+
+    // --------------------------------------------------
+    // Emit cursor movement with tool information
+    // --------------------------------------------------
+    if (user) {
+      const cursorData = {
         roomId: resolvedRoomIdRef.current,
         x: point.x,
         y: point.y,
         userId: user.id || user._id,
         username: user.username || user.fullName,
-      });
+        tool: tool,
+        color: color,
+      };
+
+      if (socketRef.current && resolvedRoomIdRef.current && isConnected) {
+        socketRef.current.emit("cursor-move", cursorData);
+      } else {
+        // Optional: Usually DO NOT queue high-frequency cursor events
+        // queueAction("cursor-move", cursorData);
+      }
     }
 
-    // Handle selection drag box
-    if (tool === 'select' && dragBox && !transform.isTransforming) {
+    // --------------------------------------------------
+    // Selection Drag Box
+    // --------------------------------------------------
+    if (tool === "select" && dragBox && !transform.isTransforming) {
       handleDragBox(point);
       redrawCanvas();
       return;
     }
 
-    // Handle transformation
+    // --------------------------------------------------
+    // Transformation
+    // --------------------------------------------------
     if (transform.isTransforming) {
       handleTransform(point);
       redrawCanvas();
       return;
     }
 
-    // Handle drawing
+    // --------------------------------------------------
+    // Drawing Guard
+    // --------------------------------------------------
     if (!isDrawing || !currentElement) return;
 
-    const currentTime = Date.now();
     const timeDelta = currentTime - lastTimeRef.current;
 
+    // --------------------------------------------------
+    // Pencil / Eraser (Brush Engine)
+    // --------------------------------------------------
     if ((tool === "pencil" || tool === "eraser") && brushEngineRef.current) {
-      // Calculate velocity for pressure simulation
       const velocity = calculateVelocity(
         point,
         lastPointRef.current!,
-        timeDelta,
+        timeDelta
       );
 
-      // Simulate pressure based on velocity (slower = higher pressure)
+      // Simulated pressure (slower movement = thicker stroke)
       const pressure = Math.max(0.1, Math.min(1, 100 / (velocity + 10)));
 
-      // Add point with simulated pressure to brush engine
       brushEngineRef.current.addPoint(point, pressure);
 
-      // Update current element with brush engine points
       const updatedElement: DrawingElement = {
         ...currentElement,
         points: brushEngineRef.current.getPoints(),
-        strokeWidth: brushEngineRef.current.calculateStrokeWidth(velocity),
+        strokeWidth:
+          brushEngineRef.current.calculateStrokeWidth(velocity),
       };
 
       setCurrentElement(updatedElement);
-      redrawCurrentStroke(updatedElement);
+      redrawCanvas();
 
-      // Emit real-time update to other users (throttled to 50ms)
-      if (socketRef.current && resolvedRoomIdRef.current && currentTime - lastEmitTimeRef.current > 50) {
-        socketRef.current.emit("drawing-update", {
+      // ----------------------------------------------
+      // Throttled Real-time Emit (50ms)
+      // ----------------------------------------------
+      if (
+        socketRef.current &&
+        resolvedRoomIdRef.current &&
+        currentTime - lastEmitTimeRef.current > 50
+      ) {
+        const element = updatedElement;
+        const payload: any = {
           roomId: resolvedRoomIdRef.current,
-          element: updatedElement,
-          userId: user.id || user._id,
+          userId: user?.id || user?._id,
           saveToDb: false,
-        });
+        };
+
+        // Check if we should compress
+        if (shouldCompress([element])) {
+          payload.compressed = true;
+          payload.elements = compressDrawingData([element]);
+        } else {
+          payload.element = element;
+        }
+
+        if (isConnected) {
+          socketRef.current.emit("drawing-update", payload);
+        } else {
+          queueAction("drawing-update", payload);
+        }
+
         lastEmitTimeRef.current = currentTime;
       }
     }
+
+    // --------------------------------------------------
+    // Shape Tools (Rect, Circle, Line, Arrow)
+    // --------------------------------------------------
     else {
-      // Update shape dimensions for shape tools
       const updatedElement: DrawingElement = {
         ...currentElement,
         width: point.x - (currentElement.x || 0),
         height: point.y - (currentElement.y || 0),
+        points:
+          currentElement.type === "line" ||
+            currentElement.type === "arrow"
+            ? [
+              { x: currentElement.x!, y: currentElement.y! },
+              point,
+            ]
+            : undefined,
       };
+
       setCurrentElement(updatedElement);
       redrawCanvas();
+
+      // Optional: You can also throttle emit shapes in real-time if needed
     }
 
     lastPointRef.current = point;
     lastTimeRef.current = currentTime;
-  }, [isDrawing, currentElement, tool, user, getCanvasCoordinates, transform, handleTransform, handleDragBox, dragBox]);
-
-  /**
-   * Stop drawing and finalize the element
-   * Adds completed element to the elements array and emits to server
-   */
-  const stopDrawing = (): void => {
-    if (!isDrawing || !currentElement) return;
-
-    setIsDrawing(false);
-
-    // Only add to elements if it's a valid drawing
-    if (tool === "pencil" || tool === "eraser") {
-      if (brushEngineRef.current?.hasPoints()) {
-        setElements((prev) => [...prev, currentElement]);
-        if (socketRef.current && resolvedRoomIdRef.current) {
-          socketRef.current.emit("drawing-update", {
-            roomId: resolvedRoomIdRef.current,
-            element: currentElement,
-            saveToDb: true,
-            userId: user.id || user._id,
-          });
-        }
-      }
-    }
-    else if (tool === "line" || tool === "arrow") {
-      // Check if line has length
-      if (currentElement.points && currentElement.points.length === 2) {
-        const [start, end] = currentElement.points;
-        const distance = Math.sqrt(
-          Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2)
-        );
-        if (distance > 5) { // Minimum 5px length
-          setElements((prev) => [...prev, currentElement]);
-          if (socketRef.current && resolvedRoomIdRef.current) {
-            socketRef.current.emit("drawing-update", {
-              roomId: resolvedRoomIdRef.current,
-              element: currentElement,
-              saveToDb: true,
-              userId: user.id || user._id,
-            });
-          }
-        }
-      }
-    }
-    else {
-      // For shapes, check if they have valid dimensions
-      if (
-        Math.abs(currentElement.width || 0) > 1 ||
-        Math.abs(currentElement.height || 0) > 1
-      ) {
-        setElements((prev) => [...prev, currentElement]);
-        if (socketRef.current && resolvedRoomIdRef.current) {
-          socketRef.current.emit("drawing-update", {
-            roomId: resolvedRoomIdRef.current,
-            element: currentElement,
-            saveToDb: true,
-            userId: user.id || user._id,
-          });
-        }
-      }
-    }
-
-    // Emit object unlock event
-    if (socketRef.current && resolvedRoomIdRef.current && currentElement) {
-      socketRef.current.emit("unlock-object", {
-        roomId: resolvedRoomIdRef.current,
-        elementId: currentElement.id,
-      });
-    }
-
-    setCurrentElement(null);
-    if (brushEngineRef.current) {
-      brushEngineRef.current.clear();
-    }
-  };
+  }, [
+    isDrawing,
+    currentElement,
+    tool,
+    user,
+    color,
+    isConnected,
+    dragBox,
+    transform,
+    getCanvasCoordinates,
+    handleTransform,
+    handleDragBox,
+    redrawCanvas,
+    queueAction,
+    resetSaveTimer,
+  ]);
 
   /**
    * Mouse Handle (up)
@@ -1332,21 +1448,30 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const handleMouseUp = useCallback((e: React.MouseEvent): void => {
     const point = getCanvasCoordinates(e.clientX, e.clientY);
 
-    // Handle selection end
-    if (tool === 'select') {
+    // ---------------------------------
+    // SELECT TOOL
+    // ---------------------------------
+    if (tool === "select") {
       if (dragBox) {
         handleSelectionEnd(point);
       }
+
       if (transform.isTransforming) {
         endTransform();
 
-        // Emit final position to server
-        if (socketRef.current && resolvedRoomIdRef.current && selection.selectedIds.length > 0) {
-          selection.selectedIds.forEach(id => {
-            const element = elements.find(el => el.id === id);
+        const socket = socketRef.current;
+        const resolvedRoomId = resolvedRoomIdRef.current;
+
+        if (
+          socket &&
+          resolvedRoomId &&
+          selection.selectedIds.length > 0
+        ) {
+          selection.selectedIds.forEach((id) => {
+            const element = elements.find((el) => el.id === id);
             if (element) {
-              socketRef.current?.emit("drawing-update", {
-                roomId: resolvedRoomIdRef.current,
+              socket.emit("drawing-update", {
+                roomId: resolvedRoomId,
                 element,
                 saveToDb: true,
                 userId: user?.id || user?._id,
@@ -1354,122 +1479,102 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             }
           });
         }
+
+        // 🔒 DO NOT release lock here
+        // Keep lock until deselect for better UX
       }
+
       return;
     }
 
-    // Handle drawing stop
+    // ---------------------------------
+    // DRAWING TOOLS
+    // ---------------------------------
+
     if (!isDrawing || !currentElement) return;
 
     setIsDrawing(false);
 
-    // Determine if element should be saved
     let shouldSave = false;
 
     switch (currentElement.type) {
-      case 'pencil':
-      case 'eraser':
-        shouldSave = brushEngineRef.current?.hasPoints() || false;
+      case "pencil":
+      case "eraser":
+        shouldSave = !!brushEngineRef.current?.hasPoints();
         break;
 
-      case 'line':
-      case 'arrow':
-        if (currentElement.points && currentElement.points.length === 2) {
+      case "line":
+      case "arrow":
+        if (currentElement.points?.length === 2) {
           const [start, end] = currentElement.points;
           const distance = Math.sqrt(
-            Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2)
+            Math.pow(end.x - start.x, 2) +
+            Math.pow(end.y - start.y, 2)
           );
           shouldSave = distance > 5;
         }
         break;
 
-      case 'rectangle':
-      case 'circle':
-        shouldSave = Math.abs(currentElement.width || 0) > 5 &&
-          Math.abs(currentElement.height || 0) > 5;
+      case "rectangle":
+      case "circle":
+        shouldSave =
+          Math.abs(currentElement.width ?? 0) > 5 &&
+          Math.abs(currentElement.height ?? 0) > 5;
         break;
     }
 
     if (shouldSave) {
-      setElements((prev) => [...prev, currentElement]);
+      const elementWithLayer = {
+        ...currentElement,
+        layerId:
+          currentElement.layerId ??
+          layerState.activeLayerId!,
+      };
+
+      setElements((prev) => [...prev, elementWithLayer]);
+      resetSaveTimer();
 
       if (socketRef.current && resolvedRoomIdRef.current) {
         socketRef.current.emit("drawing-update", {
           roomId: resolvedRoomIdRef.current,
-          element: currentElement,
+          element: elementWithLayer,
           saveToDb: true,
           userId: user?.id || user?._id,
         });
       }
     }
 
+    // ---------------------------------
+    // Always release lock after drawing
+    // ---------------------------------
+
+    if (socketRef.current && resolvedRoomIdRef.current) {
+      socketRef.current.emit("unlock-object", {
+        roomId: resolvedRoomIdRef.current,
+        elementId: currentElement.id,
+      });
+    }
+
     setCurrentElement(null);
-    if (brushEngineRef.current) {
-      brushEngineRef.current.clear();
-    }
-  }, [tool, isDrawing, currentElement, setElements, user, dragBox, handleSelectionEnd, transform, endTransform, selection.selectedIds, elements, getCanvasCoordinates]);
-
-  /**
-   * Draw current stroke in real-time (for pencil/eraser tools)
-   * 
-   * @function redrawCurrentStroke
-   * @param {DrawingElement} element - Current drawing element to render
-   */
-  const redrawCurrentStroke = (element: DrawingElement): void => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Redraw all saved elements
-    redrawCanvas();
-
-    // Draw current stroke on top
-    if (
-      (element.type === "pencil" || element.type === "eraser") &&
-      element.points &&
-      element.points.length > 1
-    ) {
-      ctx.save();
-
-      // Apply transformations
-      const dpr = window.devicePixelRatio || 1;
-      ctx.scale(1 / dpr, 1 / dpr);
-      ctx.translate(
-        panOffset.x * zoomLevel * dpr,
-        panOffset.y * zoomLevel * dpr,
-      );
-      ctx.scale(zoomLevel, zoomLevel);
-
-      // Set drawing properties
-      ctx.strokeStyle = element.type === "eraser" ? "#ffffff" : element.color;
-      ctx.lineWidth = element.strokeWidth;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.globalAlpha = element.opacity || 1;
-
-      // Enable anti-aliasing
-      if (brushConfig.antiAliasing) {
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
-      }
-
-      // Draw the stroke
-      ctx.beginPath();
-      ctx.moveTo(element.points[0].x / dpr, element.points[0].y / dpr);
-
-      for (let i = 1; i < element.points.length; i++) {
-        ctx.lineTo(element.points[i].x / dpr, element.points[i].y / dpr);
-      }
-
-      ctx.stroke();
-      ctx.restore();
-    }
-  };
+    brushEngineRef.current?.clear();
+  }, [
+    tool,
+    isDrawing,
+    currentElement,
+    setElements,
+    user,
+    dragBox,
+    handleSelectionEnd,
+    transform.isTransforming,
+    endTransform,
+    selection.selectedIds,
+    elements,
+    getCanvasCoordinates,
+    layerState.activeLayerId,
+    socketRef,
+    resolvedRoomIdRef,
+    resetSaveTimer,
+  ]);
 
   /**
    * Export canvas as image
@@ -1525,6 +1630,16 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     }
   };
 
+  const handleDeselect = useCallback(() => {
+    // Release locks on all selected elements
+    selection.selectedIds.forEach(id => {
+      if (isLockedByMe(id)) {
+        releaseLock(id);
+      }
+    });
+    clearSelection();
+  }, [selection.selectedIds, isLockedByMe, releaseLock, clearSelection]);
+
   /**
    * Handle zoom in operation
    */
@@ -1579,6 +1694,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       // Tool shortcuts
       const key = e.key.toLowerCase();
       switch (key) {
+        case '`': // Backtick key
+          e.preventDefault();
+          setShowPerfStats(prev => !prev);
+          break;
         case 'v':
           if (!e.ctrlKey && !e.metaKey) { // Only if not Ctrl+V
             setTool('select');
@@ -1917,7 +2036,11 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           onClick={() => {
             setElements([]);
             if (socketRef.current && resolvedRoomIdRef.current) {
-              socketRef.current.emit("clear-canvas", { roomId: resolvedRoomIdRef.current });
+              if (isConnected) {
+                socketRef.current.emit("clear-canvas", { roomId: resolvedRoomIdRef.current });
+              } else {
+                queueAction('clear-canvas', { roomId: resolvedRoomIdRef.current });
+              }
             }
           }}
           className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
@@ -1948,93 +2071,219 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           </button>
         </div>
       </div>
+      {/* Layer Panel */}
+      <LayerPanel
+        layers={layerState.layers}
+        activeLayerId={layerState.activeLayerId}
+        isExpanded={layerState.isExpanded}
+        panelWidth={layerState.panelWidth}
+        onToggleExpand={() => setLayerState(prev => ({ ...prev, isExpanded: !prev.isExpanded }))}
+        onResize={(width) => setLayerState(prev => ({ ...prev, panelWidth: width }))}
+        onCreateLayer={() => createLayer()}
+        onDeleteLayer={deleteLayer}
+        onDuplicateLayer={duplicateLayer}
+        onToggleVisibility={toggleLayerVisibility}
+        onToggleLock={toggleLayerLock}
+        onSelectLayer={setActiveLayer}
+        onRenameLayer={renameLayer}
+        onMergeDown={mergeLayerDown}
+        onReorderLayers={reorderLayers}
+        totalElements={elements.length}
+      />
 
       {/* Selection toolbar - shown when objects are selected */}
-      {selection.selectedIds.length > 0 && (
-        <div className="absolute top-24 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 flex items-center gap-2 z-20">
-          {/* Copy button */}
-          <button
-            onClick={() => copyToClipboard()}
-            className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-            title="Copy (Ctrl+C)"
-          >
-            <Copy size={18} />
-          </button>
+      {selection.selectedIds.length > 0 && (() => {
+        const singleSelectedId =
+          selection.selectedIds.length === 1
+            ? selection.selectedIds[0]
+            : null;
 
-          {/* Cut button */}
-          <button
-            onClick={() => cutToClipboard()}
-            className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-            title="Cut (Ctrl+X)"
-          >
-            <Scissors size={18} />
-          </button>
+        const isLockedByOther =
+          singleSelectedId &&
+          isLocked(singleSelectedId) &&
+          !isLockedByMe(singleSelectedId);
 
-          {/* Paste button (if clipboard has content) */}
-          {hasClipboardContent() && (
+        return (
+          <div className="absolute top-24 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 px-3 py-2 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 flex items-center gap-2 z-20">
+
+            {/* Lock indicator */}
+            {singleSelectedId && isLockedByOther && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg text-xs">
+                <Lock size={14} />
+                <span>
+                  Locked by {getLockInfo(singleSelectedId)?.username}
+                </span>
+              </div>
+            )}
+
+            {/* Copy */}
             <button
-              onClick={() => pasteFromClipboard(20, 20)}
-              className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-              title="Paste (Ctrl+V)"
+              onClick={copyToClipboard}
+              disabled={!!isLockedByOther}
+              className={`p-2 rounded-lg transition-colors ${isLockedByOther
+                ? "opacity-50 cursor-not-allowed"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                }`}
+              title="Copy (Ctrl+C)"
             >
-              <Clipboard size={18} />
+              <Copy size={18} />
             </button>
-          )}
 
-          <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
+            {/* Cut */}
+            <button
+              onClick={cutToClipboard}
+              disabled={!!isLockedByOther}
+              className={`p-2 rounded-lg transition-colors ${isLockedByOther
+                ? "opacity-50 cursor-not-allowed"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                }`}
+              title="Cut (Ctrl+X)"
+            >
+              <Scissors size={18} />
+            </button>
 
-          {/* Duplicate button */}
-          <button
-            onClick={duplicateSelected}
-            className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-            title="Duplicate (Ctrl+D)"
-          >
-            <Copy size={18} />
-          </button>
+            {/* Paste */}
+            {hasClipboardContent() && (
+              <button
+                onClick={() => pasteFromClipboard(20, 20)}
+                className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                title="Paste (Ctrl+V)"
+              >
+                <Clipboard size={18} />
+              </button>
+            )}
 
-          {/* Delete button */}
-          <button
-            onClick={deleteSelected}
-            className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-            title="Delete (Del)"
-          >
-            <Trash size={18} />
-          </button>
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
 
-          <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
+            {/* Duplicate */}
+            <button
+              onClick={duplicateSelected}
+              disabled={!!isLockedByOther}
+              className={`p-2 rounded-lg transition-colors ${isLockedByOther
+                ? "opacity-50 cursor-not-allowed"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                }`}
+              title="Duplicate (Ctrl+D)"
+            >
+              <Copy size={18} />
+            </button>
 
-          {/* Layer controls */}
-          <button
-            onClick={bringToFront}
-            className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-            title="Bring to Front"
-          >
-            <ArrowUp size={18} />
-          </button>
-          <button
-            onClick={sendToBack}
-            className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-            title="Send to Back"
-          >
-            <ArrowDown size={18} />
-          </button>
+            {/* Delete */}
+            <button
+              onClick={deleteSelected}
+              disabled={!!isLockedByOther}
+              className={`p-2 rounded-lg transition-colors ${isLockedByOther
+                ? "opacity-50 cursor-not-allowed"
+                : "text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                }`}
+              title="Delete (Del)"
+            >
+              <Trash size={18} />
+            </button>
 
-          <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
 
-          {/* Selection count */}
-          <span className="text-sm text-slate-600 dark:text-slate-400 px-2">
-            {selection.selectedIds.length} {selection.selectedIds.length === 1 ? 'object' : 'objects'} selected
-          </span>
-        </div>
-      )}
+            {/* Layer order */}
+            <button
+              onClick={bringToFront}
+              disabled={!!isLockedByOther}
+              className={`p-2 rounded-lg transition-colors ${isLockedByOther
+                ? "opacity-50 cursor-not-allowed"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                }`}
+              title="Bring to Front"
+            >
+              <ArrowUp size={18} />
+            </button>
+
+            <button
+              onClick={sendToBack}
+              disabled={!!isLockedByOther}
+              className={`p-2 rounded-lg transition-colors ${isLockedByOther
+                ? "opacity-50 cursor-not-allowed"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                }`}
+              title="Send to Back"
+            >
+              <ArrowDown size={18} />
+            </button>
+
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
+
+            {/* Selection count */}
+            <span className="text-sm text-slate-600 dark:text-slate-400 px-2">
+              {selection.selectedIds.length}{" "}
+              {selection.selectedIds.length === 1 ? "object" : "objects"} selected
+            </span>
+
+            {/* Deselect */}
+            <button
+              onClick={handleDeselect}
+              className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              title="Deselect (Esc)"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        );
+      })()}
 
       {/* Canvas info overlay */}
       <div className="absolute bottom-4 left-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm px-3 py-1.5 rounded-lg text-sm text-slate-600 dark:text-slate-400">
         {Math.round(canvasSize.width)} × {Math.round(canvasSize.height)} px
         {brushConfig.pressureSensitive && " • Pressure: On"}
-        {brushConfig.smoothing > 0 &&
-          ` • Smoothing: ${brushConfig.smoothing.toFixed(1)}`}
+        {brushConfig.smoothing > 0 && ` • Smoothing: ${brushConfig.smoothing.toFixed(1)}`}
+        {layerState.activeLayerId && (
+          <span className="ml-2 inline-flex items-center gap-1">
+            • Layer: {
+              layerState.layers.find(l => l.id === layerState.activeLayerId)?.name
+            }
+            {!isLayerEditable(layerState.activeLayerId) && (
+              <span className="text-xs text-amber-500">(locked)</span>
+            )}
+          </span>
+        )}
       </div>
+
+      {/* Save Indicator - positioned above the network status */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+        <SaveIndicator
+          lastSaveTime={lastSaveTime}
+          unsavedChanges={unsavedChanges}
+          isSaving={isAutoSaving}
+          error={saveError}
+          onManualSave={manualSave}
+          onToggleAutoSave={toggleAutoSave}
+          isAutoSaveEnabled={isAutoSaveEnabled}
+        />
+      </div>
+
+      {/* Network Status Indicator */}
+      <NetworkStatus
+        isOnline={isOnline}
+        isConnected={isConnected}
+        latency={latency}
+        packetLoss={packetLoss}
+        queueLength={actionQueue.length}
+        isSyncing={isSyncing}
+        onRetry={() => {
+          if (socketRef.current && !isConnected) {
+            socketRef.current.connect();
+          }
+        }}
+        onSync={processQueue}
+      />
+
+      {/* Performance Stats (toggle with ` key) */}
+      {showPerfStats && (
+        <div className="absolute top-20 right-4 bg-black/80 text-white text-xs p-2 rounded-lg z-50 font-mono">
+          <div>Render: {lastRenderTimeRef.current.toFixed(1)}ms</div>
+          <div>Elements: {elements.length} total</div>
+          <div>Visible: {visibleElementCount}</div>
+          <div>Queue: {actionQueue.length}</div>
+          <div>FPS: {Math.round(1000 / Math.max(16, lastRenderTimeRef.current))}</div>
+        </div>
+      )}
 
       {/* Main drawing canvas */}
       <canvas
@@ -2073,6 +2322,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       {Object.entries(remoteCursors).map(([id, pos]) => {
         // Don't show current user's cursor
         if (id === (user?.id || user?._id)) return null;
+
+        const ToolIcon = getToolIcon(pos.tool || 'select');
+        const toolColor = pos.color || getToolColor(pos.tool || 'select');
+
         return (
           <div
             key={id}
@@ -2083,16 +2336,28 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             }}
             aria-label={`${pos.username}'s cursor`}
           >
-            {/* Custom cursor SVG */}
+            {/* Custom cursor SVG with user's color */}
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z" fill="#3B82F6" stroke="white" />
+              <path d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z" fill={toolColor} stroke="white" />
             </svg>
-            <div className="ml-3 px-1.5 py-0.5 bg-blue-500 text-white text-[10px] rounded shadow-sm whitespace-nowrap">
-              {pos.username}
+
+            {/* Tooltip with username and tool */}
+            <div
+              className="ml-3 px-2 py-1 rounded shadow-sm whitespace-nowrap flex items-center gap-1.5"
+              style={{ backgroundColor: toolColor }}
+            >
+              <ToolIcon size={12} className="text-white" />
+              <span className="text-white text-[10px] font-medium">
+                {pos.username}
+              </span>
+              <span className="text-white/80 text-[8px]">
+                {getToolLabel(pos.tool || 'select')}
+              </span>
             </div>
           </div>
         );
       })}
+
       {/* Text Editor Overlay */}
       {isEditingText && textPosition && (
         <TextEditor

@@ -217,6 +217,9 @@ export interface DrawingElement {
    * Controls dash patterns, line caps, and joins
    */
   strokeStyle?: StrokeStyle;
+
+  /** ID of the layer this element belongs to */
+  layerId?: string;
 }
 
 /**
@@ -330,4 +333,46 @@ export interface SelectionState {
   lastClickTime?: number;
   /** Last clicked object ID */
   lastClickedId?: string;
+}
+
+/**
+ * Interface for layer properties
+ * 
+ * @interface Layer
+ */
+export interface Layer {
+  /** Unique identifier for the layer */
+  id: string;
+  /** Display name of the layer */
+  name: string;
+  /** Whether the layer is visible */
+  visible: boolean;
+  /** Whether the layer is locked (prevent editing) */
+  locked: boolean;
+  /** Opacity of the layer (0-1) */
+  opacity: number;
+  /** Blend mode for the layer */
+  blendMode: 'normal' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten' | 'color-dodge' | 'color-burn' | 'hard-light' | 'soft-light' | 'difference' | 'exclusion' | 'hue' | 'saturation' | 'color' | 'luminosity';
+  /** Index of the layer (lower = bottom, higher = top) */
+  index: number;
+  /** IDs of elements belonging to this layer */
+  elementIds: string[];
+  /** Color for layer UI (for visual distinction) */
+  color?: string;
+}
+
+/**
+ * Interface for layer panel state
+ * 
+ * @interface LayerPanelState
+ */
+export interface LayerPanelState {
+  /** Array of layers */
+  layers: Layer[];
+  /** ID of the currently active layer */
+  activeLayerId: string | null;
+  /** Whether the layer panel is expanded */
+  isExpanded: boolean;
+  /** Width of the layer panel (when expanded) */
+  panelWidth: number;
 }

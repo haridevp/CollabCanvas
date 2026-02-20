@@ -1,0 +1,417 @@
+﻿
+> frontend@0.0.0 lint
+> eslint .
+
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\components\DeletionSurveyModal.test.tsx
+  13:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  26:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\components\Sidebar.test.tsx
+  28:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:65  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\components\ui\ImageCropper.test.tsx
+   30:22  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+   48:86  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+   73:10  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  234:11  warning  'imgInstance' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  234:42  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  239:42  warning  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\components\ui\InviteModal.test.tsx
+  14:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\components\ui\Modal.test.tsx
+  8:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\components\ui\RoomCardComponent.test.tsx
+  8:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\components\ui\ThemeSelector.test.tsx
+    9:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   13:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   16:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  125:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  143:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\features\rooms\MyRoomsDashboard.test.tsx
+  27:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\features\rooms\RoomCreationModal.test.tsx
+  93:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\pages\Dashboard.test.tsx
+   8:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  27:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\pages\LoginPage.test.tsx
+  40:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\pages\PrivacyPolicyPage.test.tsx
+  17:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\pages\ProfilePage.test.tsx
+   22:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   35:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   46:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   92:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  265:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  480:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  481:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\pages\RegisterPage.test.tsx
+  16:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  26:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\pages\RegistrationSuccess.test.tsx
+   8:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\pages\ResetPasswordPage.test.tsx
+  15:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\pages\RoomPage.test.tsx
+  36:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  68:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\pages\TermsofServicePage.test.tsx
+  11:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\services\accountDeletionService.test.ts
+  132:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  159:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  181:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  198:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\services\roomService.test.ts
+   40:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   68:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   82:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   96:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  120:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  136:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  159:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  171:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  184:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  199:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  212:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  230:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  243:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  262:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  275:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  288:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  301:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  314:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  327:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  344:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  357:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  377:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  392:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  407:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\__tests__\utils\logoutHandler.test.ts
+  27:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\components\Sidebar.tsx
+   2:41  warning  'PlusCircle' is defined but never used                                                                   @typescript-eslint/no-unused-vars
+  49:6   warning  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\components\ui\BrushSettings.tsx
+  4:10  warning  'Plus' is defined but never used  @typescript-eslint/no-unused-vars
+  5:19  warning  'Type' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\components\ui\ImageCropper.tsx
+  77:3  warning  'aspectRatio' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\components\ui\ImageUploader.tsx
+  189:22  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  215:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\components\ui\LayerPanel.tsx
+  11:3  warning  'ChevronDown' is defined but never used  @typescript-eslint/no-unused-vars
+  13:3  warning  'ChevronLeft' is defined but never used  @typescript-eslint/no-unused-vars
+  14:3  warning  'ChevronUp' is defined but never used    @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\components\ui\NotificationCenter.tsx
+  62:6  warning  React Hook useEffect has missing dependencies: 'loadNotifications' and 'loadUnreadCount'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\components\ui\RoomCardComponent.tsx
+  177:9  warning  'participantPercentage' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\components\ui\SaveIndicator.tsx
+  37:41  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\components\ui\SaveIndicator.tsx:37:41
+  35 |         if (unsavedChanges > 0) return `${unsavedChanges} unsaved change${unsavedChanges !== 1 ? 's' : ''}`;
+  36 |         if (lastSaveTime) {
+> 37 |             const timeAgo = Math.floor((Date.now() - lastSaveTime.getTime()) / 1000);
+     |                                         ^^^^^^^^^^ Cannot call impure function
+  38 |             if (timeAgo < 60) return `Saved ${timeAgo} second${timeAgo !== 1 ? 's' : ''} ago`;
+  39 |             if (timeAgo < 3600) return `Saved ${Math.floor(timeAgo / 60)} minute${Math.floor(timeAgo / 60) !== 1 ? 's' : ''} ago`;
+  40 |             return `Saved at ${lastSaveTime.toLocaleTimeString()}`;  react-hooks/purity
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\components\ui\TextEditor.tsx
+  4:17  warning  'Type' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\components\ui\UsernameChecker.tsx
+   18:27  warning  The `Function` type accepts any function-like value.
+Prefer explicitly defining any function parameters and return type  @typescript-eslint/no-unsafe-function-type
+   20:26  warning  Unexpected any. Specify a different type                                                                                 @typescript-eslint/no-explicit-any
+   20:40  warning  Unexpected any. Specify a different type                                                                                 @typescript-eslint/no-explicit-any
+  172:16  warning  'err' is defined but never used                                                                                          @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\features\canvas\CollaborativeCanvas.tsx
+    23:30  warning  'getViewportStats' is defined but never used                                                                                             @typescript-eslint/no-unused-vars
+    27:11  warning  'MinusCircle' is defined but never used                                                                                                  @typescript-eslint/no-unused-vars
+    27:24  warning  'PlusCircle' is defined but never used                                                                                                   @typescript-eslint/no-unused-vars
+    28:18  warning  'LineIcon' is defined but never used                                                                                                     @typescript-eslint/no-unused-vars
+   312:10  warning  'selectedObjectId' is assigned a value but never used                                                                                    @typescript-eslint/no-unused-vars
+   312:28  warning  'setSelectedObjectId' is assigned a value but never used                                                                                 @typescript-eslint/no-unused-vars
+   357:5   warning  'startResize' is assigned a value but never used                                                                                         @typescript-eslint/no-unused-vars
+   392:5   warning  'setLayerOpacity' is assigned a value but never used                                                                                     @typescript-eslint/no-unused-vars
+   393:5   warning  'setLayerBlendMode' is assigned a value but never used                                                                                   @typescript-eslint/no-unused-vars
+   396:5   warning  'getLayerElements' is assigned a value but never used                                                                                    @typescript-eslint/no-unused-vars
+   398:5   warning  'updateLayerElementCounts' is assigned a value but never used                                                                            @typescript-eslint/no-unused-vars
+   411:5   warning  'clearQueue' is assigned a value but never used                                                                                          @typescript-eslint/no-unused-vars
+   412:5   warning  'getQueueStatus' is assigned a value but never used                                                                                      @typescript-eslint/no-unused-vars
+   420:5   warning  'lockedObjects' is assigned a value but never used                                                                                       @typescript-eslint/no-unused-vars
+   421:5   warning  'myLocks' is assigned a value but never used                                                                                             @typescript-eslint/no-unused-vars
+   569:40  warning  Unexpected any. Specify a different type                                                                                                 @typescript-eslint/no-explicit-any
+   650:6   warning  React Hook useEffect has a missing dependency: 'manualSave'. Either include it or remove the dependency array                            react-hooks/exhaustive-deps
+   673:6   warning  React Hook useEffect has a missing dependency: 'manualSave'. Either include it or remove the dependency array                            react-hooks/exhaustive-deps
+   916:52  warning  'layerOpacity' is assigned a value but never used                                                                                        @typescript-eslint/no-unused-vars
+   946:6   warning  React Hook useCallback has an unnecessary dependency: 'selection.selectedIds'. Either exclude it or remove the dependency array          react-hooks/exhaustive-deps
+  1102:6   warning  React Hook useCallback has a missing dependency: 'resetSaveTimer'. Either include it or remove the dependency array                      react-hooks/exhaustive-deps
+  1154:6   warning  React Hook useCallback has a missing dependency: 'resetSaveTimer'. Either include it or remove the dependency array                      react-hooks/exhaustive-deps
+  1266:6   warning  React Hook useCallback has a missing dependency: 'resetSaveTimer'. Either include it or remove the dependency array                      react-hooks/exhaustive-deps
+  1378:13  error    'payload' is never reassigned. Use 'const' instead                                                                                       prefer-const
+  1378:22  warning  Unexpected any. Specify a different type                                                                                                 @typescript-eslint/no-explicit-any
+  1428:6   warning  React Hook useCallback has missing dependencies: 'queueAction' and 'resetSaveTimer'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  1558:6   warning  React Hook useCallback has a missing dependency: 'resetSaveTimer'. Either include it or remove the dependency array                      react-hooks/exhaustive-deps
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\features\rooms\MyRoomsDashboard.tsx
+    3:31  warning  'Clock' is defined but never used                                                                                      @typescript-eslint/no-unused-vars
+    4:55  warning  'EyeOff' is defined but never used                                                                                     @typescript-eslint/no-unused-vars
+  108:6   warning  React Hook useEffect has a missing dependency: 'filterAndSortRooms'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\features\rooms\ParticipantsPanel.tsx
+    5:3   warning  'Video' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+    5:10  warning  'VideoOff' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+    5:47  warning  'UserCheck' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+    6:11  warning  'Filter' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+    6:36  warning  'UserMinus' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+   58:12  warning  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  139:6   warning  React Hook useEffect has a missing dependency: 'loadParticipants'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  151:46  warning  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  716:3   warning  'onCloseMenu' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\features\rooms\PublicRoomsGallery.tsx
+   75:6   warning  React Hook useEffect has a missing dependency: 'loadRooms'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  310:64  warning  Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\features\rooms\RoomCreationModal.tsx
+  110:14  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\features\rooms\RoomJoinModal.tsx
+   98:14  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+  156:14  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\features\rooms\RoomSettingsPanel.tsx
+    5:35  warning  'Download' is defined but never used      @typescript-eslint/no-unused-vars
+    5:45  warning  'Upload' is defined but never used        @typescript-eslint/no-unused-vars
+    5:53  warning  'RefreshCw' is defined but never used     @typescript-eslint/no-unused-vars
+  105:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  169:14  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+  204:14  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\hooks\useLayers.ts
+  67:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\hooks\useLayers.ts:67:7
+  65 |   useEffect(() => {
+  66 |     if (layerState.layers.length === 0) {
+> 67 |       createLayer('Background', true);
+     |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  68 |     }
+  69 |   }, [createLayer, layerState.layers.length]);
+  70 |  react-hooks/set-state-in-effect
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\hooks\useNetworkStatus.ts
+    9:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   20:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  122:60  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  142:23  warning  'now' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  168:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\hooks\useObjectLocks.ts
+   26:40   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+   95:40   error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `releaseLock`, but the source dependencies were [lockTimeout, myLocks]. Inferred different dependency than source.
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\hooks\useObjectLocks.ts:95:40
+   93 |      * Set timeout to auto-release a lock
+   94 |      */
+>  95 |     const setLockTimeout = useCallback((elementId: string) => {
+      |                                        ^^^^^^^^^^^^^^^^^^^^^^^^
+>  96 |         clearLockTimeout(elementId);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  97 |
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  98 |         lockTimeoutsRef.current[elementId] = setTimeout(() => {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  99 |             // Auto-release the lock after timeout
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 100 |             if (myLocks.has(elementId)) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |                 releaseLock(elementId, true); // true = auto-release
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |             }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 103 |         }, lockTimeout);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 104 |     }, [lockTimeout, myLocks]);
+      | ^^^^^^ Could not preserve existing manual memoization
+  105 |
+  106 |     /**
+  107 |      * Request a lock on an object  react-hooks/preserve-manual-memoization
+  104:8    warning  React Hook useCallback has missing dependencies: 'clearLockTimeout' and 'releaseLock'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+  178:102  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  202:73   warning  'isAutoRelease' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  202:90   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  221:58   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  227:49   warning  'reason' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  227:59   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\hooks\useSelection.ts
+   16:5   warning  '_zoomLevel' is defined but never used    @typescript-eslint/no-unused-vars
+   17:5   warning  '_panOffset' is defined but never used    @typescript-eslint/no-unused-vars
+  100:45  warning  '_point' is defined but never used        @typescript-eslint/no-unused-vars
+  197:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\hooks\useUndoRedo.ts
+  205:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  206:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\pages\Dashboard.tsx
+    5:45  warning  'Clock' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+    5:52  warning  'Calendar' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+    6:15  warning  'Star' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   75:6   warning  React Hook useEffect has a missing dependency: 'loadRooms'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  118:9   warning  'handleCreateRoom' is assigned a value but never used                                                         @typescript-eslint/no-unused-vars
+  129:9   warning  'handleJoinRoom' is assigned a value but never used                                                           @typescript-eslint/no-unused-vars
+  264:57  warning  Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  308:64  warning  Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\pages\EmailVerificationPage.tsx
+  103:16  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\pages\ForgotPasswordPage.tsx
+  114:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\pages\LoginPage.tsx
+  169:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\pages\ProfilePage.tsx
+  148:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  148:57  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  228:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  236:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  449:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\pages\RegisterPage.tsx
+  193:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\pages\ResetPasswordPage.tsx
+  102:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\pages\RoomPage.tsx
+  24:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  65:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\services\AuthContext.tsx
+    9:9   warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   13:36  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   17:22  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   63:36  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   86:46  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  137:29  warning  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  169:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\services\accountDeletionService.ts
+   92:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  130:12  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  186:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  207:45  warning  'id' is defined but never used            @typescript-eslint/no-unused-vars
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\services\passwordResetService.ts
+   81:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  122:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  180:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\services\roomService.ts
+   74:30  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  162:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  199:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  252:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  285:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  316:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  343:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  354:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  382:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  410:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  434:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  442:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  480:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  523:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  541:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\utils\payloadCompression.ts
+    1:31  warning  'Point' is defined but never used         @typescript-eslint/no-unused-vars
+   10:66  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   12:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   49:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   64:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   87:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   88:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   89:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  115:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:43  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\utils\toolIcons.ts
+  14:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sidha\OneDrive\Desktop\Software_Engineering_Project\CollabCanvas\frontend\src\utils\viewportCulling.ts
+  50:13  error  Unexpected lexical declaration in case block  no-case-declarations
+  59:13  error  Unexpected lexical declaration in case block  no-case-declarations
+
+Γ£û 237 problems (6 errors, 231 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+
