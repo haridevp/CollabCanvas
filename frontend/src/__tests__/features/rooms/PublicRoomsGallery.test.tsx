@@ -1,12 +1,18 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi, describe, test, expect, beforeEach } from 'vitest';
 import PublicRoomsGallery from '../../../features/rooms/PublicRoomsGallery';
 import roomService from '../../../services/roomService';
 import { BrowserRouter } from 'react-router-dom';
 
 // Mock roomService
-jest.mock('../../services/roomService', () => ({
-  getPublicRooms: jest.fn(),
+vi.mock('../../../services/roomService', () => ({
+  default: {
+    getPublicRooms: vi.fn(),
+    joinRoom: vi.fn(),
+    leaveRoom: vi.fn(),
+    createRoom: vi.fn(),
+  }
 }));
 
 // Wrap with Router for navigate
@@ -41,22 +47,23 @@ const mockRooms = [
 
 describe('PublicRoomsGallery', () => {
   beforeEach(() => {
-    (roomService.getPublicRooms as jest.Mock).mockResolvedValue({
+    vi.clearAllMocks();
+    vi.mocked(roomService.getPublicRooms).mockResolvedValue({
       success: true,
-      rooms: mockRooms,
+      rooms: mockRooms as any,
     });
   });
 
   test('does not render when isOpen is false', () => {
     renderWithRouter(
-      <PublicRoomsGallery isOpen={false} onClose={jest.fn()} onJoinRoom={jest.fn()} />
+      <PublicRoomsGallery isOpen={false} onClose={vi.fn()} onJoinRoom={vi.fn()} />
     );
     expect(screen.queryByText(/Public Rooms Gallery/i)).not.toBeInTheDocument();
   });
 
   test('renders gallery and rooms when isOpen is true', async () => {
     renderWithRouter(
-      <PublicRoomsGallery isOpen={true} onClose={jest.fn()} onJoinRoom={jest.fn()} />
+      <PublicRoomsGallery isOpen={true} onClose={vi.fn()} onJoinRoom={vi.fn()} />
     );
 
     expect(screen.getByText(/Public Rooms Gallery/i)).toBeInTheDocument();
@@ -69,7 +76,7 @@ describe('PublicRoomsGallery', () => {
 
   test('filters rooms based on search input', async () => {
     renderWithRouter(
-      <PublicRoomsGallery isOpen={true} onClose={jest.fn()} onJoinRoom={jest.fn()} />
+      <PublicRoomsGallery isOpen={true} onClose={vi.fn()} onJoinRoom={vi.fn()} />
     );
 
     await waitFor(() => screen.getByText('Test Room 1'));
@@ -81,38 +88,44 @@ describe('PublicRoomsGallery', () => {
     expect(screen.getByText('Private Room')).toBeInTheDocument();
   });
 
-  test('calls onClose when close button is clicked', () => {
-    const onClose = jest.fn();
+  test('calls onClose when close button is clicked', async () => {
+    const onClose = vi.fn();
     renderWithRouter(
-      <PublicRoomsGallery isOpen={true} onClose={onClose} onJoinRoom={jest.fn()} />
+      <PublicRoomsGallery isOpen={true} onClose={onClose} onJoinRoom={vi.fn()} />
     );
+
+    await waitFor(() => screen.getByText('Test Room 1'));
 
     fireEvent.click(screen.getByLabelText('Close gallery'));
     expect(onClose).toHaveBeenCalled();
   });
 
   test('calls onJoinRoom when clicking a public room', async () => {
-    const onJoinRoom = jest.fn();
+    const onJoinRoom = vi.fn();
     renderWithRouter(
-      <PublicRoomsGallery isOpen={true} onClose={jest.fn()} onJoinRoom={onJoinRoom} />
+      <PublicRoomsGallery isOpen={true} onClose={vi.fn()} onJoinRoom={onJoinRoom} />
     );
 
     await waitFor(() => screen.getByText('Test Room 1'));
-    fireEvent.click(screen.getAllByText('Join Room')[0]);
+    // Finding join button - actually we want to click the card to trigger handleRoomClick
+    const card = screen.getByRole('article', { name: /Room: Test Room 1/i });
+    fireEvent.click(card);
 
     expect(onJoinRoom).toHaveBeenCalledWith('r1');
   });
 
   test('prompts for password when joining a private room', async () => {
-    window.prompt = jest.fn().mockReturnValue('secret');
-    const onJoinRoom = jest.fn();
+    vi.spyOn(window, 'prompt').mockReturnValue('secret');
+    const onJoinRoom = vi.fn();
 
     renderWithRouter(
-      <PublicRoomsGallery isOpen={true} onClose={jest.fn()} onJoinRoom={onJoinRoom} />
+      <PublicRoomsGallery isOpen={true} onClose={vi.fn()} onJoinRoom={onJoinRoom} />
     );
 
     await waitFor(() => screen.getByText('Private Room'));
-    fireEvent.click(screen.getAllByText('Join Room')[1]);
+    // Finding join button - actually click the card
+    const card = screen.getByRole('article', { name: /Room: Private Room/i });
+    fireEvent.click(card);
 
     expect(window.prompt).toHaveBeenCalledWith(
       'This room requires a password. Please enter the password:'
@@ -122,7 +135,7 @@ describe('PublicRoomsGallery', () => {
 
   test('category filter buttons change categoryFilter state', async () => {
     renderWithRouter(
-      <PublicRoomsGallery isOpen={true} onClose={jest.fn()} onJoinRoom={jest.fn()} />
+      <PublicRoomsGallery isOpen={true} onClose={vi.fn()} onJoinRoom={vi.fn()} />
     );
 
     const creativeButton = screen.getByLabelText('Filter by Creative');
@@ -136,7 +149,7 @@ describe('PublicRoomsGallery', () => {
 
   test('refresh button triggers loadRooms', async () => {
     renderWithRouter(
-      <PublicRoomsGallery isOpen={true} onClose={jest.fn()} onJoinRoom={jest.fn()} />
+      <PublicRoomsGallery isOpen={true} onClose={vi.fn()} onJoinRoom={vi.fn()} />
     );
 
     const refreshButton = screen.getByLabelText('Refresh rooms');
@@ -149,7 +162,7 @@ describe('PublicRoomsGallery', () => {
 
   test('sort select changes sortBy state and reloads rooms', async () => {
     renderWithRouter(
-      <PublicRoomsGallery isOpen={true} onClose={jest.fn()} onJoinRoom={jest.fn()} />
+      <PublicRoomsGallery isOpen={true} onClose={vi.fn()} onJoinRoom={vi.fn()} />
     );
 
     const sortSelect = screen.getByLabelText('Sort rooms by');
@@ -161,17 +174,29 @@ describe('PublicRoomsGallery', () => {
   });
 
   test('load more button calls handleLoadMore', async () => {
+    // Mock 20 rooms to make hasMore true
+    const manyRooms = Array.from({ length: 20 }, (_, i) => ({
+      ...mockRooms[0],
+      id: `room-${i}`,
+      name: `Room ${i}`,
+    }));
+
+    vi.mocked(roomService.getPublicRooms).mockResolvedValueOnce({
+      success: true,
+      rooms: manyRooms as any,
+    });
+
     renderWithRouter(
-      <PublicRoomsGallery isOpen={true} onClose={jest.fn()} onJoinRoom={jest.fn()} />
+      <PublicRoomsGallery isOpen={true} onClose={vi.fn()} onJoinRoom={vi.fn()} />
     );
 
-    await waitFor(() => screen.getByText('Test Room 1'));
+    await waitFor(() => screen.getByText('Room 0'));
 
     const loadMoreButton = screen.getByLabelText('Load more rooms');
     fireEvent.click(loadMoreButton);
 
     await waitFor(() => {
-      expect(roomService.getPublicRooms).toHaveBeenCalled();
+      expect(roomService.getPublicRooms).toHaveBeenCalledTimes(2); // Initial + load more
     });
   });
 });

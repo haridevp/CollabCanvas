@@ -1,6 +1,7 @@
 // src/__tests__/pages/ProfilePage.test.tsx
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi, describe, test, expect, beforeEach } from 'vitest';
 import ProfilePage from '../../pages/ProfilePage';
 import { updateProfile } from '../../utils/authService';
 import { useAuth } from '../../services/AuthContext';
@@ -13,12 +14,12 @@ import {
 // ============ MOCKS ============
 
 // Sidebar
-jest.mock('../../components/Sidebar', () => ({
+vi.mock('../../components/Sidebar', () => ({
   Sidebar: () => <div data-testid="sidebar">Sidebar</div>,
 }));
 
 // UI Components
-jest.mock('../../components/ui/Button', () => ({
+vi.mock('../../components/ui/Button', () => ({
   Button: ({ children, onClick, isLoading, className, variant }: any) => (
     <button
       onClick={onClick}
@@ -31,7 +32,7 @@ jest.mock('../../components/ui/Button', () => ({
   ),
 }));
 
-jest.mock('../../components/ui/Modal', () => ({
+vi.mock('../../components/ui/Modal', () => ({
   Modal: ({ isOpen, title, children }: any) =>
     isOpen ? (
       <div data-testid="modal">
@@ -41,7 +42,7 @@ jest.mock('../../components/ui/Modal', () => ({
     ) : null,
 }));
 
-jest.mock('../../components/ui/ThemeSelector', () => ({
+vi.mock('../../components/ui/ThemeSelector', () => ({
   __esModule: true,
   default: ({ currentTheme, onThemeChange }: any) => (
     <div data-testid="theme-selector">
@@ -54,7 +55,7 @@ jest.mock('../../components/ui/ThemeSelector', () => ({
   ),
 }));
 
-jest.mock('../../components/ui/CharacterCounter', () => ({
+vi.mock('../../components/ui/CharacterCounter', () => ({
   __esModule: true,
   default: ({ currentLength, maxLength }: any) => (
     <div data-testid="character-counter">
@@ -63,7 +64,7 @@ jest.mock('../../components/ui/CharacterCounter', () => ({
   ),
 }));
 
-jest.mock('../../components/ui/FileUpload', () => ({
+vi.mock('../../components/ui/FileUpload', () => ({
   __esModule: true,
   default: ({ onFileSelect }: any) => (
     <div data-testid="file-upload">
@@ -75,7 +76,7 @@ jest.mock('../../components/ui/FileUpload', () => ({
   ),
 }));
 
-jest.mock('../../components/ui/ImageCropper', () => ({
+vi.mock('../../components/ui/ImageCropper', () => ({
   __esModule: true,
   default: ({ onCropComplete, onCancel }: any) => (
     <div data-testid="image-cropper">
@@ -87,31 +88,31 @@ jest.mock('../../components/ui/ImageCropper', () => ({
   ),
 }));
 
-jest.mock('../../components/DeletionSurveyModal', () => ({
+vi.mock('../../components/DeletionSurveyModal', () => ({
   __esModule: true,
   default: ({ isOpen }: any) => (isOpen ? <div>Deletion Survey</div> : null),
 }));
 
 // Services
-jest.mock('../../utils/authService', () => ({
-  updateProfile: jest.fn(),
+vi.mock('../../utils/authService', () => ({
+  updateProfile: vi.fn(),
 }));
 
-jest.mock('../../services/AuthContext', () => ({
-  useAuth: jest.fn(),
+vi.mock('../../services/AuthContext', () => ({
+  useAuth: vi.fn(),
 }));
 
-jest.mock('../../services/accountDeletionService', () => ({
-  requestAccountDeletion: jest.fn(),
-  hasPendingDeletion: jest.fn(),
-  getPendingDeletion: jest.fn(),
-  cancelAccountDeletion: jest.fn(),
-  clearUserData: jest.fn(),
+vi.mock('../../services/accountDeletionService', () => ({
+  requestAccountDeletion: vi.fn(),
+  hasPendingDeletion: vi.fn(),
+  getPendingDeletion: vi.fn(),
+  cancelAccountDeletion: vi.fn(),
+  clearUserData: vi.fn(),
 }));
 
 // ============ HELPERS ============
-const mockUpdateUser = jest.fn();
-const mockLogout = jest.fn();
+const mockUpdateUser = vi.fn();
+const mockLogout = vi.fn();
 
 const baseUser = {
   email: 'test@example.com',
@@ -122,7 +123,7 @@ const baseUser = {
 };
 
 const setupAuthMock = (overrides?: Partial<typeof baseUser>) => {
-  (useAuth as jest.Mock).mockReturnValue({
+  (useAuth as any).mockReturnValue({
     user: { ...baseUser, ...(overrides || {}) },
     updateUser: mockUpdateUser,
     logout: mockLogout,
@@ -132,32 +133,32 @@ const setupAuthMock = (overrides?: Partial<typeof baseUser>) => {
 // ============ TESTS ============
 describe('ProfilePage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     setupAuthMock();
 
-    (hasPendingDeletion as jest.Mock).mockReturnValue(false);
-    (getPendingDeletion as jest.Mock).mockReturnValue(null);
+    vi.mocked(hasPendingDeletion).mockReturnValue(false);
+    vi.mocked(getPendingDeletion).mockReturnValue(null);
 
     // Avoid crash for URL.createObjectURL
-    global.URL.createObjectURL = jest.fn(() => 'blob:mock');
+    global.URL.createObjectURL = vi.fn(() => 'blob:mock');
 
     // Default matchMedia
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
-      value: jest.fn().mockImplementation((query) => ({
+      value: vi.fn().mockImplementation((query) => ({
         matches: false,
         media: query,
         onchange: null,
-        addListener: jest.fn(),
-        removeListener: jest.fn(),
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
       })),
     });
 
-    jest.spyOn(window, 'alert').mockImplementation(() => {});
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
   test('renders base layout and personal tab by default', () => {
@@ -266,11 +267,11 @@ describe('ProfilePage', () => {
       matches: query.includes('prefers-color-scheme: dark'),
       media: query,
       onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
     }));
 
     render(<ProfilePage />);
@@ -334,7 +335,7 @@ describe('ProfilePage', () => {
   });
 
   test('save changes: calls updateProfile and updates global user on success', async () => {
-    (updateProfile as jest.Mock).mockResolvedValueOnce({
+    vi.mocked(updateProfile).mockResolvedValueOnce({
       success: true,
       user: { ...baseUser, fullName: 'New Name' },
       message: 'ok',
@@ -356,7 +357,7 @@ describe('ProfilePage', () => {
   });
 
   test('save changes: shows message when updateProfile returns success=false', async () => {
-    (updateProfile as jest.Mock).mockResolvedValueOnce({
+    vi.mocked(updateProfile).mockResolvedValueOnce({
       success: false,
       message: 'Bad request',
     });
@@ -373,7 +374,7 @@ describe('ProfilePage', () => {
   });
 
   test('save changes: shows fallback error on thrown error', async () => {
-    (updateProfile as jest.Mock).mockRejectedValueOnce(new Error('Network'));
+    vi.mocked(updateProfile).mockRejectedValueOnce(new Error('Network'));
 
     render(<ProfilePage />);
 
@@ -475,7 +476,7 @@ describe('ProfilePage', () => {
   });
 
   test('security: successful delete calls requestAccountDeletion and redirects', async () => {
-    (requestAccountDeletion as jest.Mock).mockResolvedValueOnce({ success: true });
+    vi.mocked(requestAccountDeletion).mockResolvedValueOnce({ success: true });
 
     delete (window as any).location;
     (window as any).location = { href: '' };

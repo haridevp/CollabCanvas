@@ -1,23 +1,28 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import ForgotPasswordPage from '../../pages/ForgotPasswordPage';
 
 // MOCK: forgotPassword API
-const mockForgotPassword = jest.fn();
+const mockForgotPassword = vi.fn();
 
-jest.mock('../../utils/authService', () => ({
+vi.mock('../../utils/authService', () => ({
   forgotPassword: (email: string) => mockForgotPassword(email)
 }));
 
 describe('ForgotPasswordPage', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  test('renders initial UI correctly', () => {
-    render(<ForgotPasswordPage />);
+  it('renders initial UI correctly', () => {
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
 
     expect(screen.getByText(/Reset Password/i)).toBeInTheDocument();
     expect(
@@ -31,7 +36,11 @@ describe('ForgotPasswordPage', () => {
 
   test('shows error if email is empty', async () => {
     const user = userEvent.setup();
-    render(<ForgotPasswordPage />);
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
 
     // click submit with empty input
     await user.click(screen.getByRole('button', { name: /Send Reset Link/i }));
@@ -45,7 +54,11 @@ describe('ForgotPasswordPage', () => {
 
   test('shows error if email format is invalid', async () => {
     const user = userEvent.setup();
-    render(<ForgotPasswordPage />);
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
 
     await user.type(screen.getByLabelText(/Email Address/i), 'notanemail');
     await user.click(screen.getByRole('button', { name: /Send Reset Link/i }));
@@ -65,7 +78,11 @@ describe('ForgotPasswordPage', () => {
       message: 'Reset email sent'
     });
 
-    render(<ForgotPasswordPage />);
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
 
     await user.type(screen.getByLabelText(/Email Address/i), 'user@example.com');
     await user.click(screen.getByRole('button', { name: /Send Reset Link/i }));
@@ -83,7 +100,11 @@ describe('ForgotPasswordPage', () => {
       message: 'Reset email sent'
     });
 
-    render(<ForgotPasswordPage />);
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
 
     await user.type(screen.getByLabelText(/Email Address/i), 'user@example.com');
     await user.click(screen.getByRole('button', { name: /Send Reset Link/i }));
@@ -101,7 +122,11 @@ describe('ForgotPasswordPage', () => {
       message: 'Too many requests'
     });
 
-    render(<ForgotPasswordPage />);
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
 
     await user.type(screen.getByLabelText(/Email Address/i), 'user@example.com');
     await user.click(screen.getByRole('button', { name: /Send Reset Link/i }));
@@ -114,7 +139,11 @@ describe('ForgotPasswordPage', () => {
 
     mockForgotPassword.mockRejectedValue(new Error('Network down'));
 
-    render(<ForgotPasswordPage />);
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
 
     await user.type(screen.getByLabelText(/Email Address/i), 'user@example.com');
     await user.click(screen.getByRole('button', { name: /Send Reset Link/i }));
@@ -131,7 +160,11 @@ describe('ForgotPasswordPage', () => {
       response: { data: { message: 'Email service down' } }
     });
 
-    render(<ForgotPasswordPage />);
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
 
     await user.type(screen.getByLabelText(/Email Address/i), 'user@example.com');
     await user.click(screen.getByRole('button', { name: /Send Reset Link/i }));
@@ -143,9 +176,13 @@ describe('ForgotPasswordPage', () => {
     const user = userEvent.setup();
 
     // Make promise never resolve so loading stays true
-    mockForgotPassword.mockImplementation(() => new Promise(() => {}));
+    mockForgotPassword.mockImplementation(() => new Promise(() => { }));
 
-    render(<ForgotPasswordPage />);
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
 
     const input = screen.getByLabelText(/Email Address/i);
     const button = screen.getByRole('button', { name: /Send Reset Link/i });
@@ -165,7 +202,11 @@ describe('ForgotPasswordPage', () => {
       message: 'Reset email sent'
     });
 
-    render(<ForgotPasswordPage />);
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
 
     await user.type(screen.getByLabelText(/Email Address/i), 'user@example.com');
     await user.click(screen.getByRole('button', { name: /Send Reset Link/i }));
@@ -186,7 +227,11 @@ describe('ForgotPasswordPage', () => {
       message: 'Reset email sent'
     });
 
-    render(<ForgotPasswordPage />);
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
 
     const input = screen.getByLabelText(/Email Address/i);
 

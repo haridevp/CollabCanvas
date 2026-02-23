@@ -191,7 +191,7 @@ describe("Dashboard Component", () => {
 
     await waitFor(() => {
       expect(mockGetPublicRooms).toHaveBeenCalled();
-      expect(screen.getByText("Public Room")).toBeInTheDocument();
+      expect(screen.getByTestId("room-card")).toHaveTextContent("Public Room");
     });
   });
 

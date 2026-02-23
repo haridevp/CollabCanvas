@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import FileUpload from "../../../components/ui/FileUpload";
 
 const makeFile = (name: string, size: number, type = "image/png") => {
@@ -12,15 +13,15 @@ const makeFile = (name: string, size: number, type = "image/png") => {
 describe("FileUpload", () => {
   beforeEach(() => {
     // Mock URL.createObjectURL (used for preview)
-    global.URL.createObjectURL = jest.fn(() => "blob:mock-url");
+    global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("renders upload area initially", () => {
-    render(<FileUpload onFileSelect={jest.fn()} />);
+    render(<FileUpload onFileSelect={vi.fn()} />);
 
     expect(
       screen.getByRole("button", {
@@ -32,10 +33,11 @@ describe("FileUpload", () => {
   });
 
   it("selects a valid file and calls onFileSelect(file)", () => {
-    const onFileSelect = jest.fn();
+    const onFileSelect = vi.fn();
     render(<FileUpload onFileSelect={onFileSelect} />);
 
-    const input = screen.getByLabelText(/file upload/i) as HTMLInputElement;
+    // Use strict regex to match input aria-label "File upload" only
+    const input = screen.getByLabelText(/^File upload$/i) as HTMLInputElement;
 
     const file = makeFile("test.png", 1024 * 1024); // 1MB
 
@@ -51,10 +53,10 @@ describe("FileUpload", () => {
   });
 
   it("rejects unsupported file format and calls onFileSelect(null)", () => {
-    const onFileSelect = jest.fn();
+    const onFileSelect = vi.fn();
     render(<FileUpload onFileSelect={onFileSelect} />);
 
-    const input = screen.getByLabelText(/file upload/i);
+    const input = screen.getByLabelText(/^File upload$/i);
 
     const file = makeFile("bad.pdf", 5000, "application/pdf");
 
@@ -68,10 +70,10 @@ describe("FileUpload", () => {
   });
 
   it("rejects file larger than maxSizeMB and calls onFileSelect(null)", () => {
-    const onFileSelect = jest.fn();
+    const onFileSelect = vi.fn();
     render(<FileUpload onFileSelect={onFileSelect} maxSizeMB={5} />);
 
-    const input = screen.getByLabelText(/file upload/i);
+    const input = screen.getByLabelText(/^File upload$/i);
 
     const tooBig = makeFile("big.png", 6 * 1024 * 1024); // 6MB
 
@@ -83,10 +85,10 @@ describe("FileUpload", () => {
   });
 
   it("removes selected file when clicking remove button", () => {
-    const onFileSelect = jest.fn();
+    const onFileSelect = vi.fn();
     render(<FileUpload onFileSelect={onFileSelect} />);
 
-    const input = screen.getByLabelText(/file upload/i);
+    const input = screen.getByLabelText(/^File upload$/i);
 
     const file = makeFile("test.png", 1024);
 
@@ -104,7 +106,7 @@ describe("FileUpload", () => {
   });
 
   it("supports drag over -> adds dragging styles", () => {
-    render(<FileUpload onFileSelect={jest.fn()} />);
+    render(<FileUpload onFileSelect={vi.fn()} />);
 
     const dropArea = screen.getByRole("button", { name: /file upload area/i });
 
@@ -115,7 +117,7 @@ describe("FileUpload", () => {
   });
 
   it("supports drag leave -> removes dragging styles", () => {
-    render(<FileUpload onFileSelect={jest.fn()} />);
+    render(<FileUpload onFileSelect={vi.fn()} />);
 
     const dropArea = screen.getByRole("button", { name: /file upload area/i });
 
@@ -127,7 +129,7 @@ describe("FileUpload", () => {
   });
 
   it("supports dropping a valid file and calls onFileSelect(file)", () => {
-    const onFileSelect = jest.fn();
+    const onFileSelect = vi.fn();
     render(<FileUpload onFileSelect={onFileSelect} />);
 
     const dropArea = screen.getByRole("button", { name: /file upload area/i });
@@ -145,7 +147,7 @@ describe("FileUpload", () => {
   });
 
   it("does not select invalid dropped file (wrong extension)", () => {
-    const onFileSelect = jest.fn();
+    const onFileSelect = vi.fn();
     render(<FileUpload onFileSelect={onFileSelect} />);
 
     const dropArea = screen.getByRole("button", { name: /file upload area/i });
@@ -167,10 +169,10 @@ describe("FileUpload", () => {
   });
 
   it("opens file input when pressing Enter on upload area", () => {
-    render(<FileUpload onFileSelect={jest.fn()} />);
+    render(<FileUpload onFileSelect={vi.fn()} />);
 
-    const input = screen.getByLabelText(/file upload/i) as HTMLInputElement;
-    const clickSpy = jest.spyOn(input, "click");
+    const input = screen.getByLabelText(/^File upload$/i) as HTMLInputElement;
+    const clickSpy = vi.spyOn(input, "click");
 
     const dropArea = screen.getByRole("button", { name: /file upload area/i });
 
@@ -180,10 +182,10 @@ describe("FileUpload", () => {
   });
 
   it("opens file input when pressing Space on upload area", () => {
-    render(<FileUpload onFileSelect={jest.fn()} />);
+    render(<FileUpload onFileSelect={vi.fn()} />);
 
-    const input = screen.getByLabelText(/file upload/i) as HTMLInputElement;
-    const clickSpy = jest.spyOn(input, "click");
+    const input = screen.getByLabelText(/^File upload$/i) as HTMLInputElement;
+    const clickSpy = vi.spyOn(input, "click");
 
     const dropArea = screen.getByRole("button", { name: /file upload area/i });
 
@@ -195,7 +197,7 @@ describe("FileUpload", () => {
   it("shows custom accepted formats + maxSizeMB in UI", () => {
     render(
       <FileUpload
-        onFileSelect={jest.fn()}
+        onFileSelect={vi.fn()}
         acceptedFormats={[".png"]}
         maxSizeMB={10}
       />

@@ -81,7 +81,7 @@ describe("CharacterCounter", () => {
     const progress = screen.getByRole("progressbar");
     const inner = progress.firstElementChild as HTMLElement;
 
-    expect(inner.style.minWidth).toBe("0px");
+    expect(inner.style.minWidth).toBe("0");
   });
 
   test("applies custom className", () => {

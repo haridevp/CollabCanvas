@@ -1,37 +1,38 @@
 // src/__tests__/pages/RoomPage.test.tsx
 
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
+import { vi, describe, it, expect, beforeEach, afterEach, test } from "vitest";
 import RoomPage from "../../pages/RoomPage";
 import roomService from "../../services/roomService";
 
 // -------------------- Mocks --------------------
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
-jest.mock("react-router-dom", () => {
-  const actual = jest.requireActual("react-router-dom");
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
   };
 });
 
-jest.mock("../../services/AuthContext", () => ({
+vi.mock("../../services/AuthContext", () => ({
   useAuth: () => ({
     user: { id: "user-1" },
   }),
 }));
 
-jest.mock("../../services/roomService", () => ({
+vi.mock("../../services/roomService", () => ({
   __esModule: true,
   default: {
-    getRoom: jest.fn(),
+    getRoom: vi.fn(),
   },
 }));
 
-jest.mock("../../components/ui/InviteModal", () => ({
+vi.mock("../../components/ui/InviteModal", () => ({
   __esModule: true,
   default: ({ isOpen, roomId, roomName }: any) =>
     isOpen ? (
@@ -41,7 +42,7 @@ jest.mock("../../components/ui/InviteModal", () => ({
     ) : null,
 }));
 
-jest.mock("../../features/rooms/ParticipantsPanel", () => ({
+vi.mock("../../features/rooms/ParticipantsPanel", () => ({
   __esModule: true,
   default: ({ isOpen, roomId, currentUserRole }: any) =>
     isOpen ? (
@@ -51,7 +52,7 @@ jest.mock("../../features/rooms/ParticipantsPanel", () => ({
     ) : null,
 }));
 
-jest.mock("../../features/canvas/CollaborativeCanvas", () => ({
+vi.mock("../../features/canvas/CollaborativeCanvas", () => ({
   __esModule: true,
   CollaborativeCanvas: ({ roomId }: any) => (
     <div data-testid="collaborative-canvas">Canvas - {roomId}</div>
@@ -61,11 +62,11 @@ jest.mock("../../features/canvas/CollaborativeCanvas", () => ({
 // Clipboard mock
 Object.assign(navigator, {
   clipboard: {
-    writeText: jest.fn(),
+    writeText: vi.fn(),
   },
 });
 
-const mockedGetRoom = (roomService as any).default.getRoom as jest.Mock;
+const mockedGetRoom = (roomService as any).getRoom;
 
 // -------------------- Helpers --------------------
 
@@ -83,13 +84,13 @@ const renderPage = (roomId = "room-123") => {
 
 describe("RoomPage", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
   });
 
   test("shows loading state initially", async () => {
@@ -132,8 +133,8 @@ describe("RoomPage", () => {
     expect(await screen.findByText("Design Room")).toBeInTheDocument();
 
     // Room ID shown
-    expect(screen.getAllByText(/room id/i)[0]).toBeInTheDocument();
-    expect(screen.getAllByText("room-999")[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/room code/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText("XYZ")[0]).toBeInTheDocument();
 
     // Participant count badge
     expect(screen.getByText("12")).toBeInTheDocument();
@@ -212,7 +213,7 @@ describe("RoomPage", () => {
         ownerId: "user-1",
         ownerName: "Me",
         participantCount: 2,
-        roomCode: "",
+        roomCode: "room-copy",
       },
     });
 
@@ -220,7 +221,7 @@ describe("RoomPage", () => {
 
     await screen.findByText("Copy Test Room");
 
-    const copyBtn = screen.getByRole("button", { name: /copy room id/i });
+    const copyBtn = screen.getByRole("button", { name: /copy room code/i });
     fireEvent.click(copyBtn);
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("room-copy");
@@ -229,9 +230,11 @@ describe("RoomPage", () => {
     expect(await screen.findByText(/copied!/i)).toBeInTheDocument();
 
     // After 2s it should revert
-    jest.advanceTimersByTime(2000);
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+    });
 
-    expect(await screen.findByText(/copy/i)).toBeInTheDocument();
+    expect(screen.queryByText(/copied!/i)).not.toBeInTheDocument();
   });
 
   test("opens InviteModal when clicking Invite button", async () => {

@@ -13,6 +13,7 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import Dashboard from './pages/Dashboard';
 import ProfilePage from './pages/ProfilePage';
 import RoomPage from './pages/RoomPage';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 /**
  * Main Application Component
@@ -59,92 +60,32 @@ function App() {
     return cleanup;
   }, []);
 
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
   return (
     // Wrap entire application with authentication provider
     // AuthProvider makes authentication state available to all child components
-    <AuthProvider>
-      {/* 
-        React Router setup with basename configuration
-        basename is configured from environment for deployment flexibility
-      */}
-      <Router basename={import.meta.env.BASE_URL}>
-        <Routes>
-          {/* 
-            Root path redirect: Redirects from "/" to "/login"
-            replace prevents browser history entry for the redirect
-          */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <AuthProvider>
+        <Router basename={import.meta.env.BASE_URL}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
 
-          {/* 
-            ======================
-            Authentication Routes
-            ======================
-            These routes are accessible without authentication
-          */}
+            {/* Authentication Routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/registration-success" element={<RegistrationSuccess />} />
 
-          {/* User login page */}
-          <Route path="/login" element={<LoginPage />} />
-
-          {/* User registration page */}
-          <Route path="/register" element={<RegisterPage />} />
-
-          {/* 
-            Registration Success Page (NEW)
-            Intermediate page shown after successful registration
-            Provides feedback and next steps for new users
-          */}
-          <Route path="/registration-success" element={<RegistrationSuccess />} />
-
-          {/* Password recovery flow */}
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-
-          {/* 
-            Email verification landing page
-            Users arrive here after clicking verification links in emails
-          */}
-          <Route path="/verify-email" element={<EmailVerificationPage />} />
-
-          {/* 
-            ======================
-            Legal & Compliance Routes
-            ======================
-            Public legal documentation pages
-          */}
-          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-
-          {/* 
-            ======================
-            Protected Application Routes
-            ======================
-            These routes should be protected by authentication guards
-            In production, consider adding route guards or protected route components
-          */}
-
-          {/* Main application dashboard */}
-          <Route path="/dashboard" element={<Dashboard />} />
-
-          {/* User profile management */}
-          <Route path="/profile" element={<ProfilePage />} />
-
-          {/* 
-            Collaborative room workspace
-            Dynamic route with room ID parameter
-            Accessible at: /room/:id where :id is the room identifier
-          */}
-          <Route path="/room/:id" element={<RoomPage />} />
-
-          {/* 
-            ======================
-            Fallback & Error Routes
-            ======================
-            Handles undefined paths (404 equivalent)
-          */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+            {/* Other Routes */}
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/room/:id" element={<RoomPage />} />
+            
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
 

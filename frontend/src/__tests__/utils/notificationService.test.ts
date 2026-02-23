@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import api from "../../api/axios";
 import {
   getNotifications,
@@ -7,23 +8,22 @@ import {
   deleteNotification,
 } from "../../utils/notificationService";
 
-jest.mock("../../api/axios", () => ({
-  __esModule: true,
+vi.mock("../../api/axios", () => ({
   default: {
-    get: jest.fn(),
-    post: jest.fn(),
-    delete: jest.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
 describe("notificationsService", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("getNotifications()", () => {
     test("should fetch notifications with correct params", async () => {
-      (api.get as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.get).mockResolvedValueOnce({
         data: { success: true, notifications: ["n1"] },
       });
 
@@ -37,7 +37,7 @@ describe("notificationsService", () => {
     });
 
     test("should return fallback response on error", async () => {
-      (api.get as jest.Mock).mockRejectedValueOnce({
+      vi.mocked(api.get).mockRejectedValueOnce({
         response: { data: { message: "Server down" } },
       });
 
@@ -52,7 +52,7 @@ describe("notificationsService", () => {
     });
 
     test("should return default error message if no backend message", async () => {
-      (api.get as jest.Mock).mockRejectedValueOnce({});
+      vi.mocked(api.get).mockRejectedValueOnce({});
 
       const result = await getNotifications();
 
@@ -63,7 +63,7 @@ describe("notificationsService", () => {
 
   describe("getUnreadCount()", () => {
     test("should fetch unread count", async () => {
-      (api.get as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.get).mockResolvedValueOnce({
         data: { success: true, unreadCount: 5 },
       });
 
@@ -74,7 +74,7 @@ describe("notificationsService", () => {
     });
 
     test("should return fallback unreadCount on error", async () => {
-      (api.get as jest.Mock).mockRejectedValueOnce({});
+      vi.mocked(api.get).mockRejectedValueOnce({});
 
       const result = await getUnreadCount();
 
@@ -84,7 +84,7 @@ describe("notificationsService", () => {
 
   describe("markNotificationAsRead()", () => {
     test("should mark a notification as read", async () => {
-      (api.post as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.post).mockResolvedValueOnce({
         data: { success: true },
       });
 
@@ -95,7 +95,7 @@ describe("notificationsService", () => {
     });
 
     test("should return fallback response on error", async () => {
-      (api.post as jest.Mock).mockRejectedValueOnce({
+      vi.mocked(api.post).mockRejectedValueOnce({
         response: { data: { message: "Not found" } },
       });
 
@@ -110,7 +110,7 @@ describe("notificationsService", () => {
 
   describe("markAllNotificationsAsRead()", () => {
     test("should mark all notifications as read", async () => {
-      (api.post as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.post).mockResolvedValueOnce({
         data: { success: true },
       });
 
@@ -121,7 +121,7 @@ describe("notificationsService", () => {
     });
 
     test("should return fallback response on error", async () => {
-      (api.post as jest.Mock).mockRejectedValueOnce({});
+      vi.mocked(api.post).mockRejectedValueOnce({});
 
       const result = await markAllNotificationsAsRead();
 
@@ -134,7 +134,7 @@ describe("notificationsService", () => {
 
   describe("deleteNotification()", () => {
     test("should delete notification", async () => {
-      (api.delete as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.delete).mockResolvedValueOnce({
         data: { success: true },
       });
 
@@ -145,7 +145,7 @@ describe("notificationsService", () => {
     });
 
     test("should return fallback response on error", async () => {
-      (api.delete as jest.Mock).mockRejectedValueOnce({
+      vi.mocked(api.delete).mockRejectedValueOnce({
         response: { data: { message: "Delete failed" } },
       });
 

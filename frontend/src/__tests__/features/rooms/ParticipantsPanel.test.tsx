@@ -1,12 +1,15 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi, describe, test, expect, beforeEach } from 'vitest';
 import ParticipantsPanel from '../../../features/rooms/ParticipantsPanel';
 import roomService from '../../../services/roomService';
 
 // Mock roomService
-jest.mock('../../services/roomService', () => ({
-  getParticipants: jest.fn(),
-  manageParticipant: jest.fn(),
+vi.mock('../../../services/roomService', () => ({
+  default: {
+    getParticipants: vi.fn(),
+    manageParticipant: vi.fn(),
+  }
 }));
 
 const mockParticipants = [
@@ -32,11 +35,11 @@ const mockParticipants = [
 
 describe('ParticipantsPanel', () => {
   beforeEach(() => {
-    (roomService.getParticipants as jest.Mock).mockResolvedValue({
+    vi.mocked(roomService.getParticipants).mockResolvedValue({
       success: true,
       participants: mockParticipants,
     });
-    (roomService.manageParticipant as jest.Mock).mockResolvedValue({
+    vi.mocked(roomService.manageParticipant).mockResolvedValue({
       success: true,
     });
   });
@@ -48,13 +51,13 @@ describe('ParticipantsPanel', () => {
         currentUserId="u1"
         currentUserRole="owner"
         isOpen={true}
-        onClose={jest.fn()}
+        onClose={vi.fn()}
       />
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Alice')).toBeInTheDocument();
-      expect(screen.getByText('Bob')).toBeInTheDocument();
+      expect(screen.getByText(/Alice/i)).toBeInTheDocument();
+      expect(screen.getByText(/Bob/i)).toBeInTheDocument();
     });
   });
 
@@ -65,17 +68,17 @@ describe('ParticipantsPanel', () => {
         currentUserId="u1"
         currentUserRole="owner"
         isOpen={true}
-        onClose={jest.fn()}
+        onClose={vi.fn()}
       />
     );
 
-    await waitFor(() => screen.getByText('Alice'));
+    await waitFor(() => screen.getByText(/Alice/i));
 
     const searchInput = screen.getByPlaceholderText('Search participants...');
     fireEvent.change(searchInput, { target: { value: 'Bob' } });
 
-    expect(screen.queryByText('Alice')).not.toBeInTheDocument();
-    expect(screen.getByText('Bob')).toBeInTheDocument();
+    expect(screen.queryByText(/Alice/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Bob/i)).toBeInTheDocument();
   });
 
   test('opens action menu when more button is clicked', async () => {
@@ -85,15 +88,15 @@ describe('ParticipantsPanel', () => {
         currentUserId="u1"
         currentUserRole="owner"
         isOpen={true}
-        onClose={jest.fn()}
+        onClose={vi.fn()}
       />
     );
 
-    await waitFor(() => screen.getByText('Bob'));
+    await waitFor(() => screen.getByText(/Bob/i));
     const manageButtons = screen.getAllByLabelText(/Manage/);
     fireEvent.click(manageButtons[0]);
 
-    expect(screen.getByText('Manage Bob')).toBeInTheDocument();
+    expect(screen.getByText(/Manage Bob/i)).toBeInTheDocument();
   });
 
   test('promotes participant to moderator', async () => {
@@ -103,11 +106,11 @@ describe('ParticipantsPanel', () => {
         currentUserId="u1"
         currentUserRole="owner"
         isOpen={true}
-        onClose={jest.fn()}
+        onClose={vi.fn()}
       />
     );
 
-    await waitFor(() => screen.getByText('Bob'));
+    await waitFor(() => screen.getByText(/Bob/i));
     const manageButton = screen.getAllByLabelText(/Manage/)[0];
     fireEvent.click(manageButton);
 
@@ -130,11 +133,11 @@ describe('ParticipantsPanel', () => {
         currentUserId="u1"
         currentUserRole="owner"
         isOpen={true}
-        onClose={jest.fn()}
+        onClose={vi.fn()}
       />
     );
 
-    await waitFor(() => screen.getByText('Bob'));
+    await waitFor(() => screen.getByText(/Bob/i));
     const manageButton = screen.getAllByLabelText(/Manage/)[0];
     fireEvent.click(manageButton);
 
@@ -156,7 +159,7 @@ describe('ParticipantsPanel', () => {
   });
 
   test('calls onClose when close button is clicked', () => {
-    const handleClose = jest.fn();
+    const handleClose = vi.fn();
 
     render(
       <ParticipantsPanel

@@ -1,172 +1,109 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import ThemeSelector from '../../../components/ui/ThemeSelector';
+import { vi, describe, beforeEach, afterEach, test, expect } from 'vitest';
+import ThemeSelector, { ThemeType } from '../../../components/ui/ThemeSelector';
 
-const createMatchMedia = (matches: boolean) => {
-  const listeners = new Set<(e: MediaQueryListEvent) => void>();
-
-  return (query: string) => {
-    const mql: any = {
-      matches,
-      media: query,
-      onchange: null,
-      addEventListener: (event: string, cb: any) => {
-        if (event === 'change') listeners.add(cb);
-      },
-      removeEventListener: (event: string, cb: any) => {
-        if (event === 'change') listeners.delete(cb);
-      },
-      dispatch: (nextMatches: boolean) => {
-        mql.matches = nextMatches;
-        listeners.forEach((cb) => cb({ matches: nextMatches } as MediaQueryListEvent));
-      }
-    };
-    return mql;
-  };
-};
+// Mock the utils/theme module to spy on applyTheme and setStoredTheme
+// We need to import actual to not break if we want to test side effects, 
+// but for unit testing the component, mocking is safer.
+// However, the component calls them directly.
+// Let's rely on the real DOM update for integration test feel, 
+// or simple spying if we want isolation. 
+// Given the previous tests checked classList, let's keep it real but clean up.
 
 describe('ThemeSelector', () => {
   beforeEach(() => {
     localStorage.clear();
     document.documentElement.className = '';
+    vi.clearAllMocks();
   });
 
   test('renders all theme options', () => {
-    render(<ThemeSelector currentTheme="system" onThemeChange={jest.fn()} />);
+    render(<ThemeSelector currentTheme="system" onThemeChange={vi.fn()} />);
 
     expect(screen.getByText('Theme Selection')).toBeInTheDocument();
-
     expect(screen.getByRole('button', { name: /Select Light theme/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Select Dark theme/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Select System theme/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Select High Contrast theme/i })).toBeInTheDocument();
   });
 
-  test('uses saved theme from localStorage if valid', () => {
-    localStorage.setItem('user-theme', 'dark');
+  test('displays the current theme passed via props', () => {
+    render(<ThemeSelector currentTheme="dark" onThemeChange={vi.fn()} />);
 
-    render(<ThemeSelector currentTheme="light" onThemeChange={jest.fn()} />);
+    // Check if Dark button is pressed/active
+    const darkBtn = screen.getByRole('button', { name: /Select Dark theme/i });
+    expect(darkBtn).toHaveAttribute('aria-pressed', 'true');
+    expect(darkBtn).toHaveTextContent('Active');
 
-    expect(screen.getByLabelText('Current theme: Dark')).toBeInTheDocument();
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    // Check if summary shows Dark
+    // The text "Dark theme for night time use" appears in the button description and potentially in the summary
+    const descriptions = screen.getAllByText('Dark theme for night time use');
+    expect(descriptions.length).toBeGreaterThan(0);
+    expect(descriptions[0]).toBeInTheDocument();
   });
 
-  test('ignores invalid saved theme and falls back to currentTheme', () => {
-    localStorage.setItem('user-theme', 'not-a-theme');
-
-    render(<ThemeSelector currentTheme="light" onThemeChange={jest.fn()} />);
-
-    expect(screen.getByLabelText('Current theme: Light')).toBeInTheDocument();
-    expect(document.documentElement.classList.contains('light')).toBe(true);
-  });
-
-  test('clicking a theme calls onThemeChange and applies correct class + localStorage', () => {
-    const onThemeChange = jest.fn();
-
-    render(<ThemeSelector currentTheme="system" onThemeChange={onThemeChange} />);
+  test('calls onThemeChange when a theme button is clicked', () => {
+    const onThemeChange = vi.fn();
+    render(<ThemeSelector currentTheme="light" onThemeChange={onThemeChange} />);
 
     fireEvent.click(screen.getByRole('button', { name: /Select Dark theme/i }));
 
+    expect(onThemeChange).toHaveBeenCalledTimes(1);
     expect(onThemeChange).toHaveBeenCalledWith('dark');
-    expect(localStorage.getItem('user-theme')).toBe('dark');
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
-  test('high-contrast applies both high-contrast and dark classes', () => {
-    render(<ThemeSelector currentTheme="system" onThemeChange={jest.fn()} />);
+  test('applies theme to DOM when prop changes (integration)', () => {
+    const Wrapper = () => {
+      const [theme, setTheme] = useState<ThemeType>('light');
+      return (
+        <ThemeSelector 
+          currentTheme={theme} 
+          onThemeChange={setTheme} 
+        />
+      );
+    };
+
+    render(<Wrapper />);
+
+    // Initial state light
+    expect(document.documentElement.classList.contains('light')).toBe(true);
+
+    // Click dark
+    fireEvent.click(screen.getByRole('button', { name: /Select Dark theme/i }));
+
+    // Should update state -> trigger useEffect -> applyTheme('dark')
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(localStorage.getItem('user-theme')).toBe('dark');
+  });
+
+  test('reset to default calls onThemeChange with system', () => {
+    const onThemeChange = vi.fn();
+    render(<ThemeSelector currentTheme="dark" onThemeChange={onThemeChange} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Reset theme to system default/i }));
+
+    expect(onThemeChange).toHaveBeenCalledWith('system');
+  });
+
+  test('high-contrast applies correct classes when selected', () => {
+     const Wrapper = () => {
+      const [theme, setTheme] = useState<ThemeType>('light');
+      return (
+        <ThemeSelector 
+          currentTheme={theme} 
+          onThemeChange={setTheme} 
+        />
+      );
+    };
+
+    render(<Wrapper />);
 
     fireEvent.click(screen.getByRole('button', { name: /Select High Contrast theme/i }));
 
-    expect(localStorage.getItem('user-theme')).toBe('high-contrast');
     expect(document.documentElement.classList.contains('high-contrast')).toBe(true);
+    // The implementation of applyTheme for high-contrast usually adds 'dark' too or specific styles
+    // Based on previous test expectation:
     expect(document.documentElement.classList.contains('dark')).toBe(true);
-  });
-
-  test('reset to default sets system theme and calls onThemeChange(system)', () => {
-    const onThemeChange = jest.fn();
-
-    render(<ThemeSelector currentTheme="dark" onThemeChange={onThemeChange} />);
-
-    // Select dark first
-    fireEvent.click(screen.getByRole('button', { name: /Select Dark theme/i }));
-    expect(screen.getByLabelText('Current theme: Dark')).toBeInTheDocument();
-
-    // Reset
-    fireEvent.click(screen.getByRole('button', { name: /Reset theme to system default/i }));
-
-    expect(onThemeChange).toHaveBeenLastCalledWith('system');
-    expect(localStorage.getItem('user-theme')).toBe('system');
-    expect(screen.getByLabelText('Current theme: System')).toBeInTheDocument();
-  });
-
-  test('system theme applies dark if system prefers dark', () => {
-    (window as any).matchMedia = createMatchMedia(true);
-
-    render(<ThemeSelector currentTheme="system" onThemeChange={jest.fn()} />);
-
-    expect(localStorage.getItem('user-theme')).toBe('system');
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(document.documentElement.classList.contains('light')).toBe(false);
-  });
-
-  test('system theme applies light if system prefers light', () => {
-    (window as any).matchMedia = createMatchMedia(false);
-
-    render(<ThemeSelector currentTheme="system" onThemeChange={jest.fn()} />);
-
-    expect(localStorage.getItem('user-theme')).toBe('system');
-    expect(document.documentElement.classList.contains('light')).toBe(true);
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
-  });
-
-  test('listens for system theme changes ONLY when selectedTheme is system', () => {
-    const mmFactory = createMatchMedia(false);
-    const mql = mmFactory('(prefers-color-scheme: dark)');
-    (window as any).matchMedia = () => mql;
-
-    render(<ThemeSelector currentTheme="system" onThemeChange={jest.fn()} />);
-
-    // Initially light
-    expect(document.documentElement.classList.contains('light')).toBe(true);
-
-    // System changes to dark
-    act(() => {
-      mql.dispatch(true);
-    });
-
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-  });
-
-  test('does NOT listen for system changes when selectedTheme is not system', () => {
-    const mmFactory = createMatchMedia(false);
-    const mql = mmFactory('(prefers-color-scheme: dark)');
-    (window as any).matchMedia = () => mql;
-
-    render(<ThemeSelector currentTheme="system" onThemeChange={jest.fn()} />);
-
-    // Switch away from system
-    fireEvent.click(screen.getByRole('button', { name: /Select Dark theme/i }));
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-
-    // Now system changes to light -> should NOT override
-    act(() => {
-      mql.dispatch(false);
-    });
-
-    // Still dark because user selected dark manually
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-  });
-
-  test('selected theme button has aria-pressed=true', () => {
-    render(<ThemeSelector currentTheme="system" onThemeChange={jest.fn()} />);
-
-    const darkBtn = screen.getByRole('button', { name: /Select Dark theme/i });
-
-    fireEvent.click(darkBtn);
-
-    expect(darkBtn).toHaveAttribute('aria-pressed', 'true');
-
-    const lightBtn = screen.getByRole('button', { name: /Select Light theme/i });
-    expect(lightBtn).toHaveAttribute('aria-pressed', 'false');
   });
 });

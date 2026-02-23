@@ -1,6 +1,6 @@
-// src/__tests__/pages/RegisterPage.test.tsx
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { vi, describe, it, expect, beforeEach } from "vitest";
 import RegisterPage from '../../pages/RegisterPage';
 import { registerUser } from '../../utils/authService';
 import { validateEmailFormat } from '../../utils/emailValidation';
@@ -9,8 +9,8 @@ import { useNavigate } from 'react-router-dom';
 
 // ================== MOCKS ==================
 
-jest.mock('react-router-dom', () => {
-  const actual = jest.requireActual('react-router-dom');
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     Link: ({ to, children, ...rest }: any) => (
@@ -18,25 +18,25 @@ jest.mock('react-router-dom', () => {
         {children}
       </a>
     ),
-    useNavigate: jest.fn(),
+    useNavigate: vi.fn(),
   };
 });
 
-jest.mock('../../components/ui/Button', () => ({
-  Button: ({ children, disabled, isLoading, ...rest }: any) => (
+vi.mock('../../components/ui/Button', () => ({
+  Button: ({ children, disabled, isLoading, variant, ...rest }: any) => (
     <button disabled={disabled} data-loading={isLoading ? 'true' : 'false'} {...rest}>
       {children}
     </button>
   ),
 }));
 
-jest.mock('../../components/ui/PasswordStrengthMeter', () => ({
+vi.mock('../../components/ui/PasswordStrengthMeter', () => ({
   PasswordStrengthMeter: ({ password }: any) => (
     <div data-testid="password-meter">Strength for: {password}</div>
   ),
 }));
 
-jest.mock('../../components/ui/UsernameChecker', () => ({
+vi.mock('../../components/ui/UsernameChecker', () => ({
   UsernameChecker: ({ username, onAvailabilityChange }: any) => (
     <div data-testid="username-checker">
       <div>Username: {username}</div>
@@ -46,38 +46,42 @@ jest.mock('../../components/ui/UsernameChecker', () => ({
   ),
 }));
 
-jest.mock('../../utils/authService', () => ({
-  registerUser: jest.fn(),
+vi.mock('../../utils/authService', () => ({
+  registerUser: vi.fn(),
 }));
 
-jest.mock('../../utils/emailValidation', () => ({
-  validateEmailFormat: jest.fn(),
+vi.mock('../../utils/emailValidation', () => ({
+  validateEmailFormat: vi.fn(),
 }));
 
-jest.mock('../../utils/navigation', () => ({
-  openInNewTab: jest.fn(),
+vi.mock('../../utils/navigation', () => ({
+  openInNewTab: vi.fn(),
 }));
 
 // ================== TESTS ==================
 
 describe('RegisterPage', () => {
-  const navigateMock = jest.fn();
+  const navigateMock = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useNavigate as jest.Mock).mockReturnValue(navigateMock);
+    vi.clearAllMocks();
+    (useNavigate as any).mockReturnValue(navigateMock);
 
-    jest.spyOn(window, 'alert').mockImplementation(() => {});
+    vi.spyOn(window, 'alert').mockImplementation(() => { });
 
     // Default: valid email
-    (validateEmailFormat as jest.Mock).mockImplementation((email: string) => ({
+    vi.mocked(validateEmailFormat).mockImplementation((email: string) => ({
       valid: email.includes('@'),
       message: email.includes('@') ? '' : 'Invalid email format',
     }));
   });
 
-  test('renders all main inputs and submit button', () => {
-    render(<RegisterPage />);
+  it('renders all main inputs and submit button', () => {
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
 
     expect(screen.getByLabelText(/Full name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Username/i)).toBeInTheDocument();
@@ -89,27 +93,39 @@ describe('RegisterPage', () => {
     expect(screen.getByTestId('password-meter')).toBeInTheDocument();
   });
 
-  test('clicking Terms of Service opens in new tab', () => {
-    render(<RegisterPage />);
+  it('clicking Terms of Service opens in new tab', () => {
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
 
     fireEvent.click(screen.getByRole('button', { name: /Open Terms of Service/i }));
     expect(openInNewTab).toHaveBeenCalledWith('/terms-of-service');
   });
 
-  test('clicking Privacy Policy opens in new tab', () => {
-    render(<RegisterPage />);
+  it('clicking Privacy Policy opens in new tab', () => {
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
 
     fireEvent.click(screen.getByRole('button', { name: /Open Privacy Policy/i }));
     expect(openInNewTab).toHaveBeenCalledWith('/privacy-policy');
   });
 
-  test('email validation: invalid email shows error message and aria-invalid=true', () => {
-    (validateEmailFormat as jest.Mock).mockReturnValueOnce({
+  it('email validation: invalid email shows error message and aria-invalid=true', () => {
+    vi.mocked(validateEmailFormat).mockReturnValueOnce({
       valid: false,
       message: 'Invalid email format',
     });
 
-    render(<RegisterPage />);
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
 
     const emailInput = screen.getByLabelText(/Email address/i);
 
@@ -119,17 +135,26 @@ describe('RegisterPage', () => {
     expect(emailInput).toHaveAttribute('aria-invalid', 'true');
   });
 
-  test('submit: missing fields shows alert and does not call registerUser', async () => {
-    render(<RegisterPage />);
+  it('submit: missing fields shows alert and does not call registerUser', async () => {
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
 
-    fireEvent.click(screen.getByRole('button', { name: /Sign Up/i }));
+    const submit = screen.getByRole('button', { name: /Sign Up/i });
+    expect(submit).toBeDisabled();
 
-    expect(window.alert).toHaveBeenCalledWith('Please fill in all required fields');
+    fireEvent.click(submit);
     expect(registerUser).not.toHaveBeenCalled();
   });
 
-  test('submit: username not available shows alert', async () => {
-    render(<RegisterPage />);
+  it('submit: username not available shows alert', async () => {
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
 
     fireEvent.change(screen.getByLabelText(/Full name/i), { target: { value: 'John Doe' } });
     fireEvent.change(screen.getByLabelText(/Username/i), { target: { value: 'john' } });
@@ -137,19 +162,24 @@ describe('RegisterPage', () => {
     fireEvent.change(screen.getByLabelText(/^Password$/i), { target: { value: 'password123' } });
 
     // do NOT mark available
-    fireEvent.click(screen.getByRole('button', { name: /Sign Up/i }));
+    const submit = screen.getByRole('button', { name: /Sign Up/i });
+    expect(submit).toBeDisabled();
 
-    expect(window.alert).toHaveBeenCalledWith('Please choose an available username');
+    fireEvent.click(submit);
     expect(registerUser).not.toHaveBeenCalled();
   });
 
-  test('submit: invalid email shows alert', async () => {
-    (validateEmailFormat as jest.Mock).mockReturnValue({
+  it('submit: invalid email shows alert', async () => {
+    vi.mocked(validateEmailFormat).mockReturnValue({
       valid: false,
       message: 'Email invalid',
     });
 
-    render(<RegisterPage />);
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
 
     fireEvent.change(screen.getByLabelText(/Full name/i), { target: { value: 'John Doe' } });
     fireEvent.change(screen.getByLabelText(/Username/i), { target: { value: 'john' } });
@@ -158,14 +188,19 @@ describe('RegisterPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Mark Available/i }));
 
-    fireEvent.click(screen.getByRole('button', { name: /Sign Up/i }));
+    const submit = screen.getByRole('button', { name: /Sign Up/i });
+    expect(submit).toBeDisabled();
 
-    expect(window.alert).toHaveBeenCalledWith('Email invalid');
+    fireEvent.click(submit);
     expect(registerUser).not.toHaveBeenCalled();
   });
 
-  test('submit: not agreeing to terms shows alert', async () => {
-    render(<RegisterPage />);
+  it('submit: not agreeing to terms shows alert', async () => {
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
 
     fireEvent.change(screen.getByLabelText(/Full name/i), { target: { value: 'John Doe' } });
     fireEvent.change(screen.getByLabelText(/Username/i), { target: { value: 'john' } });
@@ -175,16 +210,19 @@ describe('RegisterPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /Mark Available/i }));
 
     // do NOT check terms
-    fireEvent.click(screen.getByRole('button', { name: /Sign Up/i }));
+    const submit = screen.getByRole('button', { name: /Sign Up/i });
+    expect(submit).toBeDisabled();
 
-    expect(window.alert).toHaveBeenCalledWith(
-      'You must agree to the Terms of Service and Privacy Policy'
-    );
+    fireEvent.click(submit);
     expect(registerUser).not.toHaveBeenCalled();
   });
 
-  test('submit: password too short shows alert', async () => {
-    render(<RegisterPage />);
+  it('submit: password too short shows alert', async () => {
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
 
     fireEvent.change(screen.getByLabelText(/Full name/i), { target: { value: 'John Doe' } });
     fireEvent.change(screen.getByLabelText(/Username/i), { target: { value: 'john' } });
@@ -201,10 +239,14 @@ describe('RegisterPage', () => {
     expect(registerUser).not.toHaveBeenCalled();
   });
 
-  test('successful registration: calls registerUser with normalized data and navigates', async () => {
-    (registerUser as jest.Mock).mockResolvedValueOnce({ success: true });
+  it('successful registration: calls registerUser with normalized data and navigates', async () => {
+    vi.mocked(registerUser).mockResolvedValueOnce({ success: true, message: 'Registration successful' });
 
-    render(<RegisterPage />);
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>
+    );
 
     fireEvent.change(screen.getByLabelText(/Full name/i), { target: { value: 'John Doe' } });
     fireEvent.change(screen.getByLabelText(/Username/i), { target: { value: 'JohnUser' } });
@@ -235,8 +277,8 @@ describe('RegisterPage', () => {
     });
   });
 
-  test('failed registration: shows alert with backend message', async () => {
-    (registerUser as jest.Mock).mockResolvedValueOnce({
+  it('failed registration: shows alert with backend message', async () => {
+    vi.mocked(registerUser).mockResolvedValueOnce({
       success: false,
       message: 'Username already exists',
     });
@@ -260,8 +302,8 @@ describe('RegisterPage', () => {
     expect(window.alert).toHaveBeenCalledWith('Username already exists');
   });
 
-  test('thrown error registration: shows fallback alert message', async () => {
-    (registerUser as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+  it('thrown error registration: shows fallback alert message', async () => {
+    vi.mocked(registerUser).mockRejectedValueOnce(new Error('Network error'));
 
     render(<RegisterPage />);
 
@@ -284,8 +326,8 @@ describe('RegisterPage', () => {
     );
   });
 
-  test('submit button disabled when terms not checked / username not available / email invalid', () => {
-    (validateEmailFormat as jest.Mock).mockReturnValue({
+  it('submit button disabled when terms not checked / username not available / email invalid', () => {
+    vi.mocked(validateEmailFormat).mockReturnValue({
       valid: false,
       message: 'Bad email',
     });
@@ -298,7 +340,7 @@ describe('RegisterPage', () => {
     expect(submit).toBeDisabled();
 
     // Make email valid
-    (validateEmailFormat as jest.Mock).mockReturnValue({
+    vi.mocked(validateEmailFormat).mockReturnValue({
       valid: true,
       message: '',
     });

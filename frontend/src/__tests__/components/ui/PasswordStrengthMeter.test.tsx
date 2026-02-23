@@ -35,8 +35,8 @@ describe("PasswordStrengthMeter", () => {
   });
 
   it("shows Fair label for medium passwords", () => {
-    // 8 chars + lowercase only => 25 + 15 = 40 => Fair
-    render(<PasswordStrengthMeter password="abcdefgh" />);
+    // Length 8 (+25), Lower(+15), Number(+15) = 55 -> Fair (30-69)
+    render(<PasswordStrengthMeter password="complexity8" />);
 
     expect(screen.getByText("Fair")).toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute(
@@ -46,8 +46,8 @@ describe("PasswordStrengthMeter", () => {
   });
 
   it("shows Good label for stronger passwords", () => {
-    // 8 chars + upper + lower + number => 25 + 15 + 15 + 15 = 70 => Good
-    render(<PasswordStrengthMeter password="Abcdefg1" />);
+    // Length 8 (+25), Upper(+15), Lower(+15), Number(+15) = 70 -> Good (70-89)
+    render(<PasswordStrengthMeter password="Complex1" />);
 
     expect(screen.getByText("Good")).toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute(
@@ -58,7 +58,7 @@ describe("PasswordStrengthMeter", () => {
 
   it("shows Strong label for very strong passwords", () => {
     // >=12 + upper + lower + number + special => 35 + 15 + 15 + 15 + 20 = 100 => Strong
-    render(<PasswordStrengthMeter password="Abcdefghijk1!" />);
+    render(<PasswordStrengthMeter password="VeryComplexPass1!" />);
 
     expect(screen.getByText("Strong")).toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute(

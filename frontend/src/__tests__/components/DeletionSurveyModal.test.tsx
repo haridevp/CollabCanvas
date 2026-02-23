@@ -1,15 +1,16 @@
 // __tests__/components/DeletionSurveyModal.test.tsx
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import DeletionSurveyModal from '../../components/DeletionSurveyModal';
 import { submitDeletionFeedback } from '../../services/accountDeletionService';
 
-jest.mock('../../services/accountDeletionService', () => ({
-  submitDeletionFeedback: jest.fn(),
+vi.mock('../../services/accountDeletionService', () => ({
+  submitDeletionFeedback: vi.fn(),
 }));
 
 // Mock Modal so tests don't depend on its internal UI
-jest.mock('../../components/ui/Modal', () => ({
+vi.mock('../../components/ui/Modal', () => ({
   Modal: ({ isOpen, title, children }: any) => {
     if (!isOpen) return null;
     return (
@@ -22,30 +23,28 @@ jest.mock('../../components/ui/Modal', () => ({
 }));
 
 // Mock Button so loading/variant doesn't break tests
-jest.mock('../../components/ui/Button', () => ({
-  Button: ({ children, onClick, disabled, isLoading, ...rest }: any) => (
+vi.mock('../../components/ui/Button', () => ({
+  Button: ({ children, onClick, disabled, isLoading, variant, ...rest }: any) => (
     <button onClick={onClick} disabled={disabled} {...rest}>
       {isLoading ? 'Loading...' : children}
     </button>
   ),
 }));
 
-const mockedSubmit = submitDeletionFeedback as jest.Mock;
-
 describe('DeletionSurveyModal', () => {
-  const onClose = jest.fn();
-  const onComplete = jest.fn();
+  const onClose = vi.fn();
+  const onComplete = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
-    jest.spyOn(window, 'alert').mockImplementation(() => {});
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
-    (window.alert as jest.Mock).mockRestore();
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it('does not render when isOpen is false', () => {
@@ -178,7 +177,7 @@ describe('DeletionSurveyModal', () => {
   });
 
   it('submits survey successfully and shows success UI', async () => {
-    mockedSubmit.mockResolvedValueOnce({ success: true });
+    vi.mocked(submitDeletionFeedback).mockResolvedValueOnce({ success: true });
 
     render(
       <DeletionSurveyModal
@@ -212,11 +211,11 @@ describe('DeletionSurveyModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
 
     await waitFor(() => {
-      expect(mockedSubmit).toHaveBeenCalledTimes(1);
+      expect(submitDeletionFeedback).toHaveBeenCalledTimes(1);
     });
 
     // verify payload
-    expect(mockedSubmit).toHaveBeenCalledWith({
+    expect(submitDeletionFeedback).toHaveBeenCalledWith({
       reason: 'temporary',
       feedback: 'Feedback text',
       improvementSuggestions: 'Suggestion text',
@@ -232,7 +231,7 @@ describe('DeletionSurveyModal', () => {
 
     // after 2s -> onComplete + onClose
     act(() => {
-      jest.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(2000);
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
@@ -240,7 +239,7 @@ describe('DeletionSurveyModal', () => {
   });
 
   it('alerts if API returns success:false', async () => {
-    mockedSubmit.mockResolvedValueOnce({ success: false, message: 'Bad request' });
+    vi.mocked(submitDeletionFeedback).mockResolvedValueOnce({ success: false, message: 'Bad request' });
 
     render(
       <DeletionSurveyModal
@@ -255,7 +254,7 @@ describe('DeletionSurveyModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
 
     await waitFor(() => {
-      expect(mockedSubmit).toHaveBeenCalledTimes(1);
+      expect(submitDeletionFeedback).toHaveBeenCalledTimes(1);
     });
 
     expect(window.alert).toHaveBeenCalledWith('Bad request');
@@ -264,7 +263,7 @@ describe('DeletionSurveyModal', () => {
   });
 
   it('alerts on submit failure (throws)', async () => {
-    mockedSubmit.mockRejectedValueOnce(new Error('Network fail'));
+    vi.mocked(submitDeletionFeedback).mockRejectedValueOnce(new Error('Network fail'));
 
     render(
       <DeletionSurveyModal
@@ -279,7 +278,7 @@ describe('DeletionSurveyModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /submit feedback/i }));
 
     await waitFor(() => {
-      expect(mockedSubmit).toHaveBeenCalledTimes(1);
+      expect(submitDeletionFeedback).toHaveBeenCalledTimes(1);
     });
 
     expect(window.alert).toHaveBeenCalledWith(

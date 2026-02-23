@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    * @state {string | null} token
    */
   const [token, setToken] = useState<string | null>(localStorage.getItem('auth_token'));
-  
+
   /**
    * State for user data
    * Initialized from localStorage with JSON parsing error handling
@@ -85,9 +85,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
    */
   const login = (newToken: string, userData: any) => {
     setToken(newToken);
-    setUser(userData);    
+    setUser(userData);
     localStorage.setItem('auth_token', newToken);
-    localStorage.setItem('user', JSON.stringify(userData)); 
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   /**
@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    window.location.assign('/login');
   };
 
   /**

@@ -1,63 +1,23 @@
+import React, { useState, ChangeEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, Mail, Lock, User, AtSign } from 'lucide-react';
+import { Mail, Lock, User, AtSign } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { PasswordStrengthMeter } from '../components/ui/PasswordStrengthMeter';
 import { UsernameChecker } from '../components/ui/UsernameChecker';
 import { Modal } from '../components/ui/Modal';
 import { TermsOfServiceContent } from '../components/legal/TermsOfServiceContent';
 import { PrivacyPolicyContent } from '../components/legal/PrivacyPolicyContent';
-import type { ChangeEvent } from 'react';
-import { useState } from 'react';
 import { registerUser } from '../utils/authService';
 import { validateEmailFormat } from '../utils/emailValidation';
+import { openInNewTab } from '../utils/navigation';
+import Background from '../components/ui/Background';
+import TitleAnimation from '../components/ui/TitleAnimation';
 
-/**
- * Interface for email validation results
- * @interface EmailValidationResult
- */
 interface EmailValidationResult {
-  /** Whether the email is valid */
   valid: boolean;
-  /** Validation message for the user */
   message: string;
 }
 
-/**
- * Registration form data interface
- * @interface RegistrationFormData
- */
-interface RegistrationFormData {
-  /** User's full name */
-  fullName: string;
-  /** Desired username */
-  username: string;
-  /** Email address */
-  email: string;
-  /** Password */
-  password: string;
-}
-
-/**
- * RegisterPage component - User registration interface
- * 
- * Provides a complete user registration form with real-time validation for:
- * - Full name input
- * - Username availability checking
- * - Email format validation
- * - Password strength assessment
- * - Terms and conditions agreement
- * 
- * The component includes real-time feedback and connects to backend authentication services.
- * 
- * @component
- * @example
- * ```tsx
- * // In your router configuration
- * <Route path="/register" element={<RegisterPage />} />
- * ```
- * 
- * @returns {JSX.Element} A fully featured registration form with validation
- */
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -77,74 +37,29 @@ const RegisterPage: React.FC = () => {
   const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState<boolean>(false);
 
-  /**
-   * Opens Terms of Service modal
-   * 
-   * @example
-   * ```typescript
-   * openTermsOfService();
-   * ```
-   */
-  const openTermsOfService = (): void => setShowTermsModal(true);
+  const openTermsOfService = (): void => {
+    setShowTermsModal(true);
+    openInNewTab('/terms-of-service');
+  };
+  const openPrivacyPolicy = (): void => {
+    setShowPrivacyModal(true);
+    openInNewTab('/privacy-policy');
+  };
 
-  /**
-   * Opens Privacy Policy modal
-   * 
-   * @example
-   * ```typescript
-   * openPrivacyPolicy();
-   * ```
-   */
-  const openPrivacyPolicy = (): void => setShowPrivacyModal(true);
-
-  /**
-   * Handles email input changes and validates format in real-time
-   * 
-   * @param {string} newEmail - The email value to validate
-   * 
-   * @example
-   * ```typescript
-   * handleEmailChange('user@example.com');
-   * ```
-   */
   const handleEmailChange = (newEmail: string): void => {
     setEmail(newEmail);
     const validation = validateEmailFormat(newEmail);
     setEmailValidation(validation);
   };
 
-  /**
-   * Handles registration form submission with comprehensive validation
-   * 
-   * Performs multiple validation steps before sending data to the backend:
-   * 1. Basic field presence validation
-   * 2. Username availability confirmation
-   * 3. Email format validation
-   * 4. Terms agreement verification
-   * 5. Minimum password length check
-   * 
-   * @async
-   * @param {React.FormEvent} e - Form submission event
-   * @returns {Promise<void>}
-   * 
-   * @throws {Error} When registration fails or validation errors occur
-   * 
-   * @example
-   * ```typescript
-   * // This function is called when the form is submitted
-   * handleSubmit(event);
-   * ```
-   */
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
 
-    // 1. Basic Field Validation
     if (!fullName.trim() || !username.trim() || !email.trim() || !password.trim()) {
       alert('Please fill in all required fields');
       return;
     }
 
-    // 2. Specialized Validation
     if (!isUsernameAvailable) {
       alert('Please choose an available username');
       return;
@@ -167,20 +82,14 @@ const RegisterPage: React.FC = () => {
 
     try {
       setIsLoading(true);
-
-      // Prepare registration data
-      const registrationData: RegistrationFormData = {
+      const result = await registerUser({
         fullName,
         username: username.toLowerCase().trim(),
         email: email.toLowerCase().trim(),
         password
-      };
-
-      // Connect to backend authentication service
-      const result = await registerUser(registrationData);
+      });
 
       if (result.success) {
-        // Redirect to the success notice page we created earlier
         navigate('/registration-success', {
           state: {
             email,
@@ -199,163 +108,165 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+    <div className="relative min-h-screen flex flex-col items-center justify-center p-4">
+      {/* Dynamic Background */}
+      <Background />
 
-        {/* Header section with icon */}
-        <div className="text-center mb-8">
-          <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <UserPlus className="text-blue-600" size={32} aria-hidden="true" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900">Create an Account</h1>
-          <p className="text-slate-500">Join the Collaborative Canvas platform</p>
-        </div>
+      {/* Floating Title */}
+      <div className="absolute top-12 left-0 w-full text-center z-10 pointer-events-none mb-24">
+        <TitleAnimation />
+      </div>
 
-        {/* Registration form */}
-        <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+      <div className="w-full max-w-md z-20 mt-32">
+        <div className="bg-white rounded-xl shadow-2xl p-6 border border-slate-100 flex flex-col justify-center">
 
-          {/* Full name input */}
-          <div className="relative">
-            <User className="absolute left-3 top-3 text-slate-400" size={20} aria-hidden="true" />
-            <input
-              type="text"
-              placeholder="Full Name"
-              value={fullName}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setFullName(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              required
-              disabled={isLoading}
-              aria-label="Full name"
-            />
-          </div>
-
-          {/* Username input */}
-          <div className="relative">
-            <AtSign className="absolute left-3 top-3 text-slate-400" size={20} aria-hidden="true" />
-            <input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              required
-              disabled={isLoading}
-              aria-label="Username"
-            />
-          </div>
-
-          {/* Username availability checker component */}
-          <UsernameChecker
-            username={username}
-            onAvailabilityChange={setIsUsernameAvailable}
-          />
-
-          {/* Email input */}
-          <div className="relative">
-            <Mail className="absolute left-3 top-3 text-slate-400" size={20} aria-hidden="true" />
-            <input
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => handleEmailChange(e.target.value)}
-              className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all ${email && !emailValidation.valid ? 'border-red-300' : 'border-slate-200'
-                }`}
-              required
-              disabled={isLoading}
-              aria-label="Email address"
-              aria-invalid={email && !emailValidation.valid ? "true" : "false"}
-              aria-describedby={email && !emailValidation.valid ? "email-error" : undefined}
-            />
-          </div>
-
-          {/* Email validation error message */}
-          {email && !emailValidation.valid && (
-            <div
-              id="email-error"
-              className="text-xs text-red-600 px-1"
-              role="alert"
-            >
-              {emailValidation.message}
+          {/* Header section with brand logo */}
+          <div className="text-center mb-6">
+            <div className="mb-4 flex justify-center">
+              <img
+                src="/CollabCanvas/logo.png"
+                alt="CollabCanvas Logo"
+                style={{ height: '64px', width: 'auto' }}
+                className="object-contain mx-auto"
+              />
             </div>
-          )}
-
-          {/* Password input */}
-          <div className="relative">
-            <Lock className="absolute left-3 top-3 text-slate-400" size={20} aria-hidden="true" />
-            <input
-              type="password"
-              placeholder="Password (min. 8 characters)"
-              value={password}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              required
-              minLength={8}
-              disabled={isLoading}
-              aria-label="Password"
-            />
+            <h1 className="text-xl font-bold text-black border-t-2 border-black pt-2 inline-block">Create Account</h1>
+            <p className="text-slate-600 text-xs mt-1">Join the transformation today</p>
           </div>
 
-          {/* Password strength meter component */}
-          <PasswordStrengthMeter password={password} className="mt-2" />
+          <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+            {/* Full name input */}
+            <div>
+              <label htmlFor="full-name" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1">Full Name</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 text-slate-400" size={18} aria-hidden="true" />
+                <input
+                  id="full-name"
+                  type="text"
+                  value={fullName}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setFullName(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
 
-          {/* Terms and conditions agreement */}
-          <div className="flex items-start gap-2 py-2">
-            <input
-              type="checkbox"
-              id="terms"
-              checked={agreeToTerms}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setAgreeToTerms(e.target.checked)}
-              className="mt-1"
-              required
-              disabled={isLoading}
-              aria-label="Agree to terms and conditions"
-              aria-checked={agreeToTerms}
-            />
-            <label htmlFor="terms" className="text-sm text-slate-500">
-              I agree to the{' '}
-              <button
-                type="button"
-                className="text-blue-600 hover:underline focus:outline-none"
-                onClick={openTermsOfService}
-                aria-label="Open Terms of Service"
-              >
-                Terms of Service
-              </button>
-              {' '}and{' '}
-              <button
-                type="button"
-                className="text-blue-600 hover:underline focus:outline-none"
-                onClick={openPrivacyPolicy}
-                aria-label="Open Privacy Policy"
-              >
-                Privacy Policy
-              </button>.
-            </label>
-          </div>
+            {/* Username input */}
+            <div>
+              <label htmlFor="username" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1">Username</label>
+              <div className="relative">
+                <AtSign className="absolute left-3 top-3 text-slate-400" size={18} aria-hidden="true" />
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <UsernameChecker
+                username={username}
+                onAvailabilityChange={setIsUsernameAvailable}
+              />
+            </div>
 
-          {/* Submit button */}
-          <Button
-            type="submit"
-            className="w-full py-3 text-lg"
-            isLoading={isLoading}
-            disabled={isLoading || !isUsernameAvailable || !emailValidation.valid || !agreeToTerms}
-            aria-label={isLoading ? "Creating account..." : "Sign up"}
-          >
-            Sign Up
-          </Button>
-        </form>
+            {/* Email input */}
+            <div>
+              <label htmlFor="email" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 text-slate-400" size={18} aria-hidden="true" />
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => handleEmailChange(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm ${email && !emailValidation.valid ? 'border-red-300' : 'border-slate-200'}`}
+                  required
+                  disabled={isLoading}
+                  aria-invalid={email && !emailValidation.valid ? 'true' : 'false'}
+                />
+              </div>
+              {email && !emailValidation.valid && (
+                <p role="alert" className="text-[10px] text-red-600 px-1 mt-1 font-medium">{emailValidation.message}</p>
+              )}
+            </div>
 
-        {/* Login link for existing users */}
-        <p className="text-center mt-6 text-slate-600">
-          Already have an account?{' '}
-          <Link
-            to="/login"
-            className="text-blue-600 font-semibold hover:underline"
-            aria-label="Go to login page"
-          >
-            Log in
-          </Link>
-        </p>
+            {/* Password input */}
+            <div>
+              <label htmlFor="password" title="Password" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 text-slate-400" size={18} aria-hidden="true" />
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"
+                  required
+                  minLength={8}
+                  disabled={isLoading}
+                />
+              </div>
+              <PasswordStrengthMeter password={password} className="mt-2" />
+            </div>
+
+            {/* Terms and conditions agreement */}
+            <div className="flex items-start gap-2 py-1">
+              <input
+                type="checkbox"
+                id="terms"
+                aria-label="Agree to terms and conditions"
+                checked={agreeToTerms}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setAgreeToTerms(e.target.checked)}
+                className="mt-0.5 h-3.5 w-3.5 text-black rounded border-slate-300 focus:ring-black accent-black"
+                required
+                disabled={isLoading}
+              />
+              <label htmlFor="terms" className="text-xs text-slate-600 font-medium leading-tight">
+                I agree to the{' '}
+                <button
+                  type="button"
+                  aria-label="Open Terms of Service"
+                  className="text-blue-600 hover:text-purple-700 font-bold transition-colors"
+                  onClick={openTermsOfService}
+                >
+                  Terms
+                </button>
+                {' '}and{' '}
+                <button
+                  type="button"
+                  aria-label="Open Privacy Policy"
+                  className="text-blue-600 hover:text-purple-700 font-bold transition-colors"
+                  onClick={openPrivacyPolicy}
+                >
+                  Privacy Policy
+                </button>
+              </label>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full py-3 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-md active:scale-[0.98] mt-2 border-none"
+              isLoading={isLoading}
+              disabled={isLoading || !isUsernameAvailable || !emailValidation.valid || !agreeToTerms}
+            >
+              Sign Up
+            </Button>
+          </form>
+
+          <p className="text-center mt-6 text-slate-600 text-sm">
+            Already have an account?{' '}
+            <Link
+              to="/login"
+              className="text-blue-600 font-bold hover:text-purple-700 transition-colors"
+            >
+              Log in
+            </Link>
+          </p>
+        </div>
       </div>
 
       {/* Terms of Service Modal */}
@@ -364,7 +275,9 @@ const RegisterPage: React.FC = () => {
         onClose={() => setShowTermsModal(false)}
         title="Terms of Service"
       >
-        <TermsOfServiceContent />
+        <div className="bg-slate-800 text-white rounded-lg p-6">
+          <TermsOfServiceContent />
+        </div>
       </Modal>
 
       {/* Privacy Policy Modal */}
@@ -373,8 +286,15 @@ const RegisterPage: React.FC = () => {
         onClose={() => setShowPrivacyModal(false)}
         title="Privacy Policy"
       >
-        <PrivacyPolicyContent />
+        <div className="bg-slate-800 text-white rounded-lg p-6">
+          <PrivacyPolicyContent />
+        </div>
       </Modal>
+
+      {/* Footer hint */}
+      <div className="absolute bottom-4 text-[10px] text-slate-400 font-medium tracking-tight uppercase z-10">
+        &copy; 2026 CollabCanvas v1.0.0
+      </div>
     </div>
   );
 };

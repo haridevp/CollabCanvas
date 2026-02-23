@@ -1,107 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { useSearchParams, useNavigate, useParams, Link } from 'react-router-dom';
+import { CheckCircle, XCircle, Loader2, ArrowRight } from 'lucide-react';
 import { verifyEmailToken } from '../utils/authService';
+import Background from '../components/ui/Background';
+import TitleAnimation from '../components/ui/TitleAnimation';
 
-/**
- * Email Verification Page Component
- * 
- * This component handles email verification for user accounts.
- * Users arrive at this page after clicking email verification links.
- * Supports two URL patterns:
- * 1. /verify-email?token=TOKEN (query parameter)
- * 2. /verify-email/TOKEN (URL parameter)
- * 
- * @component
- * @returns {JSX.Element} The rendered email verification page
- * 
- * @example
- * URL patterns that trigger this component:
- * - /verify-email?token=abc123def456
- * - /verify-email/abc123def456
- * 
- * @remarks
- * Key Features:
- * 1. Dual token support (query param and URL param)
- * 2. Prevention of double API calls in React 18 StrictMode
- * 3. Automatic redirect on successful verification
- * 4. User-friendly loading and error states
- * 
- * Security Considerations:
- * - Tokens are single-use and time-limited
- * - Prevents double verification attempts
- * - Handles invalid/expired tokens gracefully
- */
-const EmailVerificationPage = () => {
+const EmailVerificationPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const { token: pathToken } = useParams(); // Catch /verify-email/:token
+  const { token: pathToken } = useParams();
   const navigate = useNavigate();
-  
-  // Verification status state
+
   const [status, setStatus] = useState<'verifying' | 'success' | 'failed'>('verifying');
   const [message, setMessage] = useState('');
-  
-  // Ref to prevent double-calling the API (React 18 StrictMode issue)
   const hasCalled = useRef(false);
-
-  // Use the token from the query (?token=) OR from the path (/:token)
   const token = searchParams.get('token') || pathToken;
 
-  /**
-   * Effect to handle email verification on component mount
-   * 
-   * This effect:
-   * 1. Validates the presence of a token
-   * 2. Prevents double execution in React 18 StrictMode
-   * 3. Calls the verification API
-   * 4. Updates UI state based on API response
-   * 5. Redirects on success after delay
-   * 
-   * @effect
-   * @dependencies token, navigate
-   * 
-   * @remarks
-   * The useRef prevents double execution which can cause:
-   * - Duplicate API calls
-   * - Inconsistent UI states
-   * - "Activation Failed" errors on hidden second calls
-   */
   useEffect(() => {
-    /**
-     * Asynchronous function to verify the email token
-     * 
-     * @async
-     * @function verify
-     * @returns {Promise<void>}
-     */
     const verify = async () => {
-      // 1. Check if token exists
       if (!token) {
         setStatus('failed');
         setMessage('No verification token found. Please check your email link.');
         return;
       }
 
-      // 2. Prevent double execution (This often causes "Activation Failed" on the second hidden call)
       if (hasCalled.current) return;
       hasCalled.current = true;
 
       try {
-        // 3. Call verification API
         const result = await verifyEmailToken(token);
-        
-        // 4. Handle API response
         if (result.success) {
           setStatus('success');
           setMessage(result.message);
-          // Redirect to login after 3 seconds on success
           setTimeout(() => navigate('/login'), 3000);
         } else {
           setStatus('failed');
           setMessage(result.message || 'Verification failed.');
         }
       } catch (err) {
-        // 5. Handle network or unexpected errors
         setStatus('failed');
         setMessage('Connection error. Please try again.');
       }
@@ -110,54 +45,82 @@ const EmailVerificationPage = () => {
     verify();
   }, [token, navigate]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-      <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl text-center border border-slate-100">
-        {/* 
-          ======================
-          Verification Loading State
-          ======================
-          Shows while API call is in progress
-        */}
+  const renderContent = () => {
+    return (
+      <div className="bg-white rounded-xl shadow-2xl p-8 border border-slate-100 flex flex-col justify-center text-center">
+        {/* Header section with brand logo */}
+        <div className="mb-6">
+          <div className="mb-4 flex justify-center">
+            <img
+              src="/CollabCanvas/logo.png"
+              alt="CollabCanvas Logo"
+              style={{ height: '64px', width: 'auto' }}
+              className="object-contain mx-auto"
+            />
+          </div>
+        </div>
+
         {status === 'verifying' && (
           <div className="space-y-4">
-            <Loader2 className="w-16 h-16 text-blue-600 animate-spin mx-auto" />
-            <h2 className="text-xl font-bold">Verifying Your Account</h2>
+            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100">
+              <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+            </div>
+            <h1 className="text-xl font-bold text-black border-t-2 border-black pt-2 inline-block">Verifying Your Account</h1>
+            <p className="text-slate-600 text-xs mt-1">Please wait while we validate your link</p>
           </div>
         )}
-        
-        {/* 
-          ======================
-          Verification Success State
-          ======================
-          Shows when verification succeeds
-          Automatically redirects to login after 3 seconds
-        */}
+
         {status === 'success' && (
           <div className="space-y-4">
-            <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
-            <h2 className="text-xl font-bold text-green-700">Success!</h2>
-            <p className="text-slate-600">{message}</p>
+            <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-100">
+              <CheckCircle className="text-green-600" size={32} />
+            </div>
+            <h1 className="text-xl font-bold text-black border-t-2 border-black pt-2 inline-block">Success!</h1>
+            <p className="text-slate-600 text-xs px-4">{message}</p>
+            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Redirecting to login...</p>
           </div>
         )}
-        
-        {/* 
-          ======================
-          Verification Failed State
-          ======================
-          Shows when verification fails
-          Provides helpful guidance for users
-        */}
+
         {status === 'failed' && (
           <div className="space-y-4">
-            <XCircle className="w-16 h-16 text-red-500 mx-auto" />
-            <h2 className="text-xl font-bold text-red-700">Activation Failed</h2>
-            <p className="text-slate-600">{message}</p>
-            <p className="text-xs text-slate-400 mt-2">
-              If you already verified, try logging in.
-            </p>
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+              <XCircle className="text-red-500" size={32} />
+            </div>
+            <h1 className="text-xl font-bold text-black border-t-2 border-black pt-2 inline-block">Activation Failed</h1>
+            <p className="text-slate-600 text-xs px-4">{message}</p>
+
+            <div className="pt-4">
+              <Link
+                to="/login"
+                className="flex items-center justify-center gap-2 text-blue-600 hover:text-purple-700 font-bold text-sm transition-colors uppercase tracking-wider"
+              >
+                Go to Login
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+            </div>
           </div>
         )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="relative min-h-screen flex flex-col items-center justify-center p-4">
+      {/* Dynamic Background */}
+      <Background />
+
+      {/* Floating Title */}
+      <div className="absolute top-12 left-0 w-full text-center z-10 pointer-events-none mb-24">
+        <TitleAnimation />
+      </div>
+
+      <div className="w-full max-w-md z-20 mt-32">
+        {renderContent()}
+      </div>
+
+      {/* Footer hint */}
+      <div className="absolute bottom-4 text-[10px] text-slate-400 font-medium tracking-tight uppercase z-10">
+        &copy; 2026 CollabCanvas v1.0.0
       </div>
     </div>
   );

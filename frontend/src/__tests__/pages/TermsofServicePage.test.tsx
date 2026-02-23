@@ -3,10 +3,11 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { vi, describe, test, expect, beforeEach } from "vitest";
 import TermsOfServicePage from "../../pages/TermsOfServicePage";
 
 // Mock your Button component
-jest.mock("../../components/ui/Button", () => ({
+vi.mock("../../components/ui/Button", () => ({
   __esModule: true,
   Button: ({ children, onClick, ...props }: any) => (
     <button onClick={onClick} {...props}>
@@ -17,7 +18,7 @@ jest.mock("../../components/ui/Button", () => ({
 
 describe("TermsOfServicePage", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("renders main heading and last updated text", () => {
@@ -70,7 +71,7 @@ describe("TermsOfServicePage", () => {
       </MemoryRouter>
     );
 
-    const privacyLink = screen.getByRole("link", { name: /view privacy policy/i });
+    const privacyLink = screen.getByRole("link", { name: /privacy policy/i });
     expect(privacyLink).toHaveAttribute("href", "/privacy-policy");
   });
 
@@ -81,12 +82,13 @@ describe("TermsOfServicePage", () => {
       </MemoryRouter>
     );
 
-    const backLink = screen.getByRole("link", { name: /return to registration/i });
+    // The link wraps the button. The button has text "Back to Registration"
+    const backLink = screen.getByRole("link", { name: /back to registration/i });
     expect(backLink).toHaveAttribute("href", "/register");
   });
 
   test("clicking accept terms calls window.history.back()", () => {
-    const backSpy = jest.spyOn(window.history, "back").mockImplementation(() => {});
+    const backSpy = vi.spyOn(window.history, "back").mockImplementation(() => {});
 
     render(
       <MemoryRouter>

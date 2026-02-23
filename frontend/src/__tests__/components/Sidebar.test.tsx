@@ -1,30 +1,33 @@
-// __tests__/components/Sidebar.test.tsx
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Sidebar } from '../../components/Sidebar';
 import api from '../../api/axios';
 import { performLogout } from '../../utils/logoutHandler';
 import { useAuth } from '../../services/AuthContext';
 
 // ---- mocks ----
-jest.mock('../../api/axios', () => ({
-  get: jest.fn(),
+vi.mock('../../api/axios', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+  },
 }));
 
-jest.mock('../../utils/logoutHandler', () => ({
-  performLogout: jest.fn(),
+vi.mock('../../utils/logoutHandler', () => ({
+  performLogout: vi.fn(),
 }));
 
-jest.mock('../../services/AuthContext', () => ({
-  useAuth: jest.fn(),
+vi.mock('../../services/AuthContext', () => ({
+  useAuth: vi.fn(),
 }));
 
-jest.mock('../../components/ui/NotificationCenter', () => ({
+vi.mock('../../components/ui/NotificationCenter', () => ({
   NotificationCenter: () => <div data-testid="notification-center" />,
 }));
 
-jest.mock('../../components/ui/Modal', () => ({
+vi.mock('../../components/ui/Modal', () => ({
   Modal: ({ isOpen, title, children }: any) =>
     isOpen ? (
       <div data-testid="modal">
@@ -34,7 +37,7 @@ jest.mock('../../components/ui/Modal', () => ({
     ) : null,
 }));
 
-jest.mock('../../components/ui/Button', () => ({
+vi.mock('../../components/ui/Button', () => ({
   Button: ({ children, onClick, disabled, isLoading, ...rest }: any) => (
     <button onClick={onClick} disabled={disabled} {...rest}>
       {isLoading ? 'Loading...' : children}
@@ -42,16 +45,16 @@ jest.mock('../../components/ui/Button', () => ({
   ),
 }));
 
-const mockedApi = api as unknown as { get: jest.Mock };
-const mockedPerformLogout = performLogout as jest.Mock;
-const mockedUseAuth = useAuth as jest.Mock;
+const mockedApi = api as unknown as { get: ReturnType<typeof vi.fn> };
+const mockedPerformLogout = performLogout as ReturnType<typeof vi.fn>;
+const mockedUseAuth = useAuth as ReturnType<typeof vi.fn>;
 
 // react-router-dom navigate mock
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => {
-  const actual = jest.requireActual('react-router-dom');
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
   return {
-    ...actual,
+    ...actual as any,
     useNavigate: () => mockNavigate,
   };
 });

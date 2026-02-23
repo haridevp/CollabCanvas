@@ -3,29 +3,32 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import ResetPasswordPage from "../../pages/ResetPasswordPage";
 import { resetPassword } from "../../utils/authService";
 
-jest.mock("../../utils/authService", () => ({
-  resetPassword: jest.fn(),
+vi.mock("../../utils/authService", () => ({
+  resetPassword: vi.fn(),
 }));
 
 // Mock your Button component to a normal HTML button
-jest.mock("../../components/ui/Button", () => ({
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+vi.mock("../../components/ui/Button", () => ({
+  Button: ({ children, isLoading, variant, ...props }: any) => (
+    <button {...props}>
+      {isLoading ? "Loading..." : children}
+    </button>
+  ),
 }));
 
 // Mock strength meter (not needed for logic)
-jest.mock("../../components/ui/PasswordStrengthMeter", () => ({
+vi.mock("../../components/ui/PasswordStrengthMeter", () => ({
   PasswordStrengthMeter: () => <div data-testid="password-strength-meter" />,
 }));
 
-const mockedResetPassword = resetPassword as jest.Mock;
+const mockNavigate = vi.fn();
 
-const mockNavigate = jest.fn();
-
-jest.mock("react-router-dom", () => {
-  const actual = jest.requireActual("react-router-dom");
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -46,30 +49,30 @@ const renderPage = (token?: string | null) => {
 
 describe("ResetPasswordPage", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
   });
 
-  test("renders reset form UI", () => {
+  it("renders reset form UI", () => {
     renderPage("abc123");
 
     expect(
       screen.getByRole("heading", { name: /set new password/i })
     ).toBeInTheDocument();
 
-    expect(screen.getByLabelText(/new password/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/confirm new password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^New Password$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Confirm New Password$/i)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /update password/i })
     ).toBeInTheDocument();
   });
 
-  test("shows error if no token is present", async () => {
+  it("shows error if no token is present", async () => {
     renderPage(null);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -80,10 +83,10 @@ describe("ResetPasswordPage", () => {
     expect(submitBtn).toBeDisabled();
   });
 
-  test("toggles password visibility when clicking show/hide button", () => {
+  it("toggles password visibility when clicking show/hide button", () => {
     renderPage("abc123");
 
-    const passwordInput = screen.getByLabelText(/new password/i);
+    const passwordInput = screen.getByLabelText(/^New Password$/i);
     const toggleBtn = screen.getByRole("button", { name: /show password/i });
 
     expect(passwordInput).toHaveAttribute("type", "password");
@@ -95,14 +98,14 @@ describe("ResetPasswordPage", () => {
     expect(passwordInput).toHaveAttribute("type", "password");
   });
 
-  test("shows validation error when password is less than 8 chars", async () => {
+  it("shows validation error when password is less than 8 chars", async () => {
     renderPage("abc123");
 
-    fireEvent.change(screen.getByLabelText(/new password/i), {
+    fireEvent.change(screen.getByLabelText(/^New Password$/i), {
       target: { value: "123" },
     });
 
-    fireEvent.change(screen.getByLabelText(/confirm new password/i), {
+    fireEvent.change(screen.getByLabelText(/^Confirm New Password$/i), {
       target: { value: "123" },
     });
 
@@ -112,17 +115,17 @@ describe("ResetPasswordPage", () => {
       /at least 8 characters/i
     );
 
-    expect(mockedResetPassword).not.toHaveBeenCalled();
+    expect(resetPassword).not.toHaveBeenCalled();
   });
 
-  test("shows validation error when passwords do not match", async () => {
+  it("shows validation error when passwords do not match", async () => {
     renderPage("abc123");
 
-    fireEvent.change(screen.getByLabelText(/new password/i), {
+    fireEvent.change(screen.getByLabelText(/^New Password$/i), {
       target: { value: "password123" },
     });
 
-    fireEvent.change(screen.getByLabelText(/confirm new password/i), {
+    fireEvent.change(screen.getByLabelText(/^Confirm New Password$/i), {
       target: { value: "password999" },
     });
 
@@ -132,39 +135,39 @@ describe("ResetPasswordPage", () => {
       /passwords do not match/i
     );
 
-    expect(mockedResetPassword).not.toHaveBeenCalled();
+    expect(resetPassword).not.toHaveBeenCalled();
   });
 
-  test("calls resetPassword API with token and password on valid submit", async () => {
-    mockedResetPassword.mockResolvedValueOnce({ success: true });
+  it("calls resetPassword API with token and password on valid submit", async () => {
+    vi.mocked(resetPassword).mockResolvedValueOnce({ success: true, message: "Success" });
 
     renderPage("abc123");
 
-    fireEvent.change(screen.getByLabelText(/new password/i), {
+    fireEvent.change(screen.getByLabelText(/^New Password$/i), {
       target: { value: "password123" },
     });
 
-    fireEvent.change(screen.getByLabelText(/confirm new password/i), {
+    fireEvent.change(screen.getByLabelText(/^Confirm New Password$/i), {
       target: { value: "password123" },
     });
 
     fireEvent.click(screen.getByRole("button", { name: /update password/i }));
 
     await waitFor(() => {
-      expect(mockedResetPassword).toHaveBeenCalledWith("abc123", "password123");
+      expect(resetPassword).toHaveBeenCalledWith("abc123", "password123");
     });
   });
 
-  test("shows success screen when resetPassword returns success", async () => {
-    mockedResetPassword.mockResolvedValueOnce({ success: true });
+  it("shows success screen when resetPassword returns success", async () => {
+    vi.mocked(resetPassword).mockResolvedValueOnce({ success: true, message: "Success" });
 
     renderPage("abc123");
 
-    fireEvent.change(screen.getByLabelText(/new password/i), {
+    fireEvent.change(screen.getByLabelText(/^New Password$/i), {
       target: { value: "password123" },
     });
 
-    fireEvent.change(screen.getByLabelText(/confirm new password/i), {
+    fireEvent.change(screen.getByLabelText(/^Confirm New Password$/i), {
       target: { value: "password123" },
     });
 
@@ -175,20 +178,20 @@ describe("ResetPasswordPage", () => {
     ).toBeInTheDocument();
 
     expect(
-      screen.getByRole("button", { name: /go to login page/i })
+      screen.getByRole("button", { name: /go to login/i })
     ).toBeInTheDocument();
   });
 
-  test("navigates to /login after 3 seconds on success", async () => {
-    mockedResetPassword.mockResolvedValueOnce({ success: true });
+  it("navigates to /login after 3 seconds on success", async () => {
+    vi.mocked(resetPassword).mockResolvedValueOnce({ success: true, message: "Success" });
 
     renderPage("abc123");
 
-    fireEvent.change(screen.getByLabelText(/new password/i), {
+    fireEvent.change(screen.getByLabelText(/^New Password$/i), {
       target: { value: "password123" },
     });
 
-    fireEvent.change(screen.getByLabelText(/confirm new password/i), {
+    fireEvent.change(screen.getByLabelText(/^Confirm New Password$/i), {
       target: { value: "password123" },
     });
 
@@ -198,24 +201,24 @@ describe("ResetPasswordPage", () => {
 
     expect(mockNavigate).not.toHaveBeenCalled();
 
-    jest.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(3000);
 
     expect(mockNavigate).toHaveBeenCalledWith("/login");
   });
 
-  test("shows API error message when resetPassword returns success=false", async () => {
-    mockedResetPassword.mockResolvedValueOnce({
+  it("shows API error message when resetPassword returns success=false", async () => {
+    vi.mocked(resetPassword).mockResolvedValueOnce({
       success: false,
       message: "Invalid token",
     });
 
     renderPage("abc123");
 
-    fireEvent.change(screen.getByLabelText(/new password/i), {
+    fireEvent.change(screen.getByLabelText(/^New Password$/i), {
       target: { value: "password123" },
     });
 
-    fireEvent.change(screen.getByLabelText(/confirm new password/i), {
+    fireEvent.change(screen.getByLabelText(/^Confirm New Password$/i), {
       target: { value: "password123" },
     });
 
@@ -224,16 +227,16 @@ describe("ResetPasswordPage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(/invalid token/i);
   });
 
-  test("shows fallback error message when resetPassword throws", async () => {
-    mockedResetPassword.mockRejectedValueOnce(new Error("Network error"));
+  it("shows fallback error message when resetPassword throws", async () => {
+    vi.mocked(resetPassword).mockRejectedValueOnce(new Error("Network error"));
 
     renderPage("abc123");
 
-    fireEvent.change(screen.getByLabelText(/new password/i), {
+    fireEvent.change(screen.getByLabelText(/^New Password$/i), {
       target: { value: "password123" },
     });
 
-    fireEvent.change(screen.getByLabelText(/confirm new password/i), {
+    fireEvent.change(screen.getByLabelText(/^Confirm New Password$/i), {
       target: { value: "password123" },
     });
 

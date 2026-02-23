@@ -1,0 +1,97 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/sidha/OneDrive/Desktop/Software_Engineering_Project/CollabCanvas/frontend[39m
+
+ [32mΓ£ô[39m src/__tests__/services/AuthContext.test.tsx[2m > [22mAuthContext[2m > [22mshould initialize token from localStorage[32m 33[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/AuthContext.test.tsx[2m > [22mAuthContext[2m > [22mshould initialize user from localStorage[32m 6[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/AuthContext.test.tsx[2m > [22mAuthContext[2m > [22mshould return null if user JSON in localStorage is invalid[32m 5[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/AuthContext.test.tsx[2m > [22mAuthContext[2m > [22mlogin() should set token/user and store them in localStorage[32m 73[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/AuthContext.test.tsx[2m > [22mAuthContext[2m > [22mupdateUser() should merge and update localStorage[32m 105[2mms[22m[39m
+ [31m├ù[39m src/__tests__/services/AuthContext.test.tsx[2m > [22mAuthContext[2m > [22mlogout() should clear state and localStorage and redirect[32m 107[2mms[22m[39m
+[31m   ΓåÆ expected "vi.fn()" to be called with arguments: [ '/login' ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+ [32mΓ£ô[39m src/__tests__/services/AuthContext.test.tsx[2m > [22mAuthContext[2m > [22museAuth should throw error if used outside AuthProvider[32m 6[2mms[22m[39m
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files
+\nodejs/node.exe" "C:
+\Users\sidha\AppData\
+Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (:String   
+ ) [], RemoteExce    
+ption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»[39m[1m[41m 
+Failed Tests 1 [49m
+[22m[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»[39m
+
+[41m[1m FAIL 
+[22m[49m src/__test
+s__/services/AuthCont
+ext.test.tsx[2m > 
+[22mAuthContext[2m 
+> [22mlogout() 
+should clear state 
+and localStorage and 
+redirect
+[31m[1mAssertionErr
+or[22m: expected 
+"vi.fn()" to be 
+called with 
+arguments: [ 
+'/login' ][90m
+
+Number of calls: 
+[1m0[22m
+[31m[39m
+[36m [2mΓ¥»[22m sr
+c/__tests__/services/
+AuthContext.test.tsx:
+[2m141:24[22m[39m
+    [90m139| [39m  
+  [34mexpect[39m(sc
+reen[33m.[39m[34mg
+etByTestId[39m([32m
+"user"[39m)[33m.[3
+9mtextContent)[33m.
+[39m[34mtoBe[39m([
+32m"null"[39m)[33m;
+[39m
+    [90m140| [39m
+    [90m141| [39m  
+  [34mexpect[39m(as
+signMock)[33m.[39m
+[34mtoHaveBeenCalledW
+ith[39m([32m"/login
+"[39m)[33m;[39m
+    [90m   | [39m  
+                     
+[31m^[39m
+    [90m142| [39m  
+})[33m;[39m
+    [90m143| [39m
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/
+1]ΓÄ»[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 23:55:32
+[2m   Duration [22m 1.60s[2m (transform 79ms, setup 173ms, import 240ms, tests 339ms, environment 643ms)[22m
+

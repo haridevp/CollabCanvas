@@ -31,7 +31,15 @@ const UserSchema = new mongoose.Schema({
   // Unique contact address for authentication and notifications; stored in lowercase
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   // Securely hashed password string
-  password: { type: String, required: true },
+  password: { 
+    type: String, 
+    required: function() { return !this.googleId; } 
+  },
+
+  googleId: { type: String, unique: true, sparse: true },
+  avatar: { type: String, default: null },
+  bio: { type: String, default: '', maxLength: 500 },
+  isVerified: { type: Boolean, default: false },
   
   // Requirement 2.3.2: Store profile picture (can be a Base64 string or image URL)
   avatar: { type: String, default: null },

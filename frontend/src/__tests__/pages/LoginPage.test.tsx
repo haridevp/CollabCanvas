@@ -1,24 +1,24 @@
-import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import "@testing-library/jest-dom";
+import { MemoryRouter } from "react-router-dom";
+import { vi, describe, it, expect, beforeEach } from "vitest";
 import LoginPage from "../../pages/LoginPage";
 
 /* -------------------- MOCKS -------------------- */
 
 // mock navigate
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
 // mock AuthContext
-const mockLogin = jest.fn();
+const mockLogin = vi.fn();
 
 // mock authService
-const mockLoginWithEmailPassword = jest.fn();
-const mockGetDeviceType = jest.fn();
+const mockLoginWithEmailPassword = vi.fn();
+const mockGetDeviceType = vi.fn();
 
 // react-router mocks
-jest.mock("react-router-dom", () => {
-  const actual = jest.requireActual("react-router-dom");
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -29,14 +29,14 @@ jest.mock("react-router-dom", () => {
 });
 
 // AuthContext mock
-jest.mock("../../services/AuthContext", () => ({
+vi.mock("../../services/AuthContext", () => ({
   useAuth: () => ({
     login: mockLogin,
   }),
 }));
 
 // authService mock
-jest.mock("../../utils/authService", () => ({
+vi.mock("../../utils/authService", () => ({
   loginWithEmailPassword: (creds: any, activity: any) =>
     mockLoginWithEmailPassword(creds, activity),
   getDeviceType: () => mockGetDeviceType(),
@@ -44,27 +44,35 @@ jest.mock("../../utils/authService", () => ({
 
 describe("LoginPage", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
   });
 
-  test("renders login UI", () => {
-    render(<LoginPage />);
+  it("renders login UI", () => {
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
-    expect(screen.getByText(/Welcome Back/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Email Address/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
+    expect(screen.getByText(/Welcome back/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Email Address$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Password$/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Sign In/i })).toBeInTheDocument();
 
     expect(screen.getByText(/Recent Login Activity/i)).toBeInTheDocument();
   });
 
-  test("shows no activity message if none exist in localStorage", () => {
-    render(<LoginPage />);
+  it("shows no activity message if none exist in localStorage", () => {
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
     expect(screen.getByText(/No recent activity found/i)).toBeInTheDocument();
   });
 
-  test("loads recent activities from localStorage (max 3)", () => {
+  it("loads recent activities from localStorage (max 3)", () => {
     localStorage.setItem(
       "login_activities",
       JSON.stringify([
@@ -75,7 +83,11 @@ describe("LoginPage", () => {
       ])
     );
 
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
     // only first 3 should show
     expect(screen.getByText(/1\.1\.1\.1/i)).toBeInTheDocument();
@@ -85,18 +97,26 @@ describe("LoginPage", () => {
     expect(screen.queryByText(/4\.4\.4\.4/i)).not.toBeInTheDocument();
   });
 
-  test("loads remembered email from localStorage and checks rememberMe", () => {
+  it("loads remembered email from localStorage and checks rememberMe", () => {
     localStorage.setItem("remembered_email", "saved@example.com");
 
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
-    expect(screen.getByLabelText(/Email Address/i)).toHaveValue("saved@example.com");
+    expect(screen.getByLabelText(/^Email Address$/i)).toHaveValue("saved@example.com");
     expect(screen.getByRole("checkbox", { name: /Remember me/i })).toBeChecked();
   });
 
-  test("shows validation error if email or password missing", async () => {
+  it("shows validation error if email or password missing", async () => {
     const user = userEvent.setup();
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
     await user.click(screen.getByRole("button", { name: /Sign In/i }));
 
@@ -107,11 +127,15 @@ describe("LoginPage", () => {
     expect(mockLoginWithEmailPassword).not.toHaveBeenCalled();
   });
 
-  test("toggles password visibility when eye button clicked", async () => {
+  it("toggles password visibility when eye button clicked", async () => {
     const user = userEvent.setup();
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
-    const passwordInput = screen.getByLabelText(/Password/i);
+    const passwordInput = screen.getByLabelText(/^Password$/i);
     const toggleBtn = screen.getByRole("button", { name: /Show password/i });
 
     expect(passwordInput).toHaveAttribute("type", "password");
@@ -124,7 +148,7 @@ describe("LoginPage", () => {
     expect(screen.getByRole("button", { name: /Hide password/i })).toBeInTheDocument();
   });
 
-  test("calls loginWithEmailPassword with correct args", async () => {
+  it("calls loginWithEmailPassword with correct args", async () => {
     const user = userEvent.setup();
 
     mockGetDeviceType.mockReturnValue("Windows");
@@ -134,10 +158,14 @@ describe("LoginPage", () => {
       user: { id: 1, name: "Sid" },
     });
 
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
-    await user.type(screen.getByLabelText(/Email Address/i), "user@example.com");
-    await user.type(screen.getByLabelText(/Password/i), "pass123");
+    await user.type(screen.getByLabelText(/^Email Address$/i), "user@example.com");
+    await user.type(screen.getByLabelText(/^Password$/i), "pass123");
 
     await user.click(screen.getByRole("button", { name: /Sign In/i }));
 
@@ -149,7 +177,7 @@ describe("LoginPage", () => {
     });
   });
 
-  test("on success: calls AuthContext login() and navigates to /dashboard by default", async () => {
+  it("on success: calls AuthContext login() and navigates to /dashboard by default", async () => {
     const user = userEvent.setup();
 
     mockGetDeviceType.mockReturnValue("Windows");
@@ -159,10 +187,14 @@ describe("LoginPage", () => {
       user: { id: 99, email: "user@example.com" },
     });
 
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
-    await user.type(screen.getByLabelText(/Email Address/i), "user@example.com");
-    await user.type(screen.getByLabelText(/Password/i), "pass123");
+    await user.type(screen.getByLabelText(/^Email Address$/i), "user@example.com");
+    await user.type(screen.getByLabelText(/^Password$/i), "pass123");
     await user.click(screen.getByRole("button", { name: /Sign In/i }));
 
     await waitFor(() => {
@@ -177,7 +209,7 @@ describe("LoginPage", () => {
     });
   });
 
-  test("on success: if rememberMe checked, stores remembered_email", async () => {
+  it("on success: if rememberMe checked, stores remembered_email", async () => {
     const user = userEvent.setup();
 
     mockGetDeviceType.mockReturnValue("Windows");
@@ -187,10 +219,14 @@ describe("LoginPage", () => {
       user: { id: 1 },
     });
 
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
-    await user.type(screen.getByLabelText(/Email Address/i), "remember@example.com");
-    await user.type(screen.getByLabelText(/Password/i), "pass123");
+    await user.type(screen.getByLabelText(/^Email Address$/i), "remember@example.com");
+    await user.type(screen.getByLabelText(/^Password$/i), "pass123");
 
     await user.click(screen.getByRole("checkbox", { name: /Remember me/i }));
     await user.click(screen.getByRole("button", { name: /Sign In/i }));
@@ -200,7 +236,7 @@ describe("LoginPage", () => {
     });
   });
 
-  test("on success: if rememberMe NOT checked, removes remembered_email", async () => {
+  it("on success: if rememberMe NOT checked, removes remembered_email", async () => {
     const user = userEvent.setup();
 
     localStorage.setItem("remembered_email", "old@example.com");
@@ -212,12 +248,19 @@ describe("LoginPage", () => {
       user: { id: 1 },
     });
 
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
-    await user.type(screen.getByLabelText(/Email Address/i), "new@example.com");
-    await user.type(screen.getByLabelText(/Password/i), "pass123");
+    const emailInput = screen.getByLabelText(/^Email Address$/i);
+    await user.clear(emailInput);
+    await user.type(emailInput, "new@example.com");
+    await user.type(screen.getByLabelText(/^Password$/i), "pass123");
 
-    // don't click remember me
+    // Uncheck remember me
+    await user.click(screen.getByRole("checkbox", { name: /Remember me/i }));
     await user.click(screen.getByRole("button", { name: /Sign In/i }));
 
     await waitFor(() => {
@@ -225,7 +268,7 @@ describe("LoginPage", () => {
     });
   });
 
-  test("shows API error message when result.success=false", async () => {
+  it("shows API error message when result.success=false", async () => {
     const user = userEvent.setup();
 
     mockGetDeviceType.mockReturnValue("Windows");
@@ -234,25 +277,35 @@ describe("LoginPage", () => {
       message: "Invalid credentials",
     });
 
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
-    await user.type(screen.getByLabelText(/Email Address/i), "user@example.com");
-    await user.type(screen.getByLabelText(/Password/i), "wrongpass");
+    await user.type(screen.getByLabelText(/^Email Address$/i), "user@example.com");
+    await user.type(screen.getByLabelText(/^Password$/i), "wrongpass");
     await user.click(screen.getByRole("button", { name: /Sign In/i }));
 
     expect(await screen.findByText(/Invalid credentials/i)).toBeInTheDocument();
   });
 
-  test("shows connection error when API throws", async () => {
+  it("shows connection error when API throws", async () => {
     const user = userEvent.setup();
 
     mockGetDeviceType.mockReturnValue("Windows");
-    mockLoginWithEmailPassword.mockRejectedValue(new Error("Network error"));
+    const networkError: any = new Error("Network error");
+    networkError.request = {}; // Trigger connection error path
+    mockLoginWithEmailPassword.mockRejectedValue(networkError);
 
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
-    await user.type(screen.getByLabelText(/Email Address/i), "user@example.com");
-    await user.type(screen.getByLabelText(/Password/i), "pass123");
+    await user.type(screen.getByLabelText(/^Email Address$/i), "user@example.com");
+    await user.type(screen.getByLabelText(/^Password$/i), "pass123");
     await user.click(screen.getByRole("button", { name: /Sign In/i }));
 
     expect(
@@ -260,16 +313,20 @@ describe("LoginPage", () => {
     ).toBeInTheDocument();
   });
 
-  test("disables inputs while loading", async () => {
+  it("disables inputs while loading", async () => {
     const user = userEvent.setup();
 
     mockGetDeviceType.mockReturnValue("Windows");
-    mockLoginWithEmailPassword.mockImplementation(() => new Promise(() => {}));
+    mockLoginWithEmailPassword.mockImplementation(() => new Promise(() => { }));
 
-    render(<LoginPage />);
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
 
-    const emailInput = screen.getByLabelText(/Email Address/i);
-    const passwordInput = screen.getByLabelText(/Password/i);
+    const emailInput = screen.getByLabelText(/^Email Address$/i);
+    const passwordInput = screen.getByLabelText(/^Password$/i);
     const submitBtn = screen.getByRole("button", { name: /Sign In/i });
 
     await user.type(emailInput, "user@example.com");

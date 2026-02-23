@@ -1,21 +1,24 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { vi, describe, test, expect, beforeEach } from 'vitest';
 import MyRoomsDashboard from '../../../features/rooms/MyRoomsDashboard';
 import roomService from '../../../services/roomService';
 
 // ---- Mocks ----
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate
-}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate
+  };
+});
 
-jest.mock('../../../services/roomService', () => ({
-  __esModule: true,
+vi.mock('../../../services/roomService', () => ({
   default: {
-    getMyRooms: jest.fn(),
-    leaveRoom: jest.fn()
+    getMyRooms: vi.fn(),
+    leaveRoom: vi.fn()
   }
 }));
 
@@ -23,22 +26,24 @@ jest.mock('../../../services/roomService', () => ({
  * Mock RoomCardComponent so we don't depend on its internal UI.
  * We only care that clicking triggers onClick.
  */
-jest.mock('../../../components/ui/RoomCardComponent', () => {
-  return function MockRoomCardComponent(props: any) {
-    return (
-      <button onClick={props.onClick} aria-label={`room-${props.id}`}>
-        {props.name}
-      </button>
-    );
+vi.mock('../../../components/ui/RoomCardComponent', () => {
+  return {
+    default: function MockRoomCardComponent(props: any) {
+      return (
+        <button onClick={props.onClick} aria-label={`room-${props.id}`}>
+          {props.name}
+        </button>
+      );
+    }
   };
 });
 
 describe('MyRoomsDashboard', () => {
-  const onClose = jest.fn();
-  const onRoomSelect = jest.fn();
+  const onClose = vi.fn();
+  const onRoomSelect = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('renders nothing when isOpen is false', () => {
@@ -50,7 +55,7 @@ describe('MyRoomsDashboard', () => {
   });
 
   test('calls roomService.getMyRooms when opened', async () => {
-    (roomService.getMyRooms as jest.Mock).mockResolvedValue({
+    vi.mocked(roomService.getMyRooms).mockResolvedValue({
       success: true,
       rooms: []
     });
@@ -66,7 +71,7 @@ describe('MyRoomsDashboard', () => {
 
   test('shows loading state initially', async () => {
     // Make it hang for a moment
-    (roomService.getMyRooms as jest.Mock).mockImplementation(
+    vi.mocked(roomService.getMyRooms).mockImplementation(
       () => new Promise(() => {})
     );
 
@@ -78,7 +83,7 @@ describe('MyRoomsDashboard', () => {
   });
 
   test('renders rooms returned by service', async () => {
-    (roomService.getMyRooms as jest.Mock).mockResolvedValue({
+    vi.mocked(roomService.getMyRooms).mockResolvedValue({
       success: true,
       rooms: [
         {
@@ -92,7 +97,7 @@ describe('MyRoomsDashboard', () => {
           maxParticipants: 10,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
-        },
+        } as any,
         {
           id: 'room-2',
           name: 'Beta Room',
@@ -104,7 +109,7 @@ describe('MyRoomsDashboard', () => {
           maxParticipants: 5,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
-        }
+        } as any
       ]
     });
 
@@ -118,7 +123,7 @@ describe('MyRoomsDashboard', () => {
   });
 
   test('clicking a room triggers onRoomSelect with correct id', async () => {
-    (roomService.getMyRooms as jest.Mock).mockResolvedValue({
+    vi.mocked(roomService.getMyRooms).mockResolvedValue({
       success: true,
       rooms: [
         {
@@ -132,7 +137,7 @@ describe('MyRoomsDashboard', () => {
           maxParticipants: 10,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
-        }
+        } as any
       ]
     });
 
@@ -147,7 +152,7 @@ describe('MyRoomsDashboard', () => {
   });
 
   test('clicking close triggers onClose', async () => {
-    (roomService.getMyRooms as jest.Mock).mockResolvedValue({
+    vi.mocked(roomService.getMyRooms).mockResolvedValue({
       success: true,
       rooms: []
     });
@@ -155,6 +160,10 @@ describe('MyRoomsDashboard', () => {
     render(
       <MyRoomsDashboard isOpen={true} onClose={onClose} onRoomSelect={onRoomSelect} />
     );
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Loading your rooms/i)).not.toBeInTheDocument();
+    });
 
     const closeBtn = screen.getByLabelText(/Close dashboard/i);
     fireEvent.click(closeBtn);

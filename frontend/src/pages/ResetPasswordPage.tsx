@@ -1,38 +1,17 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { PasswordStrengthMeter } from '../components/ui/PasswordStrengthMeter';
 import { resetPassword } from '../utils/authService';
+import Background from '../components/ui/Background';
+import TitleAnimation from '../components/ui/TitleAnimation';
 
-/**
- * ResetPasswordPage component - Password reset interface
- * 
- * Provides a secure password reset form that validates reset tokens and allows users
- * to set a new password. Includes password strength validation, confirmation matching,
- * and success/error states. The component handles token validation and redirects users
- * to login upon successful password reset.
- * 
- * @component
- * @example
- * ```tsx
- * // In your router configuration
- * <Route path="/reset-password" element={<ResetPasswordPage />} />
- * ```
- * 
- * @returns {JSX.Element} A password reset form or success confirmation screen
- */
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  
-  /**
-   * Password reset token extracted from URL query parameters
-   * @constant {string | null}
-   */
   const token = searchParams.get('token');
 
-  // Form state management
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -40,45 +19,16 @@ const ResetPasswordPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
-  /**
-   * Validates reset token on component mount
-   * 
-   * @effect
-   * @listens token
-   */
   useEffect(() => {
     if (!token) {
       setError("No reset token found. Please request a new link.");
     }
   }, [token]);
 
-  /**
-   * Handles password reset form submission
-   * 
-   * Performs validation and sends the new password to the backend:
-   * 1. Validates password length (min 8 characters)
-   * 2. Confirms password match
-   * 3. Validates token presence
-   * 4. Sends reset request to backend
-   * 5. Handles success/error responses
-   * 
-   * @async
-   * @param {React.FormEvent} e - Form submission event
-   * @returns {Promise<void>}
-   * 
-   * @throws {Error} When reset fails or validation errors occur
-   * 
-   * @example
-   * ```typescript
-   * // Called when user submits the password reset form
-   * handleSubmit(event);
-   * ```
-   */
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setError(null);
 
-    // Basic Validations
     if (password.length < 8) {
       setError("Password must be at least 8 characters long.");
       return;
@@ -94,7 +44,6 @@ const ResetPasswordPage: React.FC = () => {
       const result = await resetPassword(token, password);
       if (result.success) {
         setIsSuccess(true);
-        // Redirect to login after 3 seconds
         setTimeout(() => navigate('/login'), 3000);
       } else {
         setError(result.message);
@@ -106,145 +55,133 @@ const ResetPasswordPage: React.FC = () => {
     }
   };
 
-  /**
-   * Success screen component shown after successful password reset
-   * 
-   * @returns {JSX.Element} Success confirmation UI
-   */
   const renderSuccessScreen = () => (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-100">
-        <CheckCircle 
-          className="w-16 h-16 text-green-500 mx-auto mb-4" 
-          aria-hidden="true" 
-        />
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">Password Updated</h1>
-        <p className="text-slate-600 mb-6">
-          Your password has been reset successfully. Redirecting you to the login page...
-        </p>
-        <Button 
-          onClick={() => navigate('/login')} 
-          className="w-full"
-          aria-label="Go to login page"
-        >
-          Go to Login
-        </Button>
+    <div className="bg-white rounded-xl shadow-2xl p-8 text-center border border-slate-100 flex flex-col justify-center">
+      <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-100">
+        <CheckCircle className="text-green-600" size={32} />
       </div>
+      <h1 className="text-xl font-bold text-black border-t-2 border-black pt-2 inline-block mb-4">Password Updated</h1>
+      <p className="text-slate-600 text-xs mb-6 px-4">
+        Your password has been reset successfully. Redirecting you to the login page...
+      </p>
+      <Button
+        onClick={() => navigate('/login')}
+        className="w-full py-3 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-md active:scale-[0.98] border-none"
+      >
+        Go to Login
+      </Button>
     </div>
   );
 
-  /**
-   * Main password reset form component
-   * 
-   * @returns {JSX.Element} Password reset form UI
-   */
   const renderResetForm = () => (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
-        
-        {/* Back navigation */}
-        <div className="mb-6">
-          <Link 
-            to="/login" 
-            className="text-slate-400 hover:text-blue-600 flex items-center gap-2 text-sm transition-colors"
-            aria-label="Return to login page"
-          >
-            <ArrowLeft size={16} aria-hidden="true" /> 
-            Back to Login
-          </Link>
+    <div className="bg-white rounded-xl shadow-2xl p-6 border border-slate-100 flex flex-col justify-center">
+      <div className="mb-6">
+        <Link
+          to="/login"
+          className="text-blue-600 hover:text-purple-700 flex items-center gap-2 text-xs font-bold transition-colors uppercase tracking-wider"
+        >
+          <ArrowLeft size={16} aria-hidden="true" />
+          Back to Login
+        </Link>
+      </div>
+
+      <div className="text-center mb-8">
+        <div className="mb-4 flex justify-center">
+          <img
+            src="/CollabCanvas/logo.png"
+            alt="CollabCanvas Logo"
+            style={{ height: '64px', width: 'auto' }}
+            className="object-contain mx-auto"
+          />
         </div>
+        <h1 className="text-xl font-bold text-black border-t-2 border-black pt-2 inline-block">Set New Password</h1>
+        <p className="text-slate-600 text-xs mt-1">Create a secure password</p>
+      </div>
 
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">Set New Password</h1>
-          <p className="text-slate-500">Create a secure password for your account.</p>
+      {error && (
+        <div role="alert" className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+          <AlertCircle className="text-red-600" size={18} aria-hidden="true" />
+          <span className="text-red-700 text-xs font-medium">{error}</span>
         </div>
+      )}
 
-        {/* Error display */}
-        {error && (
-          <div 
-            className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
-            role="alert"
-            aria-live="polite"
-          >
-            <AlertCircle className="text-red-600" size={18} aria-hidden="true" />
-            <span className="text-red-700 text-sm font-medium">{error}</span>
-          </div>
-        )}
-
-        {/* Password reset form */}
-        <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-          
-          {/* New Password input */}
+      <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+        <div>
+          <label htmlFor="new-password" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1">New Password</label>
           <div className="relative">
-            <Lock 
-              className="absolute left-3 top-3 text-slate-400" 
-              size={20} 
-              aria-hidden="true" 
-            />
+            <Lock className="absolute left-3 top-3 text-slate-400" size={18} />
             <input
+              id="new-password"
               type={showPassword ? "text" : "password"}
-              placeholder="New Password"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-10 pr-12 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full pl-10 pr-12 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"
               disabled={isLoading || (!!error && !token)}
-              aria-label="New password"
-              aria-required="true"
+              required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
               aria-label={showPassword ? "Hide password" : "Show password"}
-              aria-pressed={showPassword}
+              className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
             >
-              {showPassword ? 
-                <EyeOff size={20} aria-hidden="true" /> : 
-                <Eye size={20} aria-hidden="true" />
-              }
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+        </div>
 
-          {/* Password strength indicator */}
-          <PasswordStrengthMeter password={password} />
+        <PasswordStrengthMeter password={password} className="mt-2" />
 
-          {/* Confirm Password input */}
+        <div>
+          <label htmlFor="confirm-password" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1">Confirm New Password</label>
           <div className="relative">
-            <Lock 
-              className="absolute left-3 top-3 text-slate-400" 
-              size={20} 
-              aria-hidden="true" 
-            />
+            <Lock className="absolute left-3 top-3 text-slate-400" size={18} />
             <input
+              id="confirm-password"
               type="password"
-              placeholder="Confirm New Password"
+              placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"
               disabled={isLoading || (!!error && !token)}
-              aria-label="Confirm new password"
-              aria-required="true"
+              required
             />
           </div>
+        </div>
 
-          {/* Submit button */}
-          <Button 
-            type="submit" 
-            className="w-full py-3" 
-            isLoading={isLoading} 
-            disabled={isLoading || !token}
-            aria-label={isLoading ? "Updating password..." : "Update password"}
-          >
-            Update Password
-          </Button>
-        </form>
-      </div>
+        <Button
+          type="submit"
+          className="w-full py-3 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-md active:scale-[0.98] mt-2 border-none"
+          isLoading={isLoading}
+          disabled={isLoading || !token}
+        >
+          Update Password
+        </Button>
+      </form>
     </div>
   );
 
-  // Return appropriate screen based on state
-  return isSuccess ? renderSuccessScreen() : renderResetForm();
+  return (
+    <div className="relative min-h-screen flex flex-col items-center justify-center p-4">
+      {/* Dynamic Background */}
+      <Background />
+
+      {/* Floating Title */}
+      <div className="absolute top-12 left-0 w-full text-center z-10 pointer-events-none mb-24">
+        <TitleAnimation />
+      </div>
+
+      <div className="w-full max-w-md z-20 mt-32">
+        {isSuccess ? renderSuccessScreen() : renderResetForm()}
+      </div>
+
+      {/* Footer hint */}
+      <div className="absolute bottom-4 text-[10px] text-slate-400 font-medium tracking-tight uppercase z-10">
+        &copy; 2026 CollabCanvas v1.0.0
+      </div>
+    </div>
+  );
 };
 
 export default ResetPasswordPage;

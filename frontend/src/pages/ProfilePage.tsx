@@ -620,51 +620,6 @@ const ProfilePage: React.FC = () => {
                   currentTheme={theme}
                   onThemeChange={handleThemeChange}
                 />
-
-                {/* Quick Theme Toggle */}
-                <div className="mt-8 p-6 border border-slate-200 dark:border-slate-700 rounded-2xl">
-                  <h4 className="font-semibold text-slate-800 dark:text-white mb-4">
-                    Quick Theme Toggle
-                  </h4>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleThemeChange('light')}
-                      className={`flex-1 p-4 rounded-xl border-2 transition-all ${theme === 'light'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                        }`}
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Sun className="w-6 h-6 text-yellow-600" />
-                        <span className="font-medium text-slate-800 dark:text-white">Light</span>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => handleThemeChange('dark')}
-                      className={`flex-1 p-4 rounded-xl border-2 transition-all ${theme === 'dark'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                        }`}
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Moon className="w-6 h-6 text-indigo-400" />
-                        <span className="font-medium text-slate-800 dark:text-white">Dark</span>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => handleThemeChange('system')}
-                      className={`flex-1 p-4 rounded-xl border-2 transition-all ${theme === 'system'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                        }`}
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Monitor className="w-6 h-6 text-slate-600 dark:text-slate-400" />
-                        <span className="font-medium text-slate-800 dark:text-white">System</span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -700,7 +655,7 @@ const ProfilePage: React.FC = () => {
                   {/* In-App Notifications */}
                   <div className="flex items-center justify-between p-4 border border-slate-100 dark:border-slate-700 rounded-xl">
                     <div>
-                      <p className="font-semibold text-slate-800 dark:text-white">In-App Notifications</p>
+                      <label htmlFor="in-app-notifications" className="font-semibold text-slate-800 dark:text-white cursor-pointer">In-App Notifications</label>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
                         Show notifications within the application
                       </p>
@@ -715,6 +670,7 @@ const ProfilePage: React.FC = () => {
                       />
                       <label
                         htmlFor="in-app-notifications"
+                        aria-label="Toggle In-App Notifications"
                         className={`block w-12 h-6 rounded-full cursor-pointer transition-colors ${notifications.push ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'
                           }`}
                       >
@@ -727,7 +683,7 @@ const ProfilePage: React.FC = () => {
                   {/* Email Notifications */}
                   <div className="flex items-center justify-between p-4 border border-slate-100 dark:border-slate-700 rounded-xl">
                     <div>
-                      <p className="font-semibold text-slate-800 dark:text-white">Email Notifications</p>
+                      <label htmlFor="email-notifications" className="font-semibold text-slate-800 dark:text-white cursor-pointer">Email Notifications</label>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
                         Receive updates about your rooms via email
                       </p>
@@ -742,6 +698,7 @@ const ProfilePage: React.FC = () => {
                       />
                       <label
                         htmlFor="email-notifications"
+                        aria-label="Toggle Email Notifications"
                         className={`block w-12 h-6 rounded-full cursor-pointer transition-colors ${notifications.email ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'
                           }`}
                       >
@@ -754,7 +711,7 @@ const ProfilePage: React.FC = () => {
                   {/* Desktop Notifications */}
                   <div className="flex items-center justify-between p-4 border border-slate-100 dark:border-slate-700 rounded-xl">
                     <div>
-                      <p className="font-semibold text-slate-800 dark:text-white">Desktop Notifications</p>
+                      <label htmlFor="desktop-notifications" className="font-semibold text-slate-800 dark:text-white cursor-pointer">Desktop Notifications</label>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
                         Show notifications on your desktop
                       </p>
@@ -769,6 +726,7 @@ const ProfilePage: React.FC = () => {
                       />
                       <label
                         htmlFor="desktop-notifications"
+                        aria-label="Toggle Desktop Notifications"
                         className={`block w-12 h-6 rounded-full cursor-pointer transition-colors ${notifications.desktopNotifications ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'
                           }`}
                       >
@@ -781,7 +739,7 @@ const ProfilePage: React.FC = () => {
                   {/* Sound Settings */}
                   <div className="flex items-center justify-between p-4 border border-slate-100 dark:border-slate-700 rounded-xl">
                     <div>
-                      <p className="font-semibold text-slate-800 dark:text-white">Notification Sounds</p>
+                      <label htmlFor="sound-notifications" className="font-semibold text-slate-800 dark:text-white cursor-pointer">Notification Sounds</label>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
                         Play sound when receiving notifications
                       </p>
@@ -802,6 +760,7 @@ const ProfilePage: React.FC = () => {
                         />
                         <label
                           htmlFor="sound-notifications"
+                          aria-label="Toggle Notification Sounds"
                           className={`block w-12 h-6 rounded-full cursor-pointer transition-colors ${notifications.soundEnabled ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'
                             }`}
                         >

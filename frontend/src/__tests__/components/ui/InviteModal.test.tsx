@@ -1,21 +1,26 @@
 // InviteModal.test.tsx
 import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react";
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import InviteModal from "../../../components/ui/InviteModal";
 import { searchUsers, inviteUsersToRoom } from "../../../utils/authService";
 
-jest.mock("../../../utils/authService", () => ({
-  searchUsers: jest.fn(),
-  inviteUsersToRoom: jest.fn(),
+vi.mock("../../../utils/authService", () => ({
+  searchUsers: vi.fn(),
+  inviteUsersToRoom: vi.fn(),
 }));
 
 // Mock Button so we don't depend on its implementation
-jest.mock("../Button", () => ({
-  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+vi.mock("../Button", () => ({
+  Button: ({ children, isLoading, variant, ...props }: any) => (
+    <button {...props}>
+      {isLoading ? "Loading..." : children}
+    </button>
+  ),
 }));
 
 describe("InviteModal", () => {
-  const onClose = jest.fn();
+  const onClose = vi.fn();
 
   const baseProps = {
     isOpen: true,
@@ -26,7 +31,7 @@ describe("InviteModal", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     Object.defineProperty(window, "location", {
       value: { origin: "http://localhost:3000" },
@@ -36,15 +41,15 @@ describe("InviteModal", () => {
     // clipboard mock
     Object.assign(navigator, {
       clipboard: {
-        writeText: jest.fn(),
+        writeText: vi.fn(),
       },
     });
 
     // alert mock
-    window.alert = jest.fn();
+    window.alert = vi.fn();
 
     // window.open mock
-    window.open = jest.fn();
+    window.open = vi.fn();
   });
 
   it("returns null when isOpen=false", () => {
@@ -83,7 +88,9 @@ describe("InviteModal", () => {
       />
     );
 
-    expect(screen.getByLabelText(/room password/i)).toBeInTheDocument();
+    // Use exact match or look for input specifically
+    const passwordInput = screen.getByLabelText(/^Room password$/i);
+    expect(passwordInput).toBeInTheDocument();
 
     const copyPasswordBtn = screen.getByRole("button", { name: /copy room password to clipboard/i });
     fireEvent.click(copyPasswordBtn);
@@ -151,10 +158,11 @@ describe("InviteModal", () => {
   });
 
   it("debounces user search and calls searchUsers when query >= 2", async () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
-    (searchUsers as jest.Mock).mockResolvedValue({
+    vi.mocked(searchUsers).mockResolvedValue({
       success: true,
+      message: "Found",
       users: [
         { id: "u1", username: "john", displayName: "John" },
         { id: "u2", username: "jane", displayName: "Jane" },
@@ -169,27 +177,29 @@ describe("InviteModal", () => {
     fireEvent.change(searchInput, { target: { value: "jo" } });
 
     await act(async () => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     expect(searchUsers).toHaveBeenCalledWith("jo");
     expect(await screen.findByText("John")).toBeInTheDocument();
     expect(await screen.findByText("Jane")).toBeInTheDocument();
 
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it("selects a user from search results and then sends invites", async () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
-    (searchUsers as jest.Mock).mockResolvedValue({
+    vi.mocked(searchUsers).mockResolvedValue({
       success: true,
+      message: "Found",
       users: [{ id: "u1", username: "john", displayName: "John" }],
     });
 
-    (inviteUsersToRoom as jest.Mock).mockResolvedValue({
+    vi.mocked(inviteUsersToRoom).mockResolvedValue({
       success: true,
-      results: { sent: 1 },
+      message: "Invited",
+      results: { sent: 1, skipped: 0, errors: [] },
     });
 
     render(<InviteModal {...baseProps} />);
@@ -200,7 +210,7 @@ describe("InviteModal", () => {
     fireEvent.change(searchInput, { target: { value: "jo" } });
 
     await act(async () => {
-      jest.advanceTimersByTime(300);
+      vi.advanceTimersByTime(300);
     });
 
     const userBtn = await screen.findByRole("button", { name: /select john/i });
@@ -216,7 +226,7 @@ describe("InviteModal", () => {
     expect(inviteUsersToRoom).toHaveBeenCalledWith("room-123", ["u1"]);
     expect(window.alert).toHaveBeenCalledWith("1 invitation(s) sent successfully!");
 
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it("social share opens window with correct url (twitter)", () => {
@@ -227,7 +237,7 @@ describe("InviteModal", () => {
     fireEvent.click(screen.getByRole("button", { name: /share on twitter/i }));
 
     expect(window.open).toHaveBeenCalled();
-    const [url, target] = (window.open as jest.Mock).mock.calls[0];
+    const [url, target] = vi.mocked(window.open).mock.calls[0];
 
     expect(url).toContain("https://twitter.com/intent/tweet?text=");
     expect(target).toBe("_blank");
@@ -245,7 +255,12 @@ describe("InviteModal", () => {
 
     expect(screen.getByText("test@example.com")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /close modal/i }));
+    // "Done" button often has text "Done", while "X" has "Close modal" label
+    // The previous test failed because finding by role with name /close modal/i found two buttons.
+    // And finding by name "Done" fails because aria-label overrides visible text.
+    // Finding by text "Done" finds the text node, clicking it works.
+    const doneBtn = screen.getByText("Done");
+    fireEvent.click(doneBtn);
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });

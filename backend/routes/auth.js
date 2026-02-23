@@ -21,6 +21,72 @@ const authh = require("../middleware/authh");
 // Import asyncHandler to clean up try/catch blocks in route handlers
 const { asyncHandler } = require("../middleware/errorHandler");
 
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+/**
+ * @route   POST /api/auth/google-login
+ * @desc    Authenticate or Register user via Google OAuth
+ * @access  Public
+ */
+router.post("/google-login", async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ success: false, message: "No Google credential provided" });
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    let user = await User.findOne({ $or: [{ googleId }, { email: email.toLowerCase() }] });
+
+    if (!user) {
+      const baseUsername = name.replace(/\s+/g, '').toLowerCase();
+      const uniqueUsername = `${baseUsername}${Math.floor(Math.random() * 1000)}`;
+
+      user = new User({
+        displayName: name,
+        username: uniqueUsername,
+        email: email.toLowerCase(),
+        googleId,
+        avatar: picture,
+        isVerified: true, 
+      });
+      await user.save();
+    } else if (!user.googleId) {
+      user.googleId = googleId;
+      if (!user.avatar) user.avatar = picture;
+      user.isVerified = true;
+      await user.save();
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        fullName: user.displayName,
+        avatar: user.avatar,
+        bio: user.bio,
+      },
+    });
+  } catch (err) {
+    console.error("❌ GOOGLE AUTH CRITICAL ERROR:", err.message);
+    res.status(400).json({ success: false, message: "Google verification failed: " + err.message });
+  }
+});
+
 /**
  * @route   GET /api/auth/check-username/:username
  * @desc    Check if a username is available for registration.

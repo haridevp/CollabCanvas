@@ -1,0 +1,286 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/sidha/OneDrive/Desktop/Software_Engineering_Project/CollabCanvas/frontend[39m
+
+[90mstdout[2m | src/__tests__/services/accountDeletionService.test.ts[2m > [22m[2maccountDeletionService[2m > [22m[2mclearUserData should remove auth/user data but preserve theme
+[22m[39mUser session and local data cleared.
+
+[90mstdout[2m | src/__tests__/services/accountDeletionService.test.ts[2m > [22m[2maccountDeletionService[2m > [22m[2mclearUserData should not set theme if it was not present
+[22m[39mUser session and local data cleared.
+
+ [32mΓ£ô[39m src/__tests__/services/accountDeletionService.test.ts[2m > [22maccountDeletionService[2m > [22mclearUserData should remove auth/user data but preserve theme[32m 3[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/accountDeletionService.test.ts[2m > [22maccountDeletionService[2m > [22mclearUserData should not set theme if it was not present[32m 1[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/accountDeletionService.test.ts[2m > [22maccountDeletionService[2m > [22mhasPendingDeletion should return false if no pending_deletion key exists[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/accountDeletionService.test.ts[2m > [22maccountDeletionService[2m > [22mhasPendingDeletion should return true if pending_deletion exists[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/accountDeletionService.test.ts[2m > [22maccountDeletionService[2m > [22mgetPendingDeletion should return null if nothing stored[32m 0[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/accountDeletionService.test.ts[2m > [22maccountDeletionService[2m > [22mgetPendingDeletion should return parsed JSON if stored[32m 1[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/accountDeletionService.test.ts[2m > [22maccountDeletionService[2m > [22msubmitDeletionFeedback should return success and message[32m 1[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/accountDeletionService.test.ts[2m > [22maccountDeletionService[2m > [22mcancelAccountDeletion should return success object[32m 0[2mms[22m[39m
+ [31m├ù[39m src/__tests__/services/accountDeletionService.test.ts[2m > [22maccountDeletionService[2m > [22mrequestAccountDeletion should call api.delete and clearUserData if success=true[32m 3[2mms[22m[39m
+[31m   ΓåÆ Cannot read properties of undefined (reading 'value')[39m
+ [31m├ù[39m src/__tests__/services/accountDeletionService.test.ts[2m > [22maccountDeletionService[2m > [22mrequestAccountDeletion should NOT clearUserData if success=false[32m 1[2mms[22m[39m
+[31m   ΓåÆ Cannot read properties of undefined (reading 'value')[39m
+ [31m├ù[39m src/__tests__/services/accountDeletionService.test.ts[2m > [22maccountDeletionService[2m > [22mrequestAccountDeletion should return error message if request fails[32m 0[2mms[22m[39m
+[31m   ΓåÆ Cannot read properties of undefined (reading 'value')[39m
+ [31m├ù[39m src/__tests__/services/accountDeletionService.test.ts[2m > [22maccountDeletionService[2m > [22mrequestAccountDeletion should return fallback message if no backend message[32m 0[2mms[22m[39m
+[31m   ΓåÆ Cannot read properties of undefined (reading 'value')[39m
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files
+\nodejs/node.exe" "C:
+\Users\sidha\AppData\
+Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (:String   
+ ) [], RemoteExce    
+ption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»[39m[1m[41m 
+Failed Tests 4 [49m
+[22m[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»[39m
+
+[41m[1m FAIL 
+[22m[49m src/__test
+s__/services/accountD
+eletionService.test.t
+s[2m > [22maccountD
+eletionService[2m > 
+[22mrequestAccountDe
+letion should call 
+api.delete and 
+clearUserData if 
+success=true
+[31m[1mTypeError[2
+2m: Cannot read 
+properties of 
+undefined (reading 
+'value')[39m
+[36m [2mΓ¥»[22m sr
+c/__tests__/services/
+accountDeletionServic
+e.test.ts:[2m142:53
+[22m[39m
+    [90m140| [39m  
+it("requestAccountDel
+etion should call 
+api.delete and 
+clearUserData ΓÇª
+    [90m141| [39m  
+  [35mconst[39m 
+axiosCreate 
+[33m=[39m (axios[3
+3m.[39mcreate 
+[35mas[39m 
+any)[33m;[39m
+    [90m142| [39m  
+  [35mconst[39m 
+apiInstance 
+[33m=[39m axiosCrea
+te[33m.[39mmock[33
+m.[39mresults[[34m0
+[39m][33m.[39mvalu
+e[33m;[39m
+    [90m   | [39m  
+                     
+                     
+        [31m^[39m
+    [90m143| [39m
+    [90m144| [39m  
+  apiInstance[33m.[
+39m[35mdelete[39m[
+33m.[39m[34mmockRes
+olvedValue[39m({
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/
+4]ΓÄ»[22m[39m
+
+[41m[1m FAIL 
+[22m[49m src/__test
+s__/services/accountD
+eletionService.test.t
+s[2m > [22maccountD
+eletionService[2m > 
+[22mrequestAccountDe
+letion should NOT 
+clearUserData if 
+success=false
+[31m[1mTypeError[2
+2m: Cannot read 
+properties of 
+undefined (reading 
+'value')[39m
+[36m [2mΓ¥»[22m sr
+c/__tests__/services/
+accountDeletionServic
+e.test.ts:[2m163:53
+[22m[39m
+    [90m161| [39m  
+it("requestAccountDel
+etion should NOT 
+clearUserData if 
+success=falseΓÇª
+    [90m162| [39m  
+  [35mconst[39m 
+axiosCreate 
+[33m=[39m (axios[3
+3m.[39mcreate 
+[35mas[39m 
+any)[33m;[39m
+    [90m163| [39m  
+  [35mconst[39m 
+apiInstance 
+[33m=[39m axiosCrea
+te[33m.[39mmock[33
+m.[39mresults[[34m0
+[39m][33m.[39mvalu
+e[33m;[39m
+    [90m   | [39m  
+                     
+                     
+        [31m^[39m
+    [90m164| [39m
+    [90m165| [39m  
+  apiInstance[33m.[
+39m[35mdelete[39m[
+33m.[39m[34mmockRes
+olvedValue[39m({
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/
+4]ΓÄ»[22m[39m
+
+[41m[1m FAIL 
+[22m[49m src/__test
+s__/services/accountD
+eletionService.test.t
+s[2m > [22maccountD
+eletionService[2m > 
+[22mrequestAccountDe
+letion should return 
+error message if 
+request fails
+[31m[1mTypeError[2
+2m: Cannot read 
+properties of 
+undefined (reading 
+'value')[39m
+[36m [2mΓ¥»[22m sr
+c/__tests__/services/
+accountDeletionServic
+e.test.ts:[2m180:53
+[22m[39m
+    [90m178| [39m  
+it("requestAccountDel
+etion should return 
+error message if 
+request faΓÇª
+    [90m179| [39m  
+  [35mconst[39m 
+axiosCreate 
+[33m=[39m (axios[3
+3m.[39mcreate 
+[35mas[39m 
+any)[33m;[39m
+    [90m180| [39m  
+  [35mconst[39m 
+apiInstance 
+[33m=[39m axiosCrea
+te[33m.[39mmock[33
+m.[39mresults[[34m0
+[39m][33m.[39mvalu
+e[33m;[39m
+    [90m   | [39m  
+                     
+                     
+        [31m^[39m
+    [90m181| [39m
+    [90m182| [39m  
+  apiInstance[33m.[
+39m[35mdelete[39m[
+33m.[39m[34mmockRej
+ectedValue[39m({
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/
+4]ΓÄ»[22m[39m
+
+[41m[1m FAIL 
+[22m[49m src/__test
+s__/services/accountD
+eletionService.test.t
+s[2m > [22maccountD
+eletionService[2m > 
+[22mrequestAccountDe
+letion should return 
+fallback message if 
+no backend message
+[31m[1mTypeError[2
+2m: Cannot read 
+properties of 
+undefined (reading 
+'value')[39m
+[36m [2mΓ¥»[22m sr
+c/__tests__/services/
+accountDeletionServic
+e.test.ts:[2m197:53
+[22m[39m
+    [90m195| [39m  
+it("requestAccountDel
+etion should return 
+fallback message if 
+no backΓÇª
+    [90m196| [39m  
+  [35mconst[39m 
+axiosCreate 
+[33m=[39m (axios[3
+3m.[39mcreate 
+[35mas[39m 
+any)[33m;[39m
+    [90m197| [39m  
+  [35mconst[39m 
+apiInstance 
+[33m=[39m axiosCrea
+te[33m.[39mmock[33
+m.[39mresults[[34m0
+[39m][33m.[39mvalu
+e[33m;[39m
+    [90m   | [39m  
+                     
+                     
+        [31m^[39m
+    [90m198| [39m
+    [90m199| [39m  
+  apiInstance[33m.[
+39m[35mdelete[39m[
+33m.[39m[34mmockRej
+ectedValue[39m({})[
+33m;[39m
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[4/
+4]ΓÄ»[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m8 passed[39m[22m[90m (12)[39m
+[2m   Start at [22m 23:47:59
+[2m   Duration [22m 1.44s[2m (transform 85ms, setup 162ms, import 62ms, tests 13ms, environment 632ms)[22m
+

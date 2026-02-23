@@ -56,7 +56,8 @@ describe('RoomSettingsPanel', () => {
 
     expect(screen.getByText(/Room Settings/i)).toBeInTheDocument();
     expect(screen.getByDisplayValue('Test Room')).toBeInTheDocument();
-    expect(screen.getByText(/Participants/i)).toBeInTheDocument();
+    // "Participants" appears in label and status, so we expect at least one
+    expect(screen.getAllByText(/Participants/i)[0]).toBeInTheDocument();
   });
 
   it('updates form values on input change', () => {

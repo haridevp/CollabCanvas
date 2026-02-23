@@ -1,32 +1,36 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import axios from "axios";
-
-import {
-  requestAccountDeletion,
-  submitDeletionFeedback,
-  clearUserData,
-  hasPendingDeletion,
-  getPendingDeletion,
-  cancelAccountDeletion,
-} from "../../services/accountDeletionService";
+import api from "../../api/axios";
 
 // ---- Mock axios ----
 vi.mock("axios", () => {
-  const mockAxiosInstance = {
+  const mockInstance = {
     delete: vi.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
     interceptors: {
-      request: {
-        use: vi.fn(),
-      },
+      request: { use: vi.fn() },
+      response: { use: vi.fn() },
     },
   };
-
   return {
     default: {
-      create: vi.fn(() => mockAxiosInstance),
+      create: vi.fn(() => mockInstance),
     },
   };
 });
+
+// Import the module as a namespace to allow spying on its exports
+import * as accountService from "../../services/accountDeletionService";
+
+// Destructure for convenience in tests
+const {
+  requestAccountDeletion,
+  submitDeletionFeedback,
+  hasPendingDeletion,
+  getPendingDeletion,
+  cancelAccountDeletion,
+} = accountService;
 
 describe("accountDeletionService", () => {
   beforeEach(() => {
@@ -46,7 +50,10 @@ describe("accountDeletionService", () => {
 
     sessionStorage.setItem("temp", "123");
 
-    clearUserData();
+    // Create a spy on clearUserData
+    const clearSpy = vi.spyOn(accountService, "clearUserData");
+
+    accountService.clearUserData();
 
     expect(localStorage.getItem("auth_token")).toBeNull();
     expect(localStorage.getItem("user")).toBeNull();
@@ -62,7 +69,7 @@ describe("accountDeletionService", () => {
   it("clearUserData should not set theme if it was not present", () => {
     localStorage.setItem("auth_token", "abc");
 
-    clearUserData();
+    accountService.clearUserData();
 
     expect(localStorage.getItem("user-theme")).toBeNull();
   });
@@ -99,7 +106,7 @@ describe("accountDeletionService", () => {
   // submitDeletionFeedback()
   // --------------------------
   it("submitDeletionFeedback should return success and message", async () => {
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => { });
 
     const result = await submitDeletionFeedback({
       reason: "Not using",
@@ -129,85 +136,69 @@ describe("accountDeletionService", () => {
   // requestAccountDeletion()
   // --------------------------
   it("requestAccountDeletion should call api.delete and clearUserData if success=true", async () => {
-    const axiosCreate = (axios.create as any);
-    const apiInstance = axiosCreate.mock.results[0].value;
-
-    apiInstance.delete.mockResolvedValue({
+    vi.mocked(api.delete).mockResolvedValue({
       data: { success: true, message: "Deleted" },
     });
 
-    // Spy on clearUserData
-    const clearSpy = vi.spyOn(
-      await import("../../services/accountDeletionService"),
-      "clearUserData"
-    );
+    localStorage.setItem("auth_token", "active-token");
 
     const result = await requestAccountDeletion({
       email: "test@test.com",
       password: "123",
     });
 
-    expect(apiInstance.delete).toHaveBeenCalledWith("/auth/delete-account", {
+    expect(api.delete).toHaveBeenCalledWith("/auth/delete-account", {
       data: { password: "123" },
     });
 
-    expect(clearSpy).toHaveBeenCalled();
+    // Verify clearUserData was called by its side effects
+    expect(localStorage.getItem("auth_token")).toBeNull();
     expect(result).toEqual({ success: true, message: "Deleted" });
   });
 
   it("requestAccountDeletion should NOT clearUserData if success=false", async () => {
-    const axiosCreate = (axios.create as any);
-    const apiInstance = axiosCreate.mock.results[0].value;
-
-    apiInstance.delete.mockResolvedValue({
+    vi.mocked(api.delete).mockResolvedValue({
       data: { success: false, message: "Wrong password" },
     });
 
-    const clearSpy = vi.spyOn(
-      await import("../../services/accountDeletionService"),
-      "clearUserData"
-    );
+    localStorage.setItem("auth_token", "active-token");
 
     const result = await requestAccountDeletion({
       email: "test@test.com",
       password: "bad",
     });
 
-    expect(clearSpy).not.toHaveBeenCalled();
+    expect(api.delete).toHaveBeenCalled();
+    expect(localStorage.getItem("auth_token")).toBe("active-token");
     expect(result).toEqual({ success: false, message: "Wrong password" });
   });
 
   it("requestAccountDeletion should return error message if request fails", async () => {
-    const axiosCreate = (axios.create as any);
-    const apiInstance = axiosCreate.mock.results[0].value;
-
-    apiInstance.delete.mockRejectedValue({
-      response: { data: { message: "Server error" } },
+    vi.mocked(api.delete).mockRejectedValue({
+      response: {
+        data: { message: "Internal Server Error" },
+      },
     });
 
     const result = await requestAccountDeletion({
       email: "test@test.com",
-      password: "123",
+      password: "error",
     });
 
-    expect(result.success).toBe(false);
-    expect(result.message).toBe("Server error");
+    expect(result).toEqual({ success: false, message: "Internal Server Error" });
   });
 
   it("requestAccountDeletion should return fallback message if no backend message", async () => {
-    const axiosCreate = (axios.create as any);
-    const apiInstance = axiosCreate.mock.results[0].value;
-
-    apiInstance.delete.mockRejectedValue({});
+    vi.mocked(api.delete).mockRejectedValue({});
 
     const result = await requestAccountDeletion({
       email: "test@test.com",
-      password: "123",
+      password: "err",
     });
 
-    expect(result.success).toBe(false);
-    expect(result.message).toBe(
-      "Failed to delete account. Please verify your password."
-    );
+    expect(result).toEqual({
+      success: false,
+      message: "Failed to delete account. Please verify your password.",
+    });
   });
 });

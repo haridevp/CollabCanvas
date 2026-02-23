@@ -1,0 +1,4329 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/sidha/OneDrive/Desktop/Software_Engineering_Project/CollabCanvas/frontend[39m
+
+ [31m├ù[39m src/__tests__/pages/ForgotPasswordPage.test.tsx[2m > [22mForgotPasswordPage[2m > [22mrenders initial UI correctly[32m 105[2mms[22m[39m
+[31m   ΓåÆ Unable to find an element with the text: /Enter your email and we'll send a reset link/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"relative min-h-screen flex flex-col items-center justify-center p-4"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"fixed inset-0 -z-10 w-full h-full overflow-hidden bg-black"[31m
+      [36m>[31m
+        [36m<section[31m
+          [33mclass[31m=[32m"dot-grid w-full h-full"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"dot-grid__wrap"[31m
+          [36m>[31m
+            [36m<canvas[31m
+              [33mclass[31m=[32m"dot-grid__canvas"[31m
+              [33mheight[31m=[32m"0"[31m
+              [33mstyle[31m=[32m"width: 0px; height: 0px;"[31m
+              [33mwidth[31m=[32m"0"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</section>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"absolute top-12 left-0 w-full text-center z-10 pointer-events-none mb-24"[31m
+      [36m>[31m
+        [36m<h1[31m
+          [33maria-label[31m=[32m"COLLABCANVAS"[31m
+          [33mclass[31m=[32m"shuffle-parent is-ready text-7xl md:text-8xl font-black tracking-tighter text-white"[31m
+          [33mstyle[31m=[32m"text-align: center; -webkit-text-stroke: 2px black; text-shadow: 4px 4px 0px rgba(0,0,0,0.5);"[31m
+        [36m>[31m
+          [36m<span[31m
+            [33mstyle[31m=[32m"white-space: nowrap;"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mC[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mO[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mL[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mL[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mB[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mC[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mN[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mV[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mS[0m
+            [36m</div>[31m
+          [36m</span>[31m
+        [36m</h1>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"w-full max-w-md z-20 mt-32"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"bg-white rounded-xl shadow-2xl p-6 border border-slate-100 flex flex-col justify-center"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"mb-6"[31m
+          [36m>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-blue-600 hover:text-purple-700 flex items-center gap-2 text-xs font-bold transition-colors uppercase tracking-wider"[31m
+              [33mdata-discover[31m=[32m"true"[31m
+              [33mhref[31m=[32m"/login"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-arrow-left"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"16"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"16"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"m12 19-7-7 7-7"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M19 12H5"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+              [0m Back to Login[0m
+            [36m</a>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"text-center mb-8"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"mb-4 flex justify-center"[31m
+            [36m>[31m
+              [36m<img[31m
+                [33malt[31m=[32m"CollabCanvas Logo"[31m
+                [33mclass[31m=[32m"object-contain mx-auto"[31m
+                [33msrc[31m=[32m"/CollabCanvas/logo.png"[31m
+                [33mstyle[31m=[32m"height: 64px; width: auto;"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<h1[31m
+              [33mclass[31m=[32m"text-xl font-bold text-black border-t-2 border-black pt-2 inline-block"[31m
+            [36m>[31m
+              [0mReset Password[0m
+            [36m</h1>[31m
+            [36m<p[31m
+              [33mclass[31m=[32m"text-slate-600 text-xs mt-1"[31m
+            [36m>[31m
+              [0mEnter your email for a reset link[0m
+            [36m</p>[31m
+          [36m</div>[31m
+          [36m<form[31m
+            [33mclass[31m=[32m"space-y-6"[31m
+          [36m>[31m
+            [36m<div>[31m
+              [36m<label[31m
+                [33mclass[31m=[32m"block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1"[31m
+                [33mfor[31m=[32m"email"[31m
+              [36m>[31m
+                [0mEmail Address[0m
+              [36m</label>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"relative"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33maria-hidden[31m=[32m"true"[31m
+                  [33mclass[31m=[32m"lucide lucide-mail absolute left-3 top-3 text-slate-400"[31m
+                  [33mfill[31m=[32m"none"[31m
+                  [33mheight[31m=[32m"18"[31m
+                  [33mstroke[31m=[32m"currentColor"[31m
+                  [33mstroke-linecap[31m=[32m"round"[31m
+                  [33mstroke-linejoin[31m=[32m"round"[31m
+                  [33mstroke-width[31m=[32m"2"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [33mwidth[31m=[32m"18"[31m
+                  [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"[31m
+                  [36m/>[31m
+                  [36m<rect[31m
+                    [33mheight[31m=[32m"16"[31m
+                    [33mrx[31m=[32m"2"[31m
+                    [33mwidth[31m=[32m"20"[31m
+                    [33mx[31m=[32m"2"[31m
+                    [33my[31m=[32m"4"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+                [36m<input[31m
+                  [33mclass[31m=[32m"w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"[31m
+                  [33mid[31m=[32m"email"[31m
+                  [33mplaceholder[31m=[32m"name@company.com"[31m
+                  [33mrequired[31m=[32m""[31m
+                  [33mtype[31m=[32m"email"[31m
+                  [33mvalue[31m=[32m""[31m
+                [36m/>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33maria-busy[31m=[32m"false"[31m
+              [33maria-disabled[31m=[32m"false"[31m
+              [33mclass[31m=[32m"px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg active:bg-blue-800 w-full py-3 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-md active:scale-[0.98] border-none"[31m
+              [33mtype[31m=[32m"submit"[31m
+            [36m>[31m
+              [0mSend Reset Link[0m
+            [36m</button>[31m
+          [36m</form>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"absolute bottom-4 text-[10px] text-slate-400 font-medium tracking-tight uppercase z-10"[31m
+      [36m>[31m
+        [0m┬⌐ 2026 CollabCanvas v1.0.0[0m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+ [31m├ù[39m src/__tests__/pages/ForgotPasswordPage.test.tsx[2m > [22mForgotPasswordPage[2m > [22mshows error if email is empty[33m 1071[2mms[22m[39m
+[31m   ΓåÆ Unable to find an element with the text: /Please enter your email address/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"relative min-h-screen flex flex-col items-center justify-center p-4"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"fixed inset-0 -z-10 w-full h-full overflow-hidden bg-black"[31m
+      [36m>[31m
+        [36m<section[31m
+          [33mclass[31m=[32m"dot-grid w-full h-full"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"dot-grid__wrap"[31m
+          [36m>[31m
+            [36m<canvas[31m
+              [33mclass[31m=[32m"dot-grid__canvas"[31m
+              [33mheight[31m=[32m"0"[31m
+              [33mstyle[31m=[32m"width: 0px; height: 0px;"[31m
+              [33mwidth[31m=[32m"0"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</section>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"absolute top-12 left-0 w-full text-center z-10 pointer-events-none mb-24"[31m
+      [36m>[31m
+        [36m<h1[31m
+          [33maria-label[31m=[32m"COLLABCANVAS"[31m
+          [33mclass[31m=[32m"shuffle-parent is-ready text-7xl md:text-8xl font-black tracking-tighter text-white"[31m
+          [33mstyle[31m=[32m"text-align: center; -webkit-text-stroke: 2px black; text-shadow: 4px 4px 0px rgba(0,0,0,0.5);"[31m
+        [36m>[31m
+          [36m<span[31m
+            [33mstyle[31m=[32m"white-space: nowrap;"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mC[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mO[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mL[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mL[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mB[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mC[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mN[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mV[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mS[0m
+            [36m</div>[31m
+          [36m</span>[31m
+        [36m</h1>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"w-full max-w-md z-20 mt-32"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"bg-white rounded-xl shadow-2xl p-6 border border-slate-100 flex flex-col justify-center"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"mb-6"[31m
+          [36m>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-blue-600 hover:text-purple-700 flex items-center gap-2 text-xs font-bold transition-colors uppercase tracking-wider"[31m
+              [33mdata-discover[31m=[32m"true"[31m
+              [33mhref[31m=[32m"/login"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-arrow-left"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"16"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"16"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"m12 19-7-7 7-7"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M19 12H5"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+              [0m Back to Login[0m
+            [36m</a>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"text-center mb-8"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"mb-4 flex justify-center"[31m
+            [36m>[31m
+              [36m<img[31m
+                [33malt[31m=[32m"CollabCanvas Logo"[31m
+                [33mclass[31m=[32m"object-contain mx-auto"[31m
+                [33msrc[31m=[32m"/CollabCanvas/logo.png"[31m
+                [33mstyle[31m=[32m"height: 64px; width: auto;"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<h1[31m
+              [33mclass[31m=[32m"text-xl font-bold text-black border-t-2 border-black pt-2 inline-block"[31m
+            [36m>[31m
+              [0mReset Password[0m
+            [36m</h1>[31m
+            [36m<p[31m
+              [33mclass[31m=[32m"text-slate-600 text-xs mt-1"[31m
+            [36m>[31m
+              [0mEnter your email for a reset link[0m
+            [36m</p>[31m
+          [36m</div>[31m
+          [36m<form[31m
+            [33mclass[31m=[32m"space-y-6"[31m
+          [36m>[31m
+            [36m<div>[31m
+              [36m<label[31m
+                [33mclass[31m=[32m"block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1"[31m
+                [33mfor[31m=[32m"email"[31m
+              [36m>[31m
+                [0mEmail Address[0m
+              [36m</label>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"relative"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33maria-hidden[31m=[32m"true"[31m
+                  [33mclass[31m=[32m"lucide lucide-mail absolute left-3 top-3 text-slate-400"[31m
+                  [33mfill[31m=[32m"none"[31m
+                  [33mheight[31m=[32m"18"[31m
+                  [33mstroke[31m=[32m"currentColor"[31m
+                  [33mstroke-linecap[31m=[32m"round"[31m
+                  [33mstroke-linejoin[31m=[32m"round"[31m
+                  [33mstroke-width[31m=[32m"2"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [33mwidth[31m=[32m"18"[31m
+                  [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"[31m
+                  [36m/>[31m
+                  [36m<rect[31m
+                    [33mheight[31m=[32m"16"[31m
+                    [33mrx[31m=[32m"2"[31m
+                    [33mwidth[31m=[32m"20"[31m
+                    [33mx[31m=[32m"2"[31m
+                    [33my[31m=[32m"4"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+                [36m<input[31m
+                  [33mclass[31m=[32m"w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"[31m
+                  [33mid[31m=[32m"email"[31m
+                  [33mplaceholder[31m=[32m"name@company.com"[31m
+                  [33mrequired[31m=[32m""[31m
+                  [33mtype[31m=[32m"email"[31m
+                  [33mvalue[31m=[32m""[31m
+                [36m/>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33maria-busy[31m=[32m"false"[31m
+              [33maria-disabled[31m=[32m"false"[31m
+              [33mclass[31m=[32m"px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg active:bg-blue-800 w-full py-3 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-md active:scale-[0.98] border-none"[31m
+              [33mtype[31m=[32m"submit"[31m
+            [36m>[31m
+              [0mSend Reset Link[0m
+            [36m</button>[31m
+          [36m</form>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"absolute bottom-4 text-[10px] text-slate-400 font-medium tracking-tight uppercase z-10"[31m
+      [36m>[31m
+        [0m┬⌐ 2026 CollabCanvas v1.0.0[0m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"relative min-h-screen flex flex-col items-center justify-center p-4"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"fixed inset-0 -z-10 w-full h-full overflow-hidden bg-black"[31m
+      [36m>[31m
+        [36m<section[31m
+          [33mclass[31m=[32m"dot-grid w-full h-full"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"dot-grid__wrap"[31m
+          [36m>[31m
+            [36m<canvas[31m
+              [33mclass[31m=[32m"dot-grid__canvas"[31m
+              [33mheight[31m=[32m"0"[31m
+              [33mstyle[31m=[32m"width: 0px; height: 0px;"[31m
+              [33mwidth[31m=[32m"0"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</section>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"absolute top-12 left-0 w-full text-center z-10 pointer-events-none mb-24"[31m
+      [36m>[31m
+        [36m<h1[31m
+          [33maria-label[31m=[32m"COLLABCANVAS"[31m
+          [33mclass[31m=[32m"shuffle-parent is-ready text-7xl md:text-8xl font-black tracking-tighter text-white"[31m
+          [33mstyle[31m=[32m"text-align: center; -webkit-text-stroke: 2px black; text-shadow: 4px 4px 0px rgba(0,0,0,0.5);"[31m
+        [36m>[31m
+          [36m<span[31m
+            [33mstyle[31m=[32m"white-space: nowrap;"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mC[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mO[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mL[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mL[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mB[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mC[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mN[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mV[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mS[0m
+            [36m</div>[31m
+          [36m</span>[31m
+        [36m</h1>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"w-full max-w-md z-20 mt-32"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"bg-white rounded-xl shadow-2xl p-6 border border-slate-100 flex flex-col justify-center"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"mb-6"[31m
+          [36m>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-blue-600 hover:text-purple-700 flex items-center gap-2 text-xs font-bold transition-colors uppercase tracking-wider"[31m
+              [33mdata-discover[31m=[32m"true"[31m
+              [33mhref[31m=[32m"/login"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-arrow-left"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"16"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"16"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"m12 19-7-7 7-7"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M19 12H5"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+              [0m Back to Login[0m
+            [36m</a>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"text-center mb-8"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"mb-4 flex justify-center"[31m
+            [36m>[31m
+              [36m<img[31m
+                [33malt[31m=[32m"CollabCanvas Logo"[31m
+                [33mclass[31m=[32m"object-contain mx-auto"[31m
+                [33msrc[31m=[32m"/CollabCanvas/logo.png"[31m
+                [33mstyle[31m=[32m"height: 64px; width: auto;"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<h1[31m
+              [33mclass[31m=[32m"text-xl font-bold text-black border-t-2 border-black pt-2 inline-block"[31m
+            [36m>[31m
+              [0mReset Password[0m
+            [36m</h1>[31m
+            [36m<p[31m
+              [33mclass[31m=[32m"text-slate-600 text-xs mt-1"[31m
+            [36m>[31m
+              [0mEnter your email for a reset link[0m
+            [36m</p>[31m
+          [36m</div>[31m
+          [36m<form[31m
+            [33mclass[31m=[32m"space-y-6"[31m
+          [36m>[31m
+            [36m<div>[31m
+              [36m<label[31m
+                [33mclass[31m=[32m"block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1"[31m
+                [33mfor[31m=[32m"email"[31m
+              [36m>[31m
+                [0mEmail Address[0m
+              [36m</label>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"relative"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33maria-hidden[31m=[32m"true"[31m
+                  [33mclass[31m=[32m"lucide lucide-mail absolute left-3 top-3 text-slate-400"[31m
+                  [33mfill[31m=[32m"none"[31m
+                  [33mheight[31m=[32m"18"[31m
+                  [33mstroke[31m=[32m"currentColor"[31m
+                  [33mstroke-linecap[31m=[32m"round"[31m
+                  [33mstroke-linejoin[31m=[32m"round"[31m
+                  [33mstroke-width[31m=[32m"2"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [33mwidth[31m=[32m"18"[31m
+                  [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"[31m
+                  [36m/>[31m
+                  [36m<rect[31m
+                    [33mheight[31m=[32m"16"[31m
+                    [33mrx[31m=[32m"2"[31m
+                    [33mwidth[31m=[32m"20"[31m
+                    [33mx[31m=[32m"2"[31m
+                    [33my[31m=[32m"4"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+                [36m<input[31m
+                  [33mclass[31m=[32m"w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"[31m
+                  [33mid[31m=[32m"email"[31m
+                  [33mplaceholder[31m=[32m"name@company.com"[31m
+                  [33mrequired[31m=[32m""[31m
+                  [33mtype[31m=[32m"email"[31m
+                  [33mvalue[31m=[32m""[31m
+                [36m/>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33maria-busy[31m=[32m"false"[31m
+              [33maria-disabled[31m=[32m"false"[31m
+              [33mclass[31m=[32m"px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg active:bg-blue-800 w-full py-3 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-md active:scale-[0.98] border-none"[31m
+              [33mtype[31m=[32m"submit"[31m
+            [36m>[31m
+              [0mSend Reset Link[0m
+            [36m</button>[31m
+          [36m</form>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"absolute bottom-4 text-[10px] text-slate-400 font-medium tracking-tight uppercase z-10"[31m
+      [36m>[31m
+        [0m┬⌐ 2026 CollabCanvas v1.0.0[0m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+ [31m├ù[39m src/__tests__/pages/ForgotPasswordPage.test.tsx[2m > [22mForgotPasswordPage[2m > [22mshows error if email format is invalid[33m 1236[2mms[22m[39m
+[31m   ΓåÆ Unable to find an element with the text: /Please enter a valid email address/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"relative min-h-screen flex flex-col items-center justify-center p-4"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"fixed inset-0 -z-10 w-full h-full overflow-hidden bg-black"[31m
+      [36m>[31m
+        [36m<section[31m
+          [33mclass[31m=[32m"dot-grid w-full h-full"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"dot-grid__wrap"[31m
+          [36m>[31m
+            [36m<canvas[31m
+              [33mclass[31m=[32m"dot-grid__canvas"[31m
+              [33mheight[31m=[32m"0"[31m
+              [33mstyle[31m=[32m"width: 0px; height: 0px;"[31m
+              [33mwidth[31m=[32m"0"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</section>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"absolute top-12 left-0 w-full text-center z-10 pointer-events-none mb-24"[31m
+      [36m>[31m
+        [36m<h1[31m
+          [33maria-label[31m=[32m"COLLABCANVAS"[31m
+          [33mclass[31m=[32m"shuffle-parent is-ready text-7xl md:text-8xl font-black tracking-tighter text-white"[31m
+          [33mstyle[31m=[32m"text-align: center; -webkit-text-stroke: 2px black; text-shadow: 4px 4px 0px rgba(0,0,0,0.5);"[31m
+        [36m>[31m
+          [36m<span[31m
+            [33mstyle[31m=[32m"white-space: nowrap;"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mC[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mO[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mL[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mL[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mB[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mC[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mN[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mV[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mS[0m
+            [36m</div>[31m
+          [36m</span>[31m
+        [36m</h1>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"w-full max-w-md z-20 mt-32"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"bg-white rounded-xl shadow-2xl p-6 border border-slate-100 flex flex-col justify-center"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"mb-6"[31m
+          [36m>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-blue-600 hover:text-purple-700 flex items-center gap-2 text-xs font-bold transition-colors uppercase tracking-wider"[31m
+              [33mdata-discover[31m=[32m"true"[31m
+              [33mhref[31m=[32m"/login"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-arrow-left"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"16"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"16"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"m12 19-7-7 7-7"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M19 12H5"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+              [0m Back to Login[0m
+            [36m</a>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"text-center mb-8"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"mb-4 flex justify-center"[31m
+            [36m>[31m
+              [36m<img[31m
+                [33malt[31m=[32m"CollabCanvas Logo"[31m
+                [33mclass[31m=[32m"object-contain mx-auto"[31m
+                [33msrc[31m=[32m"/CollabCanvas/logo.png"[31m
+                [33mstyle[31m=[32m"height: 64px; width: auto;"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<h1[31m
+              [33mclass[31m=[32m"text-xl font-bold text-black border-t-2 border-black pt-2 inline-block"[31m
+            [36m>[31m
+              [0mReset Password[0m
+            [36m</h1>[31m
+            [36m<p[31m
+              [33mclass[31m=[32m"text-slate-600 text-xs mt-1"[31m
+            [36m>[31m
+              [0mEnter your email for a reset link[0m
+            [36m</p>[31m
+          [36m</div>[31m
+          [36m<form[31m
+            [33mclass[31m=[32m"space-y-6"[31m
+          [36m>[31m
+            [36m<div>[31m
+              [36m<label[31m
+                [33mclass[31m=[32m"block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1"[31m
+                [33mfor[31m=[32m"email"[31m
+              [36m>[31m
+                [0mEmail Address[0m
+              [36m</label>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"relative"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33maria-hidden[31m=[32m"true"[31m
+                  [33mclass[31m=[32m"lucide lucide-mail absolute left-3 top-3 text-slate-400"[31m
+                  [33mfill[31m=[32m"none"[31m
+                  [33mheight[31m=[32m"18"[31m
+                  [33mstroke[31m=[32m"currentColor"[31m
+                  [33mstroke-linecap[31m=[32m"round"[31m
+                  [33mstroke-linejoin[31m=[32m"round"[31m
+                  [33mstroke-width[31m=[32m"2"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [33mwidth[31m=[32m"18"[31m
+                  [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"[31m
+                  [36m/>[31m
+                  [36m<rect[31m
+                    [33mheight[31m=[32m"16"[31m
+                    [33mrx[31m=[32m"2"[31m
+                    [33mwidth[31m=[32m"20"[31m
+                    [33mx[31m=[32m"2"[31m
+                    [33my[31m=[32m"4"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+                [36m<input[31m
+                  [33mclass[31m=[32m"w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"[31m
+                  [33mid[31m=[32m"email"[31m
+                  [33mplaceholder[31m=[32m"name@company.com"[31m
+                  [33mrequired[31m=[32m""[31m
+                  [33mtype[31m=[32m"email"[31m
+                  [33mvalue[31m=[32m"notanemail"[31m
+                [36m/>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33maria-busy[31m=[32m"false"[31m
+              [33maria-disabled[31m=[32m"false"[31m
+              [33mclass[31m=[32m"px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg active:bg-blue-800 w-full py-3 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-md active:scale-[0.98] border-none"[31m
+              [33mtype[31m=[32m"submit"[31m
+            [36m>[31m
+              [0mSend Reset Link[0m
+            [36m</button>[31m
+          [36m</form>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"absolute bottom-4 text-[10px] text-slate-400 font-medium tracking-tight uppercase z-10"[31m
+      [36m>[31m
+        [0m┬⌐ 2026 CollabCanvas v1.0.0[0m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"relative min-h-screen flex flex-col items-center justify-center p-4"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"fixed inset-0 -z-10 w-full h-full overflow-hidden bg-black"[31m
+      [36m>[31m
+        [36m<section[31m
+          [33mclass[31m=[32m"dot-grid w-full h-full"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"dot-grid__wrap"[31m
+          [36m>[31m
+            [36m<canvas[31m
+              [33mclass[31m=[32m"dot-grid__canvas"[31m
+              [33mheight[31m=[32m"0"[31m
+              [33mstyle[31m=[32m"width: 0px; height: 0px;"[31m
+              [33mwidth[31m=[32m"0"[31m
+            [36m/>[31m
+          [36m</div>[31m
+        [36m</section>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"absolute top-12 left-0 w-full text-center z-10 pointer-events-none mb-24"[31m
+      [36m>[31m
+        [36m<h1[31m
+          [33maria-label[31m=[32m"COLLABCANVAS"[31m
+          [33mclass[31m=[32m"shuffle-parent is-ready text-7xl md:text-8xl font-black tracking-tighter text-white"[31m
+          [33mstyle[31m=[32m"text-align: center; -webkit-text-stroke: 2px black; text-shadow: 4px 4px 0px rgba(0,0,0,0.5);"[31m
+        [36m>[31m
+          [36m<span[31m
+            [33mstyle[31m=[32m"white-space: nowrap;"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mC[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mO[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mL[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mL[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mB[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mC[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mN[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mV[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mA[0m
+            [36m</div>[31m
+            [36m<div[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"shuffle-char"[31m
+              [33mstyle[31m=[32m"position: relative; display: inline-block;"[31m
+            [36m>[31m
+              [0mS[0m
+            [36m</div>[31m
+          [36m</span>[31m
+        [36m</h1>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"w-full max-w-md z-20 mt-32"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"bg-white rounded-xl shadow-2xl p-6 border border-slate-100 flex flex-col justify-center"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"mb-6"[31m
+          [36m>[31m
+            [36m<a[31m
+              [33mclass[31m=[32m"text-blue-600 hover:text-purple-700 flex items-center gap-2 text-xs font-bold transition-colors uppercase tracking-wider"[31m
+              [33mdata-discover[31m=[32m"true"[31m
+              [33mhref[31m=[32m"/login"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-arrow-left"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"16"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"16"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"m12 19-7-7 7-7"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M19 12H5"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+              [0m Back to Login[0m
+            [36m</a>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"text-center mb-8"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"mb-4 flex justify-center"[31m
+            [36m>[31m
+              [36m<img[31m
+                [33malt[31m=[32m"CollabCanvas Logo"[31m
+                [33mclass[31m=[32m"object-contain mx-auto"[31m
+                [33msrc[31m=[32m"/CollabCanvas/logo.png"[31m
+                [33mstyle[31m=[32m"height: 64px; width: auto;"[31m
+              [36m/>[31m
+            [36m</div>[31m
+            [36m<h1[31m
+              [33mclass[31m=[32m"text-xl font-bold text-black border-t-2 border-black pt-2 inline-block"[31m
+            [36m>[31m
+              [0mReset Password[0m
+            [36m</h1>[31m
+            [36m<p[31m
+              [33mclass[31m=[32m"text-slate-600 text-xs mt-1"[31m
+            [36m>[31m
+              [0mEnter your email for a reset link[0m
+            [36m</p>[31m
+          [36m</div>[31m
+          [36m<form[31m
+            [33mclass[31m=[32m"space-y-6"[31m
+          [36m>[31m
+            [36m<div>[31m
+              [36m<label[31m
+                [33mclass[31m=[32m"block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1"[31m
+                [33mfor[31m=[32m"email"[31m
+              [36m>[31m
+                [0mEmail Address[0m
+              [36m</label>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"relative"[31m
+              [36m>[31m
+                [36m<svg[31m
+                  [33maria-hidden[31m=[32m"true"[31m
+                  [33mclass[31m=[32m"lucide lucide-mail absolute left-3 top-3 text-slate-400"[31m
+                  [33mfill[31m=[32m"none"[31m
+                  [33mheight[31m=[32m"18"[31m
+                  [33mstroke[31m=[32m"currentColor"[31m
+                  [33mstroke-linecap[31m=[32m"round"[31m
+                  [33mstroke-linejoin[31m=[32m"round"[31m
+                  [33mstroke-width[31m=[32m"2"[31m
+                  [33mviewBox[31m=[32m"0 0 24 24"[31m
+                  [33mwidth[31m=[32m"18"[31m
+                  [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                [36m>[31m
+                  [36m<path[31m
+                    [33md[31m=[32m"m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"[31m
+                  [36m/>[31m
+                  [36m<rect[31m
+                    [33mheight[31m=[32m"16"[31m
+                    [33mrx[31m=[32m"2"[31m
+                    [33mwidth[31m=[32m"20"[31m
+                    [33mx[31m=[32m"2"[31m
+                    [33my[31m=[32m"4"[31m
+                  [36m/>[31m
+                [36m</svg>[31m
+                [36m<input[31m
+                  [33mclass[31m=[32m"w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"[31m
+                  [33mid[31m=[32m"email"[31m
+                  [33mplaceholder[31m=[32m"name@company.com"[31m
+                  [33mrequired[31m=[32m""[31m
+                  [33mtype[31m=[32m"email"[31m
+                  [33mvalue[31m=[32m"notanemail"[31m
+                [36m/>[31m
+              [36m</div>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33maria-busy[31m=[32m"false"[31m
+              [33maria-disabled[31m=[32m"false"[31m
+              [33mclass[31m=[32m"px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg active:bg-blue-800 w-full py-3 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-md active:scale-[0.98] border-none"[31m
+              [33mtype[31m=[32m"submit"[31m
+            [36m>[31m
+              [0mSend Reset Link[0m
+            [36m</button>[31m
+          [36m</form>[31m
+        [36m</div>[31m
+      [36m</div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"absolute bottom-4 text-[10px] text-slate-400 font-medium tracking-tight uppercase z-10"[31m
+      [36m>[31m
+        [0m┬⌐ 2026 CollabCanvas v1.0.0[0m
+      [36m</div>[31m
+    [36m</div>[31m
+  [36m</div>[31m
+[36m</body>[31m[39m
+ [32mΓ£ô[39m src/__tests__/pages/ForgotPasswordPage.test.tsx[2m > [22mForgotPasswordPage[2m > [22mcalls forgotPassword(email) when email is valid[33m 332[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/pages/ForgotPasswordPage.test.tsx[2m > [22mForgotPasswordPage[2m > [22mshows success UI when API returns success=true[33m 327[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/pages/ForgotPasswordPage.test.tsx[2m > [22mForgotPasswordPage[2m > [22mshows API error message when API returns success=false[33m 345[2mms[22m[39m
+node.exe : 
+[90mstderr[2m | src/__te
+sts__/pages/ForgotPassword
+Page.test.tsx[2m > [22m
+[2mForgotPasswordPage[2m 
+> [22m[2mshows default 
+error message when API 
+throws (no response 
+message)
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:
+\Users\sidha\AppData\Roami
+ng\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (  
+  [90mstderr[2m...spon   
+ se message):String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+[22m[39mPassword reset 
+request error: Error: 
+Network down
+    at C:/Users/sidha/OneD
+rive/Desktop/Software_Engi
+neering_Project/CollabCanv
+as/frontend/src/__tests__/
+pages/ForgotPasswordPage.t
+est.tsx:140:42
+    at [90mfile:///C:/Use
+rs/sidha/OneDrive/Desktop/
+Software_Engineering_Proje
+ct/CollabCanvas/frontend/
+[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.
+js:145:11
+    at [90mfile:///C:/Use
+rs/sidha/OneDrive/Desktop/
+Software_Engineering_Proje
+ct/CollabCanvas/frontend/
+[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.
+js:915:26
+    at [90mfile:///C:/Use
+rs/sidha/OneDrive/Desktop/
+Software_Engineering_Proje
+ct/CollabCanvas/frontend/
+[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.
+js:1243:20
+    at new Promise 
+(<anonymous>)
+    at runWithTimeout [90
+m(file:///C:/Users/sidha/O
+neDrive/Desktop/Software_E
+ngineering_Project/CollabC
+anvas/frontend/[39mnode_m
+odules/[4m@vitest/runner
+[24m/dist/index.js:1209:10
+[90m)[39m
+    at [90mfile:///C:/Use
+rs/sidha/OneDrive/Desktop/
+Software_Engineering_Proje
+ct/CollabCanvas/frontend/
+[39mnode_modules/[4m@vite
+st/runner[24m/dist/index.
+js:1653:37
+    at Traces.$ [90m(file
+:///C:/Users/sidha/OneDriv
+e/Desktop/Software_Enginee
+ring_Project/CollabCanvas/
+frontend/[39mnode_modules
+/[4mvitest[24m/dist/chun
+ks/traces.CCmnQaNT.js:142:
+27[90m)[39m
+    at trace [90m(file://
+/C:/Users/sidha/OneDrive/D
+esktop/Software_Engineerin
+g_Project/CollabCanvas/fro
+ntend/[39mnode_modules/[
+4mvitest[24m/dist/chunks/
+test.B8ej_ZHS.js:239:21[9
+0m)[39m
+    at runTest [90m(file:
+///C:/Users/sidha/OneDrive
+/Desktop/Software_Engineer
+ing_Project/CollabCanvas/f
+rontend/[39mnode_modules/
+[4m@vitest/runner[24m/di
+st/index.js:1653:12[90m)
+[39m
+
+ [32mΓ£ô[39m src/__tests__/pages/ForgotPasswordPage.test.tsx[2m > [22mForgotPasswordPage[2m > [22mshows default error message when API throws (no response message)[33m 337[2mms[22m[39m
+[90mstderr[2m | src/__te
+sts__/pages/ForgotPassword
+Page.test.tsx[2m > [22m
+[2mForgotPasswordPage[2m 
+> [22m[2mshows backend 
+error message when API 
+throws with 
+response.data.message
+[22m[39mPassword reset 
+request error: { 
+response: { data: { 
+message: [32m'Email 
+service down'[39m } } }
+
+ [32mΓ£ô[39m src/__tests__/pages/ForgotPasswordPage.test.tsx[2m > [22mForgotPasswordPage[2m > [22mshows backend error message when API throws with response.data.message[33m 373[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/pages/ForgotPasswordPage.test.tsx[2m > [22mForgotPasswordPage[2m > [22mdisables input + button while loading[33m 341[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/pages/ForgotPasswordPage.test.tsx[2m > [22mForgotPasswordPage[2m > [22mTry Different Email button returns to form[33m 423[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/pages/ForgotPasswordPage.test.tsx[2m > [22mForgotPasswordPage[2m > [22mclears the email input after success (security)[33m 436[2mms[22m[39m
+
+[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+[39m[1m[41m Failed 
+Tests 3 [49m[22m[31mΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[39m
+
+[41m[1m FAIL [22m[49m 
+src/__tests__/pages/Forgot
+PasswordPage.test.tsx[2m 
+> [22mForgotPasswordPage
+[2m > [22mrenders 
+initial UI correctly
+[31m[1mTestingLibraryEle
+mentError[22m[39m: 
+Unable to find an element 
+with the text: /Enter 
+your email and we'll send 
+a reset link/i. This 
+could be because the text 
+is broken up by multiple 
+elements. In this case, 
+you can provide a 
+function for your text 
+matcher to make your 
+matcher more flexible.
+
+Ignored nodes: comments, 
+script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32
+m"relative min-h-screen 
+flex flex-col 
+items-center 
+justify-center p-4"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"fixed inset-0 -z-10 
+w-full h-full 
+overflow-hidden 
+bg-black"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=
+[32m"dot-grid w-full 
+h-full"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"dot-grid__wrap"[3
+9m
+          [36m>[39m
+            
+[36m<canvas[39m
+              [33mclass[
+39m=[32m"dot-grid__canvas
+"[39m
+              [33mheight
+[39m=[32m"0"[39m
+              [33mstyle[
+39m=[32m"width: 0px; 
+height: 0px;"[39m
+              [33mwidth[
+39m=[32m"0"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        
+[36m</section>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"absolute top-12 
+left-0 w-full text-center 
+z-10 pointer-events-none 
+mb-24"[39m
+      [36m>[39m
+        [36m<h1[39m
+          [33maria-label
+[39m=[32m"COLLABCANVAS"[
+39m
+          [33mclass[39m=
+[32m"shuffle-parent 
+is-ready text-7xl 
+md:text-8xl font-black 
+tracking-tighter 
+text-white"[39m
+          [33mstyle[39m=
+[32m"text-align: center; 
+-webkit-text-stroke: 2px 
+black; text-shadow: 4px 
+4px 0px 
+rgba(0,0,0,0.5);"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mstyle[39
+m=[32m"white-space: 
+nowrap;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mC[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mO[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mL[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mL[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mB[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mC[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mN[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mV[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mS[0m
+            
+[36m</div>[39m
+          
+[36m</span>[39m
+        [36m</h1>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"w-full max-w-md z-20 
+mt-32"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=
+[32m"bg-white rounded-xl 
+shadow-2xl p-6 border 
+border-slate-100 flex 
+flex-col 
+justify-center"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"mb-6"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mclass[
+39m=[32m"text-blue-600 
+hover:text-purple-700 
+flex items-center gap-2 
+text-xs font-bold 
+transition-colors 
+uppercase 
+tracking-wider"[39m
+              [33mdata-di
+scover[39m=[32m"true"[3
+9m
+              [33mhref[3
+9m=[32m"/login"[39m
+            [36m>[39m
+              
+[36m<svg[39m
+                [33maria-
+hidden[39m=[32m"true"[3
+9m
+                [33mclass
+[39m=[32m"lucide 
+lucide-arrow-left"[39m
+                [33mfill
+[39m=[32m"none"[39m
+                [33mheigh
+t[39m=[32m"16"[39m
+                [33mstrok
+e[39m=[32m"currentColor"
+[39m
+                [33mstrok
+e-linecap[39m=[32m"round
+"[39m
+                [33mstrok
+e-linejoin[39m=[32m"roun
+d"[39m
+                [33mstrok
+e-width[39m=[32m"2"[39m
+                
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                [33mwidth
+[39m=[32m"16"[39m
+                [33mxmlns
+[39m=[32m"http://www.w3.
+org/2000/svg"[39m
+              [36m>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"m12 
+19-7-7 7-7"[39m
+                
+[36m/>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"M19 
+12H5"[39m
+                
+[36m/>[39m
+              
+[36m</svg>[39m
+              [0m Back 
+to Login[0m
+            [36m</a>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"text-center 
+mb-8"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[
+39m=[32m"mb-4 flex 
+justify-center"[39m
+            [36m>[39m
+              
+[36m<img[39m
+                [33malt[
+39m=[32m"CollabCanvas 
+Logo"[39m
+                [33mclass
+[39m=[32m"object-contain
+ mx-auto"[39m
+                [33msrc[
+39m=[32m"/CollabCanvas/lo
+go.png"[39m
+                [33mstyle
+[39m=[32m"height: 64px; 
+width: auto;"[39m
+              [36m/>[39m
+            
+[36m</div>[39m
+            [36m<h1[39m
+              [33mclass[
+39m=[32m"text-xl 
+font-bold text-black 
+border-t-2 border-black 
+pt-2 inline-block"[39m
+            [36m>[39m
+              [0mReset 
+Password[0m
+            
+[36m</h1>[39m
+            [36m<p[39m
+              [33mclass[
+39m=[32m"text-slate-600 
+text-xs mt-1"[39m
+            [36m>[39m
+              [0mEnter 
+your email for a reset 
+link[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<form[39m
+            [33mclass[39
+m=[32m"space-y-6"[39m
+          [36m>[39m
+            
+[36m<div>[39m
+              
+[36m<label[39m
+                [33mclass
+[39m=[32m"block text-xs 
+font-semibold 
+text-slate-700 uppercase 
+tracking-wider mb-1 
+px-1"[39m
+                [33mfor[
+39m=[32m"email"[39m
+              [36m>[39m
+                [0mEmail 
+Address[0m
+              
+[36m</label>[39m
+              
+[36m<div[39m
+                [33mclass
+[39m=[32m"relative"[39m
+              [36m>[39m
+                
+[36m<svg[39m
+                  [33mari
+a-hidden[39m=[32m"true"
+[39m
+                  [33mcla
+ss[39m=[32m"lucide 
+lucide-mail absolute 
+left-3 top-3 
+text-slate-400"[39m
+                  [33mfil
+l[39m=[32m"none"[39m
+                  [33mhei
+ght[39m=[32m"18"[39m
+                  [33mstr
+oke[39m=[32m"currentColo
+r"[39m
+                  [33mstr
+oke-linecap[39m=[32m"rou
+nd"[39m
+                  [33mstr
+oke-linejoin[39m=[32m"ro
+und"[39m
+                  [33mstr
+oke-width[39m=[32m"2"[3
+9m
+                  
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                  [33mwid
+th[39m=[32m"18"[39m
+                  [33mxml
+ns[39m=[32m"http://www.w
+3.org/2000/svg"[39m
+                
+[36m>[39m
+                  
+[36m<path[39m
+                    
+[33md[39m=[32m"m22 
+7-8.991 5.727a2 2 0 0 
+1-2.009 0L2 7"[39m
+                  
+[36m/>[39m
+                  
+[36m<rect[39m
+                    [33mh
+eight[39m=[32m"16"[39m
+                    
+[33mrx[39m=[32m"2"[39m
+                    [33mw
+idth[39m=[32m"20"[39m
+                    
+[33mx[39m=[32m"2"[39m
+                    
+[33my[39m=[32m"4"[39m
+                  
+[36m/>[39m
+                
+[36m</svg>[39m
+                
+[36m<input[39m
+                  [33mcla
+ss[39m=[32m"w-full 
+pl-10 pr-4 py-2.5 
+bg-white border 
+border-slate-200 
+rounded-lg text-black 
+focus:ring-1 
+focus:ring-black 
+focus:border-black 
+outline-none 
+transition-all 
+text-sm"[39m
+                  [33mid
+[39m=[32m"email"[39m
+                  [33mpla
+ceholder[39m=[32m"name@c
+ompany.com"[39m
+                  [33mreq
+uired[39m=[32m""[39m
+                  [33mtyp
+e[39m=[32m"email"[39m
+                  [33mval
+ue[39m=[32m""[39m
+                
+[36m/>[39m
+              
+[36m</div>[39m
+            
+[36m</div>[39m
+            
+[36m<button[39m
+              [33maria-bu
+sy[39m=[32m"false"[39m
+              [33maria-di
+sabled[39m=[32m"false"[
+39m
+              [33mclass[
+39m=[32m"px-4 py-2 
+rounded-lg font-medium 
+transition-all 
+duration-200 flex 
+items-center 
+justify-center 
+disabled:opacity-50 disabl
+ed:cursor-not-allowed 
+focus:outline-none 
+focus:ring-2 
+focus:ring-blue-500 
+focus:ring-offset-2 
+bg-blue-600 text-white 
+hover:bg-blue-700 
+shadow-md hover:shadow-lg 
+active:bg-blue-800 w-full 
+py-3 bg-black 
+hover:bg-slate-800 
+text-white font-semibold 
+rounded-lg transition-all 
+shadow-md 
+active:scale-[0.98] 
+border-none"[39m
+              [33mtype[3
+9m=[32m"submit"[39m
+            [36m>[39m
+              [0mSend 
+Reset Link[0m
+            
+[36m</button>[39m
+          
+[36m</form>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"absolute bottom-4 
+text-[10px] 
+text-slate-400 
+font-medium 
+tracking-tight uppercase 
+z-10"[39m
+      [36m>[39m
+        [0m┬⌐ 2026 
+CollabCanvas v1.0.0[0m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+[90m [2mΓ¥»[22m 
+Object.getElementError nod
+e_modules/@testing-library
+/dom/dist/config.js:[2m37
+:19[22m[39m
+[90m [2mΓ¥»[22m node_mo
+dules/@testing-library/dom
+/dist/query-helpers.js:[2
+m76:38[22m[39m
+[90m [2mΓ¥»[22m node_mo
+dules/@testing-library/dom
+/dist/query-helpers.js:[2
+m52:17[22m[39m
+[90m [2mΓ¥»[22m node_mo
+dules/@testing-library/dom
+/dist/query-helpers.js:[2
+m95:19[22m[39m
+[36m [2mΓ¥»[22m src/__t
+ests__/pages/ForgotPasswor
+dPage.test.tsx:[2m29:14[
+22m[39m
+    [90m 27| [39m    [3
+4mexpect[39m(screen[33m.
+[39m[34mgetByText[39m(
+[36m/Reset Password/i[39m
+))[33m.[39m[34mtoBeInTh
+eDocument[39m()[33m;[39
+m
+    [90m 28| [39m    
+[34mexpect[39m(
+    [90m 29| [39m      s
+creen[33m.[39m[34mgetBy
+Text[39m([36m/Enter 
+your email and we'll send 
+a reset link/i[39m)
+    [90m   | [39m       
+      [31m^[39m
+    [90m 30| [39m    )[
+33m.[39m[34mtoBeInTheDoc
+ument[39m()[33m;[39m
+    [90m 31| [39m
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ
+»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»[1/3]ΓÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m 
+src/__tests__/pages/Forgot
+PasswordPage.test.tsx[2m 
+> [22mForgotPasswordPage
+[2m > [22mshows error if 
+email is empty
+[31m[1mTestingLibraryEle
+mentError[22m[39m: 
+Unable to find an element 
+with the text: /Please 
+enter your email 
+address/i. This could be 
+because the text is 
+broken up by multiple 
+elements. In this case, 
+you can provide a 
+function for your text 
+matcher to make your 
+matcher more flexible.
+
+Ignored nodes: comments, 
+script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32
+m"relative min-h-screen 
+flex flex-col 
+items-center 
+justify-center p-4"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"fixed inset-0 -z-10 
+w-full h-full 
+overflow-hidden 
+bg-black"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=
+[32m"dot-grid w-full 
+h-full"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"dot-grid__wrap"[3
+9m
+          [36m>[39m
+            
+[36m<canvas[39m
+              [33mclass[
+39m=[32m"dot-grid__canvas
+"[39m
+              [33mheight
+[39m=[32m"0"[39m
+              [33mstyle[
+39m=[32m"width: 0px; 
+height: 0px;"[39m
+              [33mwidth[
+39m=[32m"0"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        
+[36m</section>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"absolute top-12 
+left-0 w-full text-center 
+z-10 pointer-events-none 
+mb-24"[39m
+      [36m>[39m
+        [36m<h1[39m
+          [33maria-label
+[39m=[32m"COLLABCANVAS"[
+39m
+          [33mclass[39m=
+[32m"shuffle-parent 
+is-ready text-7xl 
+md:text-8xl font-black 
+tracking-tighter 
+text-white"[39m
+          [33mstyle[39m=
+[32m"text-align: center; 
+-webkit-text-stroke: 2px 
+black; text-shadow: 4px 
+4px 0px 
+rgba(0,0,0,0.5);"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mstyle[39
+m=[32m"white-space: 
+nowrap;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mC[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mO[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mL[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mL[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mB[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mC[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mN[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mV[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mS[0m
+            
+[36m</div>[39m
+          
+[36m</span>[39m
+        [36m</h1>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"w-full max-w-md z-20 
+mt-32"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=
+[32m"bg-white rounded-xl 
+shadow-2xl p-6 border 
+border-slate-100 flex 
+flex-col 
+justify-center"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"mb-6"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mclass[
+39m=[32m"text-blue-600 
+hover:text-purple-700 
+flex items-center gap-2 
+text-xs font-bold 
+transition-colors 
+uppercase 
+tracking-wider"[39m
+              [33mdata-di
+scover[39m=[32m"true"[3
+9m
+              [33mhref[3
+9m=[32m"/login"[39m
+            [36m>[39m
+              
+[36m<svg[39m
+                [33maria-
+hidden[39m=[32m"true"[3
+9m
+                [33mclass
+[39m=[32m"lucide 
+lucide-arrow-left"[39m
+                [33mfill
+[39m=[32m"none"[39m
+                [33mheigh
+t[39m=[32m"16"[39m
+                [33mstrok
+e[39m=[32m"currentColor"
+[39m
+                [33mstrok
+e-linecap[39m=[32m"round
+"[39m
+                [33mstrok
+e-linejoin[39m=[32m"roun
+d"[39m
+                [33mstrok
+e-width[39m=[32m"2"[39m
+                
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                [33mwidth
+[39m=[32m"16"[39m
+                [33mxmlns
+[39m=[32m"http://www.w3.
+org/2000/svg"[39m
+              [36m>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"m12 
+19-7-7 7-7"[39m
+                
+[36m/>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"M19 
+12H5"[39m
+                
+[36m/>[39m
+              
+[36m</svg>[39m
+              [0m Back 
+to Login[0m
+            [36m</a>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"text-center 
+mb-8"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[
+39m=[32m"mb-4 flex 
+justify-center"[39m
+            [36m>[39m
+              
+[36m<img[39m
+                [33malt[
+39m=[32m"CollabCanvas 
+Logo"[39m
+                [33mclass
+[39m=[32m"object-contain
+ mx-auto"[39m
+                [33msrc[
+39m=[32m"/CollabCanvas/lo
+go.png"[39m
+                [33mstyle
+[39m=[32m"height: 64px; 
+width: auto;"[39m
+              [36m/>[39m
+            
+[36m</div>[39m
+            [36m<h1[39m
+              [33mclass[
+39m=[32m"text-xl 
+font-bold text-black 
+border-t-2 border-black 
+pt-2 inline-block"[39m
+            [36m>[39m
+              [0mReset 
+Password[0m
+            
+[36m</h1>[39m
+            [36m<p[39m
+              [33mclass[
+39m=[32m"text-slate-600 
+text-xs mt-1"[39m
+            [36m>[39m
+              [0mEnter 
+your email for a reset 
+link[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<form[39m
+            [33mclass[39
+m=[32m"space-y-6"[39m
+          [36m>[39m
+            
+[36m<div>[39m
+              
+[36m<label[39m
+                [33mclass
+[39m=[32m"block text-xs 
+font-semibold 
+text-slate-700 uppercase 
+tracking-wider mb-1 
+px-1"[39m
+                [33mfor[
+39m=[32m"email"[39m
+              [36m>[39m
+                [0mEmail 
+Address[0m
+              
+[36m</label>[39m
+              
+[36m<div[39m
+                [33mclass
+[39m=[32m"relative"[39m
+              [36m>[39m
+                
+[36m<svg[39m
+                  [33mari
+a-hidden[39m=[32m"true"
+[39m
+                  [33mcla
+ss[39m=[32m"lucide 
+lucide-mail absolute 
+left-3 top-3 
+text-slate-400"[39m
+                  [33mfil
+l[39m=[32m"none"[39m
+                  [33mhei
+ght[39m=[32m"18"[39m
+                  [33mstr
+oke[39m=[32m"currentColo
+r"[39m
+                  [33mstr
+oke-linecap[39m=[32m"rou
+nd"[39m
+                  [33mstr
+oke-linejoin[39m=[32m"ro
+und"[39m
+                  [33mstr
+oke-width[39m=[32m"2"[3
+9m
+                  
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                  [33mwid
+th[39m=[32m"18"[39m
+                  [33mxml
+ns[39m=[32m"http://www.w
+3.org/2000/svg"[39m
+                
+[36m>[39m
+                  
+[36m<path[39m
+                    
+[33md[39m=[32m"m22 
+7-8.991 5.727a2 2 0 0 
+1-2.009 0L2 7"[39m
+                  
+[36m/>[39m
+                  
+[36m<rect[39m
+                    [33mh
+eight[39m=[32m"16"[39m
+                    
+[33mrx[39m=[32m"2"[39m
+                    [33mw
+idth[39m=[32m"20"[39m
+                    
+[33mx[39m=[32m"2"[39m
+                    
+[33my[39m=[32m"4"[39m
+                  
+[36m/>[39m
+                
+[36m</svg>[39m
+                
+[36m<input[39m
+                  [33mcla
+ss[39m=[32m"w-full 
+pl-10 pr-4 py-2.5 
+bg-white border 
+border-slate-200 
+rounded-lg text-black 
+focus:ring-1 
+focus:ring-black 
+focus:border-black 
+outline-none 
+transition-all 
+text-sm"[39m
+                  [33mid
+[39m=[32m"email"[39m
+                  [33mpla
+ceholder[39m=[32m"name@c
+ompany.com"[39m
+                  [33mreq
+uired[39m=[32m""[39m
+                  [33mtyp
+e[39m=[32m"email"[39m
+                  [33mval
+ue[39m=[32m""[39m
+                
+[36m/>[39m
+              
+[36m</div>[39m
+            
+[36m</div>[39m
+            
+[36m<button[39m
+              [33maria-bu
+sy[39m=[32m"false"[39m
+              [33maria-di
+sabled[39m=[32m"false"[
+39m
+              [33mclass[
+39m=[32m"px-4 py-2 
+rounded-lg font-medium 
+transition-all 
+duration-200 flex 
+items-center 
+justify-center 
+disabled:opacity-50 disabl
+ed:cursor-not-allowed 
+focus:outline-none 
+focus:ring-2 
+focus:ring-blue-500 
+focus:ring-offset-2 
+bg-blue-600 text-white 
+hover:bg-blue-700 
+shadow-md hover:shadow-lg 
+active:bg-blue-800 w-full 
+py-3 bg-black 
+hover:bg-slate-800 
+text-white font-semibold 
+rounded-lg transition-all 
+shadow-md 
+active:scale-[0.98] 
+border-none"[39m
+              [33mtype[3
+9m=[32m"submit"[39m
+            [36m>[39m
+              [0mSend 
+Reset Link[0m
+            
+[36m</button>[39m
+          
+[36m</form>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"absolute bottom-4 
+text-[10px] 
+text-slate-400 
+font-medium 
+tracking-tight uppercase 
+z-10"[39m
+      [36m>[39m
+        [0m┬⌐ 2026 
+CollabCanvas v1.0.0[0m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, 
+script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32
+m"relative min-h-screen 
+flex flex-col 
+items-center 
+justify-center p-4"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"fixed inset-0 -z-10 
+w-full h-full 
+overflow-hidden 
+bg-black"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=
+[32m"dot-grid w-full 
+h-full"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"dot-grid__wrap"[3
+9m
+          [36m>[39m
+            
+[36m<canvas[39m
+              [33mclass[
+39m=[32m"dot-grid__canvas
+"[39m
+              [33mheight
+[39m=[32m"0"[39m
+              [33mstyle[
+39m=[32m"width: 0px; 
+height: 0px;"[39m
+              [33mwidth[
+39m=[32m"0"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        
+[36m</section>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"absolute top-12 
+left-0 w-full text-center 
+z-10 pointer-events-none 
+mb-24"[39m
+      [36m>[39m
+        [36m<h1[39m
+          [33maria-label
+[39m=[32m"COLLABCANVAS"[
+39m
+          [33mclass[39m=
+[32m"shuffle-parent 
+is-ready text-7xl 
+md:text-8xl font-black 
+tracking-tighter 
+text-white"[39m
+          [33mstyle[39m=
+[32m"text-align: center; 
+-webkit-text-stroke: 2px 
+black; text-shadow: 4px 
+4px 0px 
+rgba(0,0,0,0.5);"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mstyle[39
+m=[32m"white-space: 
+nowrap;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mC[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mO[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mL[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mL[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mB[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mC[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mN[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mV[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mS[0m
+            
+[36m</div>[39m
+          
+[36m</span>[39m
+        [36m</h1>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"w-full max-w-md z-20 
+mt-32"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=
+[32m"bg-white rounded-xl 
+shadow-2xl p-6 border 
+border-slate-100 flex 
+flex-col 
+justify-center"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"mb-6"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mclass[
+39m=[32m"text-blue-600 
+hover:text-purple-700 
+flex items-center gap-2 
+text-xs font-bold 
+transition-colors 
+uppercase 
+tracking-wider"[39m
+              [33mdata-di
+scover[39m=[32m"true"[3
+9m
+              [33mhref[3
+9m=[32m"/login"[39m
+            [36m>[39m
+              
+[36m<svg[39m
+                [33maria-
+hidden[39m=[32m"true"[3
+9m
+                [33mclass
+[39m=[32m"lucide 
+lucide-arrow-left"[39m
+                [33mfill
+[39m=[32m"none"[39m
+                [33mheigh
+t[39m=[32m"16"[39m
+                [33mstrok
+e[39m=[32m"currentColor"
+[39m
+                [33mstrok
+e-linecap[39m=[32m"round
+"[39m
+                [33mstrok
+e-linejoin[39m=[32m"roun
+d"[39m
+                [33mstrok
+e-width[39m=[32m"2"[39m
+                
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                [33mwidth
+[39m=[32m"16"[39m
+                [33mxmlns
+[39m=[32m"http://www.w3.
+org/2000/svg"[39m
+              [36m>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"m12 
+19-7-7 7-7"[39m
+                
+[36m/>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"M19 
+12H5"[39m
+                
+[36m/>[39m
+              
+[36m</svg>[39m
+              [0m Back 
+to Login[0m
+            [36m</a>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"text-center 
+mb-8"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[
+39m=[32m"mb-4 flex 
+justify-center"[39m
+            [36m>[39m
+              
+[36m<img[39m
+                [33malt[
+39m=[32m"CollabCanvas 
+Logo"[39m
+                [33mclass
+[39m=[32m"object-contain
+ mx-auto"[39m
+                [33msrc[
+39m=[32m"/CollabCanvas/lo
+go.png"[39m
+                [33mstyle
+[39m=[32m"height: 64px; 
+width: auto;"[39m
+              [36m/>[39m
+            
+[36m</div>[39m
+            [36m<h1[39m
+              [33mclass[
+39m=[32m"text-xl 
+font-bold text-black 
+border-t-2 border-black 
+pt-2 inline-block"[39m
+            [36m>[39m
+              [0mReset 
+Password[0m
+            
+[36m</h1>[39m
+            [36m<p[39m
+              [33mclass[
+39m=[32m"text-slate-600 
+text-xs mt-1"[39m
+            [36m>[39m
+              [0mEnter 
+your email for a reset 
+link[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<form[39m
+            [33mclass[39
+m=[32m"space-y-6"[39m
+          [36m>[39m
+            
+[36m<div>[39m
+              
+[36m<label[39m
+                [33mclass
+[39m=[32m"block text-xs 
+font-semibold 
+text-slate-700 uppercase 
+tracking-wider mb-1 
+px-1"[39m
+                [33mfor[
+39m=[32m"email"[39m
+              [36m>[39m
+                [0mEmail 
+Address[0m
+              
+[36m</label>[39m
+              
+[36m<div[39m
+                [33mclass
+[39m=[32m"relative"[39m
+              [36m>[39m
+                
+[36m<svg[39m
+                  [33mari
+a-hidden[39m=[32m"true"
+[39m
+                  [33mcla
+ss[39m=[32m"lucide 
+lucide-mail absolute 
+left-3 top-3 
+text-slate-400"[39m
+                  [33mfil
+l[39m=[32m"none"[39m
+                  [33mhei
+ght[39m=[32m"18"[39m
+                  [33mstr
+oke[39m=[32m"currentColo
+r"[39m
+                  [33mstr
+oke-linecap[39m=[32m"rou
+nd"[39m
+                  [33mstr
+oke-linejoin[39m=[32m"ro
+und"[39m
+                  [33mstr
+oke-width[39m=[32m"2"[3
+9m
+                  
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                  [33mwid
+th[39m=[32m"18"[39m
+                  [33mxml
+ns[39m=[32m"http://www.w
+3.org/2000/svg"[39m
+                
+[36m>[39m
+                  
+[36m<path[39m
+                    
+[33md[39m=[32m"m22 
+7-8.991 5.727a2 2 0 0 
+1-2.009 0L2 7"[39m
+                  
+[36m/>[39m
+                  
+[36m<rect[39m
+                    [33mh
+eight[39m=[32m"16"[39m
+                    
+[33mrx[39m=[32m"2"[39m
+                    [33mw
+idth[39m=[32m"20"[39m
+                    
+[33mx[39m=[32m"2"[39m
+                    
+[33my[39m=[32m"4"[39m
+                  
+[36m/>[39m
+                
+[36m</svg>[39m
+                
+[36m<input[39m
+                  [33mcla
+ss[39m=[32m"w-full 
+pl-10 pr-4 py-2.5 
+bg-white border 
+border-slate-200 
+rounded-lg text-black 
+focus:ring-1 
+focus:ring-black 
+focus:border-black 
+outline-none 
+transition-all 
+text-sm"[39m
+                  [33mid
+[39m=[32m"email"[39m
+                  [33mpla
+ceholder[39m=[32m"name@c
+ompany.com"[39m
+                  [33mreq
+uired[39m=[32m""[39m
+                  [33mtyp
+e[39m=[32m"email"[39m
+                  [33mval
+ue[39m=[32m""[39m
+                
+[36m/>[39m
+              
+[36m</div>[39m
+            
+[36m</div>[39m
+            
+[36m<button[39m
+              [33maria-bu
+sy[39m=[32m"false"[39m
+              [33maria-di
+sabled[39m=[32m"false"[
+39m
+              [33mclass[
+39m=[32m"px-4 py-2 
+rounded-lg font-medium 
+transition-all 
+duration-200 flex 
+items-center 
+justify-center 
+disabled:opacity-50 disabl
+ed:cursor-not-allowed 
+focus:outline-none 
+focus:ring-2 
+focus:ring-blue-500 
+focus:ring-offset-2 
+bg-blue-600 text-white 
+hover:bg-blue-700 
+shadow-md hover:shadow-lg 
+active:bg-blue-800 w-full 
+py-3 bg-black 
+hover:bg-slate-800 
+text-white font-semibold 
+rounded-lg transition-all 
+shadow-md 
+active:scale-[0.98] 
+border-none"[39m
+              [33mtype[3
+9m=[32m"submit"[39m
+            [36m>[39m
+              [0mSend 
+Reset Link[0m
+            
+[36m</button>[39m
+          
+[36m</form>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"absolute bottom-4 
+text-[10px] 
+text-slate-400 
+font-medium 
+tracking-tight uppercase 
+z-10"[39m
+      [36m>[39m
+        [0m┬⌐ 2026 
+CollabCanvas v1.0.0[0m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+[90m [2mΓ¥»[22m 
+waitForWrapper node_module
+s/@testing-library/dom/dis
+t/wait-for.js:[2m163:27[
+22m[39m
+[90m [2mΓ¥»[22m node_mo
+dules/@testing-library/dom
+/dist/query-helpers.js:[2
+m86:33[22m[39m
+[36m [2mΓ¥»[22m src/__t
+ests__/pages/ForgotPasswor
+dPage.test.tsx:[2m49:20[
+22m[39m
+    [90m 47| [39m
+    [90m 48| [39m    
+[34mexpect[39m(
+    [90m 49| [39m      
+[35mawait[39m screen[33
+m.[39m[34mfindByText[39
+m([36m/Please enter your 
+email address/i[39m)
+    [90m   | [39m       
+            [31m^[39m
+    [90m 50| [39m    )[
+33m.[39m[34mtoBeInTheDoc
+ument[39m()[33m;[39m
+    [90m 51| [39m
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ
+»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»[2/3]ΓÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m 
+src/__tests__/pages/Forgot
+PasswordPage.test.tsx[2m 
+> [22mForgotPasswordPage
+[2m > [22mshows error if 
+email format is invalid
+[31m[1mTestingLibraryEle
+mentError[22m[39m: 
+Unable to find an element 
+with the text: /Please 
+enter a valid email 
+address/i. This could be 
+because the text is 
+broken up by multiple 
+elements. In this case, 
+you can provide a 
+function for your text 
+matcher to make your 
+matcher more flexible.
+
+Ignored nodes: comments, 
+script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32
+m"relative min-h-screen 
+flex flex-col 
+items-center 
+justify-center p-4"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"fixed inset-0 -z-10 
+w-full h-full 
+overflow-hidden 
+bg-black"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=
+[32m"dot-grid w-full 
+h-full"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"dot-grid__wrap"[3
+9m
+          [36m>[39m
+            
+[36m<canvas[39m
+              [33mclass[
+39m=[32m"dot-grid__canvas
+"[39m
+              [33mheight
+[39m=[32m"0"[39m
+              [33mstyle[
+39m=[32m"width: 0px; 
+height: 0px;"[39m
+              [33mwidth[
+39m=[32m"0"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        
+[36m</section>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"absolute top-12 
+left-0 w-full text-center 
+z-10 pointer-events-none 
+mb-24"[39m
+      [36m>[39m
+        [36m<h1[39m
+          [33maria-label
+[39m=[32m"COLLABCANVAS"[
+39m
+          [33mclass[39m=
+[32m"shuffle-parent 
+is-ready text-7xl 
+md:text-8xl font-black 
+tracking-tighter 
+text-white"[39m
+          [33mstyle[39m=
+[32m"text-align: center; 
+-webkit-text-stroke: 2px 
+black; text-shadow: 4px 
+4px 0px 
+rgba(0,0,0,0.5);"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mstyle[39
+m=[32m"white-space: 
+nowrap;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mC[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mO[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mL[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mL[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mB[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mC[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mN[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mV[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mS[0m
+            
+[36m</div>[39m
+          
+[36m</span>[39m
+        [36m</h1>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"w-full max-w-md z-20 
+mt-32"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=
+[32m"bg-white rounded-xl 
+shadow-2xl p-6 border 
+border-slate-100 flex 
+flex-col 
+justify-center"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"mb-6"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mclass[
+39m=[32m"text-blue-600 
+hover:text-purple-700 
+flex items-center gap-2 
+text-xs font-bold 
+transition-colors 
+uppercase 
+tracking-wider"[39m
+              [33mdata-di
+scover[39m=[32m"true"[3
+9m
+              [33mhref[3
+9m=[32m"/login"[39m
+            [36m>[39m
+              
+[36m<svg[39m
+                [33maria-
+hidden[39m=[32m"true"[3
+9m
+                [33mclass
+[39m=[32m"lucide 
+lucide-arrow-left"[39m
+                [33mfill
+[39m=[32m"none"[39m
+                [33mheigh
+t[39m=[32m"16"[39m
+                [33mstrok
+e[39m=[32m"currentColor"
+[39m
+                [33mstrok
+e-linecap[39m=[32m"round
+"[39m
+                [33mstrok
+e-linejoin[39m=[32m"roun
+d"[39m
+                [33mstrok
+e-width[39m=[32m"2"[39m
+                
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                [33mwidth
+[39m=[32m"16"[39m
+                [33mxmlns
+[39m=[32m"http://www.w3.
+org/2000/svg"[39m
+              [36m>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"m12 
+19-7-7 7-7"[39m
+                
+[36m/>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"M19 
+12H5"[39m
+                
+[36m/>[39m
+              
+[36m</svg>[39m
+              [0m Back 
+to Login[0m
+            [36m</a>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"text-center 
+mb-8"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[
+39m=[32m"mb-4 flex 
+justify-center"[39m
+            [36m>[39m
+              
+[36m<img[39m
+                [33malt[
+39m=[32m"CollabCanvas 
+Logo"[39m
+                [33mclass
+[39m=[32m"object-contain
+ mx-auto"[39m
+                [33msrc[
+39m=[32m"/CollabCanvas/lo
+go.png"[39m
+                [33mstyle
+[39m=[32m"height: 64px; 
+width: auto;"[39m
+              [36m/>[39m
+            
+[36m</div>[39m
+            [36m<h1[39m
+              [33mclass[
+39m=[32m"text-xl 
+font-bold text-black 
+border-t-2 border-black 
+pt-2 inline-block"[39m
+            [36m>[39m
+              [0mReset 
+Password[0m
+            
+[36m</h1>[39m
+            [36m<p[39m
+              [33mclass[
+39m=[32m"text-slate-600 
+text-xs mt-1"[39m
+            [36m>[39m
+              [0mEnter 
+your email for a reset 
+link[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<form[39m
+            [33mclass[39
+m=[32m"space-y-6"[39m
+          [36m>[39m
+            
+[36m<div>[39m
+              
+[36m<label[39m
+                [33mclass
+[39m=[32m"block text-xs 
+font-semibold 
+text-slate-700 uppercase 
+tracking-wider mb-1 
+px-1"[39m
+                [33mfor[
+39m=[32m"email"[39m
+              [36m>[39m
+                [0mEmail 
+Address[0m
+              
+[36m</label>[39m
+              
+[36m<div[39m
+                [33mclass
+[39m=[32m"relative"[39m
+              [36m>[39m
+                
+[36m<svg[39m
+                  [33mari
+a-hidden[39m=[32m"true"
+[39m
+                  [33mcla
+ss[39m=[32m"lucide 
+lucide-mail absolute 
+left-3 top-3 
+text-slate-400"[39m
+                  [33mfil
+l[39m=[32m"none"[39m
+                  [33mhei
+ght[39m=[32m"18"[39m
+                  [33mstr
+oke[39m=[32m"currentColo
+r"[39m
+                  [33mstr
+oke-linecap[39m=[32m"rou
+nd"[39m
+                  [33mstr
+oke-linejoin[39m=[32m"ro
+und"[39m
+                  [33mstr
+oke-width[39m=[32m"2"[3
+9m
+                  
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                  [33mwid
+th[39m=[32m"18"[39m
+                  [33mxml
+ns[39m=[32m"http://www.w
+3.org/2000/svg"[39m
+                
+[36m>[39m
+                  
+[36m<path[39m
+                    
+[33md[39m=[32m"m22 
+7-8.991 5.727a2 2 0 0 
+1-2.009 0L2 7"[39m
+                  
+[36m/>[39m
+                  
+[36m<rect[39m
+                    [33mh
+eight[39m=[32m"16"[39m
+                    
+[33mrx[39m=[32m"2"[39m
+                    [33mw
+idth[39m=[32m"20"[39m
+                    
+[33mx[39m=[32m"2"[39m
+                    
+[33my[39m=[32m"4"[39m
+                  
+[36m/>[39m
+                
+[36m</svg>[39m
+                
+[36m<input[39m
+                  [33mcla
+ss[39m=[32m"w-full 
+pl-10 pr-4 py-2.5 
+bg-white border 
+border-slate-200 
+rounded-lg text-black 
+focus:ring-1 
+focus:ring-black 
+focus:border-black 
+outline-none 
+transition-all 
+text-sm"[39m
+                  [33mid
+[39m=[32m"email"[39m
+                  [33mpla
+ceholder[39m=[32m"name@c
+ompany.com"[39m
+                  [33mreq
+uired[39m=[32m""[39m
+                  [33mtyp
+e[39m=[32m"email"[39m
+                  [33mval
+ue[39m=[32m"notanemail"
+[39m
+                
+[36m/>[39m
+              
+[36m</div>[39m
+            
+[36m</div>[39m
+            
+[36m<button[39m
+              [33maria-bu
+sy[39m=[32m"false"[39m
+              [33maria-di
+sabled[39m=[32m"false"[
+39m
+              [33mclass[
+39m=[32m"px-4 py-2 
+rounded-lg font-medium 
+transition-all 
+duration-200 flex 
+items-center 
+justify-center 
+disabled:opacity-50 disabl
+ed:cursor-not-allowed 
+focus:outline-none 
+focus:ring-2 
+focus:ring-blue-500 
+focus:ring-offset-2 
+bg-blue-600 text-white 
+hover:bg-blue-700 
+shadow-md hover:shadow-lg 
+active:bg-blue-800 w-full 
+py-3 bg-black 
+hover:bg-slate-800 
+text-white font-semibold 
+rounded-lg transition-all 
+shadow-md 
+active:scale-[0.98] 
+border-none"[39m
+              [33mtype[3
+9m=[32m"submit"[39m
+            [36m>[39m
+              [0mSend 
+Reset Link[0m
+            
+[36m</button>[39m
+          
+[36m</form>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"absolute bottom-4 
+text-[10px] 
+text-slate-400 
+font-medium 
+tracking-tight uppercase 
+z-10"[39m
+      [36m>[39m
+        [0m┬⌐ 2026 
+CollabCanvas v1.0.0[0m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, 
+script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32
+m"relative min-h-screen 
+flex flex-col 
+items-center 
+justify-center p-4"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"fixed inset-0 -z-10 
+w-full h-full 
+overflow-hidden 
+bg-black"[39m
+      [36m>[39m
+        [36m<section[39m
+          [33mclass[39m=
+[32m"dot-grid w-full 
+h-full"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"dot-grid__wrap"[3
+9m
+          [36m>[39m
+            
+[36m<canvas[39m
+              [33mclass[
+39m=[32m"dot-grid__canvas
+"[39m
+              [33mheight
+[39m=[32m"0"[39m
+              [33mstyle[
+39m=[32m"width: 0px; 
+height: 0px;"[39m
+              [33mwidth[
+39m=[32m"0"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        
+[36m</section>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"absolute top-12 
+left-0 w-full text-center 
+z-10 pointer-events-none 
+mb-24"[39m
+      [36m>[39m
+        [36m<h1[39m
+          [33maria-label
+[39m=[32m"COLLABCANVAS"[
+39m
+          [33mclass[39m=
+[32m"shuffle-parent 
+is-ready text-7xl 
+md:text-8xl font-black 
+tracking-tighter 
+text-white"[39m
+          [33mstyle[39m=
+[32m"text-align: center; 
+-webkit-text-stroke: 2px 
+black; text-shadow: 4px 
+4px 0px 
+rgba(0,0,0,0.5);"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mstyle[39
+m=[32m"white-space: 
+nowrap;"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mC[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mO[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mL[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mL[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mB[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mC[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mN[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mV[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mA[0m
+            
+[36m</div>[39m
+            [36m<div[39m
+              [33maria-hi
+dden[39m=[32m"true"[39m
+              [33mclass[
+39m=[32m"shuffle-char"[3
+9m
+              [33mstyle[
+39m=[32m"position: 
+relative; display: 
+inline-block;"[39m
+            [36m>[39m
+              [0mS[0m
+            
+[36m</div>[39m
+          
+[36m</span>[39m
+        [36m</h1>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"w-full max-w-md z-20 
+mt-32"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=
+[32m"bg-white rounded-xl 
+shadow-2xl p-6 border 
+border-slate-100 flex 
+flex-col 
+justify-center"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"mb-6"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mclass[
+39m=[32m"text-blue-600 
+hover:text-purple-700 
+flex items-center gap-2 
+text-xs font-bold 
+transition-colors 
+uppercase 
+tracking-wider"[39m
+              [33mdata-di
+scover[39m=[32m"true"[3
+9m
+              [33mhref[3
+9m=[32m"/login"[39m
+            [36m>[39m
+              
+[36m<svg[39m
+                [33maria-
+hidden[39m=[32m"true"[3
+9m
+                [33mclass
+[39m=[32m"lucide 
+lucide-arrow-left"[39m
+                [33mfill
+[39m=[32m"none"[39m
+                [33mheigh
+t[39m=[32m"16"[39m
+                [33mstrok
+e[39m=[32m"currentColor"
+[39m
+                [33mstrok
+e-linecap[39m=[32m"round
+"[39m
+                [33mstrok
+e-linejoin[39m=[32m"roun
+d"[39m
+                [33mstrok
+e-width[39m=[32m"2"[39m
+                
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                [33mwidth
+[39m=[32m"16"[39m
+                [33mxmlns
+[39m=[32m"http://www.w3.
+org/2000/svg"[39m
+              [36m>[39m
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"m12 
+19-7-7 7-7"[39m
+                
+[36m/>[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m8 passed[39m[22m[90m (11)[39m
+[2m   Start at [22m 00:00:55
+[2m   Duration [22m 7.51s[2m (transform 402ms, setup 177ms, import 813ms, tests 5.33s, environment 633ms)[22m
+
+                
+[36m<path[39m
+                  
+[33md[39m=[32m"M19 
+12H5"[39m
+                
+[36m/>[39m
+              
+[36m</svg>[39m
+              [0m Back 
+to Login[0m
+            [36m</a>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39
+m=[32m"text-center 
+mb-8"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[
+39m=[32m"mb-4 flex 
+justify-center"[39m
+            [36m>[39m
+              
+[36m<img[39m
+                [33malt[
+39m=[32m"CollabCanvas 
+Logo"[39m
+                [33mclass
+[39m=[32m"object-contain
+ mx-auto"[39m
+                [33msrc[
+39m=[32m"/CollabCanvas/lo
+go.png"[39m
+                [33mstyle
+[39m=[32m"height: 64px; 
+width: auto;"[39m
+              [36m/>[39m
+            
+[36m</div>[39m
+            [36m<h1[39m
+              [33mclass[
+39m=[32m"text-xl 
+font-bold text-black 
+border-t-2 border-black 
+pt-2 inline-block"[39m
+            [36m>[39m
+              [0mReset 
+Password[0m
+            
+[36m</h1>[39m
+            [36m<p[39m
+              [33mclass[
+39m=[32m"text-slate-600 
+text-xs mt-1"[39m
+            [36m>[39m
+              [0mEnter 
+your email for a reset 
+link[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<form[39m
+            [33mclass[39
+m=[32m"space-y-6"[39m
+          [36m>[39m
+            
+[36m<div>[39m
+              
+[36m<label[39m
+                [33mclass
+[39m=[32m"block text-xs 
+font-semibold 
+text-slate-700 uppercase 
+tracking-wider mb-1 
+px-1"[39m
+                [33mfor[
+39m=[32m"email"[39m
+              [36m>[39m
+                [0mEmail 
+Address[0m
+              
+[36m</label>[39m
+              
+[36m<div[39m
+                [33mclass
+[39m=[32m"relative"[39m
+              [36m>[39m
+                
+[36m<svg[39m
+                  [33mari
+a-hidden[39m=[32m"true"
+[39m
+                  [33mcla
+ss[39m=[32m"lucide 
+lucide-mail absolute 
+left-3 top-3 
+text-slate-400"[39m
+                  [33mfil
+l[39m=[32m"none"[39m
+                  [33mhei
+ght[39m=[32m"18"[39m
+                  [33mstr
+oke[39m=[32m"currentColo
+r"[39m
+                  [33mstr
+oke-linecap[39m=[32m"rou
+nd"[39m
+                  [33mstr
+oke-linejoin[39m=[32m"ro
+und"[39m
+                  [33mstr
+oke-width[39m=[32m"2"[3
+9m
+                  
+[33mviewBox[39m=[32m"0 
+0 24 24"[39m
+                  [33mwid
+th[39m=[32m"18"[39m
+                  [33mxml
+ns[39m=[32m"http://www.w
+3.org/2000/svg"[39m
+                
+[36m>[39m
+                  
+[36m<path[39m
+                    
+[33md[39m=[32m"m22 
+7-8.991 5.727a2 2 0 0 
+1-2.009 0L2 7"[39m
+                  
+[36m/>[39m
+                  
+[36m<rect[39m
+                    [33mh
+eight[39m=[32m"16"[39m
+                    
+[33mrx[39m=[32m"2"[39m
+                    [33mw
+idth[39m=[32m"20"[39m
+                    
+[33mx[39m=[32m"2"[39m
+                    
+[33my[39m=[32m"4"[39m
+                  
+[36m/>[39m
+                
+[36m</svg>[39m
+                
+[36m<input[39m
+                  [33mcla
+ss[39m=[32m"w-full 
+pl-10 pr-4 py-2.5 
+bg-white border 
+border-slate-200 
+rounded-lg text-black 
+focus:ring-1 
+focus:ring-black 
+focus:border-black 
+outline-none 
+transition-all 
+text-sm"[39m
+                  [33mid
+[39m=[32m"email"[39m
+                  [33mpla
+ceholder[39m=[32m"name@c
+ompany.com"[39m
+                  [33mreq
+uired[39m=[32m""[39m
+                  [33mtyp
+e[39m=[32m"email"[39m
+                  [33mval
+ue[39m=[32m"notanemail"
+[39m
+                
+[36m/>[39m
+              
+[36m</div>[39m
+            
+[36m</div>[39m
+            
+[36m<button[39m
+              [33maria-bu
+sy[39m=[32m"false"[39m
+              [33maria-di
+sabled[39m=[32m"false"[
+39m
+              [33mclass[
+39m=[32m"px-4 py-2 
+rounded-lg font-medium 
+transition-all 
+duration-200 flex 
+items-center 
+justify-center 
+disabled:opacity-50 disabl
+ed:cursor-not-allowed 
+focus:outline-none 
+focus:ring-2 
+focus:ring-blue-500 
+focus:ring-offset-2 
+bg-blue-600 text-white 
+hover:bg-blue-700 
+shadow-md hover:shadow-lg 
+active:bg-blue-800 w-full 
+py-3 bg-black 
+hover:bg-slate-800 
+text-white font-semibold 
+rounded-lg transition-all 
+shadow-md 
+active:scale-[0.98] 
+border-none"[39m
+              [33mtype[3
+9m=[32m"submit"[39m
+            [36m>[39m
+              [0mSend 
+Reset Link[0m
+            
+[36m</button>[39m
+          
+[36m</form>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[
+32m"absolute bottom-4 
+text-[10px] 
+text-slate-400 
+font-medium 
+tracking-tight uppercase 
+z-10"[39m
+      [36m>[39m
+        [0m┬⌐ 2026 
+CollabCanvas v1.0.0[0m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+[90m [2mΓ¥»[22m 
+waitForWrapper node_module
+s/@testing-library/dom/dis
+t/wait-for.js:[2m163:27[
+22m[39m
+[90m [2mΓ¥»[22m node_mo
+dules/@testing-library/dom
+/dist/query-helpers.js:[2
+m86:33[22m[39m
+[36m [2mΓ¥»[22m src/__t
+ests__/pages/ForgotPasswor
+dPage.test.tsx:[2m67:20[
+22m[39m
+    [90m 65| [39m
+    [90m 66| [39m    
+[34mexpect[39m(
+    [90m 67| [39m      
+[35mawait[39m screen[33
+m.[39m[34mfindByText[39
+m([36m/Please enter a 
+valid email 
+address/i[39m)
+    [90m   | [39m       
+            [31m^[39m
+    [90m 68| [39m    )[
+33m.[39m[34mtoBeInTheDoc
+ument[39m()[33m;[39m
+    [90m 69| [39m
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ
+»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»[3/3]ΓÄ»[22m[39m
+

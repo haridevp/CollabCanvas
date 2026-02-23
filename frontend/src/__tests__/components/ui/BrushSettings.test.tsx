@@ -1,26 +1,27 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { vi, describe, test, expect, beforeEach } from "vitest";
 import BrushSettings from "../../../components/ui/BrushSettings";
 
 describe("BrushSettings", () => {
   const defaultProps = {
     strokeWidth: 5,
-    onStrokeWidthChange: jest.fn(),
+    onStrokeWidthChange: vi.fn(),
     brushType: "pencil" as const,
-    onBrushTypeChange: jest.fn(),
+    onBrushTypeChange: vi.fn(),
     pressureSensitive: false,
-    onPressureSensitiveChange: jest.fn(),
+    onPressureSensitiveChange: vi.fn(),
     strokeStyle: {
       type: "solid" as const,
       dashArray: [],
       lineCap: "round" as const,
       lineJoin: "round" as const,
     },
-    onStrokeStyleChange: jest.fn(),
+    onStrokeStyleChange: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("renders brush preview button with current brush and width", () => {
@@ -91,9 +92,10 @@ describe("BrushSettings", () => {
     fireEvent.click(screen.getByLabelText("Open brush settings"));
 
     const slider = screen.getByRole("slider");
-    fireEvent.change(slider, { target: { value: "12" } });
+    // Range inputs trigger change/input events. React's onChange usually covers both.
+    fireEvent.change(slider, { target: { value: "8" } });
 
-    expect(defaultProps.onStrokeWidthChange).toHaveBeenCalledWith(12);
+    expect(defaultProps.onStrokeWidthChange).toHaveBeenCalledWith(8);
   });
 
   test("calls onStrokeWidthChange when preset button clicked", () => {

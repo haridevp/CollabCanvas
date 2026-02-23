@@ -1,0 +1,125 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/sidha/OneDrive/Desktop/Software_Engineering_Project/CollabCanvas/frontend[39m
+
+ [32mΓ£ô[39m src/__tests__/components/ui/BrushSettings.test.tsx[2m > [22mBrushSettings[2m > [22mrenders brush preview button with current brush and width[32m 42[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/BrushSettings.test.tsx[2m > [22mBrushSettings[2m > [22mopens dropdown when preview button clicked[32m 38[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/BrushSettings.test.tsx[2m > [22mBrushSettings[2m > [22mcalls onBrushTypeChange when selecting a brush[32m 26[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/BrushSettings.test.tsx[2m > [22mBrushSettings[2m > [22madjusts strokeWidth if switching brush requires higher minimum[32m 18[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/BrushSettings.test.tsx[2m > [22mBrushSettings[2m > [22madjusts strokeWidth if switching brush requires lower maximum[32m 17[2mms[22m[39m
+ [31m├ù[39m src/__tests__/components/ui/BrushSettings.test.tsx[2m > [22mBrushSettings[2m > [22mcalls onStrokeWidthChange when slider changes[32m 67[2mms[22m[39m
+[31m   ΓåÆ expected "vi.fn()" to be called with arguments: [ 12 ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   12,[90m
+[31m+   10,[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/BrushSettings.test.tsx[2m > [22mBrushSettings[2m > [22mcalls onStrokeWidthChange when preset button clicked[32m 16[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/BrushSettings.test.tsx[2m > [22mBrushSettings[2m > [22mcalls onStrokeStyleChange when selecting dashed[32m 17[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/BrushSettings.test.tsx[2m > [22mBrushSettings[2m > [22mcalls onStrokeStyleChange when selecting dotted[32m 15[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/BrushSettings.test.tsx[2m > [22mBrushSettings[2m > [22mcalls onStrokeStyleChange when changing line cap[32m 17[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/BrushSettings.test.tsx[2m > [22mBrushSettings[2m > [22mtoggles pressure sensitivity[32m 15[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/BrushSettings.test.tsx[2m > [22mBrushSettings[2m > [22mcloses dropdown when Apply Settings clicked[32m 16[2mms[22m[39m
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files
+\nodejs/node.exe" "C:
+\Users\sidha\AppData\
+Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (:String   
+ ) [], RemoteExce    
+ption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»[39m[1m[41m 
+Failed Tests 1 [49m
+[22m[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»[39m
+
+[41m[1m FAIL 
+[22m[49m src/__test
+s__/components/ui/Bru
+shSettings.test.tsx[
+2m > [22mBrushSettin
+gs[2m > [22mcalls 
+onStrokeWidthChange 
+when slider changes
+[31m[1mAssertionErr
+or[22m: expected 
+"vi.fn()" to be 
+called with 
+arguments: [ 12 
+][90m
+
+Received: 
+
+[1m  1st vi.fn() 
+call:
+
+[22m[2m  [[22m
+[32m-   12,[90m
+[31m+   10,[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: 
+[1m1[22m
+[31m[39m
+[36m [2mΓ¥»[22m sr
+c/__tests__/component
+s/ui/BrushSettings.te
+st.tsx:[2m98:46[22m
+[39m
+    [90m 96| [39m  
+  fireEvent[33m.[39
+m[34mchange[39m(sli
+der[33m,[39m { 
+target[33m:[39m { 
+value[33m:[39m 
+[32m"12"[39m } 
+})[33m;[39m
+    [90m 97| [39m
+    [90m 98| [39m  
+  [34mexpect[39m(de
+faultProps[33m.[39m
+onStrokeWidthChange)
+[33m.[39m[34mtoHave
+BeenCalledWith[39m(
+[34m12[39m)[33m;[3
+9m
+    [90m   | [39m  
+                     
+                     
+ [31m^[39m
+    [90m 99| [39m  
+})[33m;[39m
+    [90m100| [39m
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/
+1]ΓÄ»[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m11 passed[39m[22m[90m (12)[39m
+[2m   Start at [22m 23:56:56
+[2m   Duration [22m 1.96s[2m (transform 107ms, setup 175ms, import 288ms, tests 306ms, environment 642ms)[22m
+

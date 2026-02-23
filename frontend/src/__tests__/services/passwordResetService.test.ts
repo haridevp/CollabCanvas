@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import api from "../../api/axios";
 import {
   requestPasswordReset,
   validateResetToken,
@@ -8,271 +8,149 @@ import {
   trackResetRequest,
 } from "../../services/passwordResetService";
 
+// Mock the API module
+vi.mock("../../api/axios", () => ({
+  default: {
+    post: vi.fn(),
+  },
+}));
+
 describe("passwordResetService", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
     vi.restoreAllMocks();
   });
 
   describe("requestPasswordReset()", () => {
     it("should return error if email is invalid", async () => {
-      vi.useFakeTimers();
-
-      const promise = requestPasswordReset("invalidEmail");
-
-      // fast-forward setTimeout delay
-      vi.advanceTimersByTime(1000);
-
-      const result = await promise;
+      const result = await requestPasswordReset("invalidEmail");
 
       expect(result.success).toBe(false);
       expect(result.message).toBe("Please provide a valid email address");
-
-      vi.useRealTimers();
+      expect(api.post).not.toHaveBeenCalled();
     });
 
-    it("should store token, expiry, email in localStorage for valid email", async () => {
-      vi.useFakeTimers();
+    it("should call API and return success on valid email", async () => {
+      (api.post as any).mockResolvedValueOnce({
+        data: { success: true, message: "Password reset email sent successfully" },
+      });
 
-      const promise = requestPasswordReset("user@example.com");
+      const result = await requestPasswordReset("user@example.com");
 
-      vi.advanceTimersByTime(1000);
-
-      const result = await promise;
-
+      expect(api.post).toHaveBeenCalledWith("/auth/forgot-password", {
+        email: "user@example.com",
+      });
       expect(result.success).toBe(true);
       expect(result.message).toBe("Password reset email sent successfully");
-
-      expect(result.resetToken).toBeTruthy();
-      expect(result.expiresAt).toBeTruthy();
-
-      expect(localStorage.getItem("reset_token")).toBe(result.resetToken);
-      expect(localStorage.getItem("reset_token_expires")).toBe(result.expiresAt);
-      expect(localStorage.getItem("reset_email")).toBe("user@example.com");
-
-      vi.useRealTimers();
     });
 
-    it("should return failure if an exception occurs", async () => {
-      vi.useFakeTimers();
+    it("should return failure if API call fails", async () => {
+      (api.post as any).mockRejectedValueOnce({
+        response: {
+          data: { message: "User not found" },
+        },
+      });
 
-      // force localStorage.setItem to throw
-      const setItemSpy = vi
-        .spyOn(Storage.prototype, "setItem")
-        .mockImplementation(() => {
-          throw new Error("localStorage failed");
-        });
+      const result = await requestPasswordReset("user@example.com");
 
-      const promise = requestPasswordReset("user@example.com");
+      expect(api.post).toHaveBeenCalledWith("/auth/forgot-password", {
+        email: "user@example.com",
+      });
+      expect(result.success).toBe(false);
+      expect(result.message).toBe("User not found");
+    });
 
-      vi.advanceTimersByTime(1000);
+    it("should return default failure message if API fails without message", async () => {
+      (api.post as any).mockRejectedValueOnce(new Error("Network Error"));
 
-      const result = await promise;
+      const result = await requestPasswordReset("user@example.com");
 
       expect(result.success).toBe(false);
-      expect(result.message).toBe(
-        "Failed to send reset email. Please try again."
-      );
-
-      setItemSpy.mockRestore();
-      vi.useRealTimers();
+      expect(result.message).toBe("Failed to send reset email. Please try again.");
     });
   });
 
   describe("validateResetToken()", () => {
-    it("should return invalid if no stored token exists", async () => {
-      vi.useFakeTimers();
+    it("should call API and return valid status", async () => {
+      (api.post as any).mockResolvedValueOnce({
+        data: { valid: true, email: "user@example.com" },
+      });
 
-      const promise = validateResetToken("some-token");
+      const result = await validateResetToken("valid-token");
 
-      vi.advanceTimersByTime(800);
-
-      const result = await promise;
-
-      expect(result.valid).toBe(false);
-      expect(result.message).toBe("Invalid reset token");
-
-      vi.useRealTimers();
-    });
-
-    it("should return invalid if token does not match", async () => {
-      localStorage.setItem("reset_token", "correct-token");
-      localStorage.setItem(
-        "reset_token_expires",
-        new Date(Date.now() + 100000).toISOString()
-      );
-
-      vi.useFakeTimers();
-
-      const promise = validateResetToken("wrong-token");
-
-      vi.advanceTimersByTime(800);
-
-      const result = await promise;
-
-      expect(result.valid).toBe(false);
-      expect(result.message).toBe("Invalid reset token");
-
-      vi.useRealTimers();
-    });
-
-    it("should return invalid if token is expired", async () => {
-      localStorage.setItem("reset_token", "token123");
-      localStorage.setItem(
-        "reset_token_expires",
-        new Date(Date.now() - 1000).toISOString()
-      );
-
-      vi.useFakeTimers();
-
-      const promise = validateResetToken("token123");
-
-      vi.advanceTimersByTime(800);
-
-      const result = await promise;
-
-      expect(result.valid).toBe(false);
-      expect(result.message).toBe("Reset token has expired");
-
-      vi.useRealTimers();
-    });
-
-    it("should return valid and email if token matches and not expired", async () => {
-      localStorage.setItem("reset_token", "token123");
-      localStorage.setItem(
-        "reset_token_expires",
-        new Date(Date.now() + 60_000).toISOString()
-      );
-      localStorage.setItem("reset_email", "sid@example.com");
-
-      vi.useFakeTimers();
-
-      const promise = validateResetToken("token123");
-
-      vi.advanceTimersByTime(800);
-
-      const result = await promise;
-
-      expect(result.valid).toBe(true);
-      expect(result.message).toBe("Valid reset token");
-      expect(result.email).toBe("sid@example.com");
-
-      vi.useRealTimers();
-    });
-
-    it("should fallback to default email if reset_email not found", async () => {
-      localStorage.setItem("reset_token", "token123");
-      localStorage.setItem(
-        "reset_token_expires",
-        new Date(Date.now() + 60_000).toISOString()
-      );
-
-      vi.useFakeTimers();
-
-      const promise = validateResetToken("token123");
-
-      vi.advanceTimersByTime(800);
-
-      const result = await promise;
-
+      expect(api.post).toHaveBeenCalledWith("/auth/validate-reset-token", {
+        token: "valid-token",
+      });
       expect(result.valid).toBe(true);
       expect(result.email).toBe("user@example.com");
+    });
 
-      vi.useRealTimers();
+    it("should return invalid if API returns invalid", async () => {
+      (api.post as any).mockRejectedValueOnce({
+        response: {
+          data: { message: "Invalid reset token" },
+        },
+      });
+
+      const result = await validateResetToken("invalid-token");
+
+      expect(result.valid).toBe(false);
+      expect(result.message).toBe("Invalid reset token");
+    });
+    
+    it("should return valid if API returns 404 (endpoint not exists logic)", async () => {
+       (api.post as any).mockRejectedValueOnce({
+        response: {
+          status: 404,
+        },
+      });
+
+      const result = await validateResetToken("some-token");
+
+      expect(result.valid).toBe(true);
+      expect(result.message).toBe("Token will be validated on reset");
     });
   });
 
   describe("resetPassword()", () => {
-    it("should fail if token is invalid", async () => {
-      vi.useFakeTimers();
-
-      const promise = resetPassword("bad-token", "NewPassword123");
-
-      // resetPassword waits 1200ms, then validateResetToken waits 800ms
-      vi.advanceTimersByTime(1200);
-      vi.advanceTimersByTime(800);
-
-      const result = await promise;
-
-      expect(result.success).toBe(false);
-      expect(result.message).toBe("Invalid reset token");
-
-      vi.useRealTimers();
-    });
-
     it("should fail if password is too short", async () => {
-      localStorage.setItem("reset_token", "token123");
-      localStorage.setItem(
-        "reset_token_expires",
-        new Date(Date.now() + 60_000).toISOString()
-      );
-
-      vi.useFakeTimers();
-
-      const promise = resetPassword("token123", "short");
-
-      vi.advanceTimersByTime(1200);
-      vi.advanceTimersByTime(800);
-
-      const result = await promise;
+      const result = await resetPassword("token", "short");
 
       expect(result.success).toBe(false);
       expect(result.message).toBe("Password must be at least 8 characters long");
-
-      vi.useRealTimers();
+      expect(api.post).not.toHaveBeenCalled();
     });
 
-    it("should reset password and clear localStorage tokens on success", async () => {
-      localStorage.setItem("reset_token", "token123");
-      localStorage.setItem(
-        "reset_token_expires",
-        new Date(Date.now() + 60_000).toISOString()
-      );
-      localStorage.setItem("reset_email", "sid@example.com");
-
-      vi.useFakeTimers();
-
-      const promise = resetPassword("token123", "NewPassword123");
-
-      vi.advanceTimersByTime(1200);
-      vi.advanceTimersByTime(800);
-
-      const result = await promise;
-
-      expect(result.success).toBe(true);
-      expect(result.message).toBe("Password has been reset successfully");
-
-      expect(localStorage.getItem("reset_token")).toBeNull();
-      expect(localStorage.getItem("reset_token_expires")).toBeNull();
-      expect(localStorage.getItem("reset_email")).toBeNull();
-
-      vi.useRealTimers();
-    });
-
-    it("should return failure if exception happens", async () => {
-      localStorage.setItem("reset_token", "token123");
-      localStorage.setItem(
-        "reset_token_expires",
-        new Date(Date.now() + 60_000).toISOString()
-      );
-
-      // force validateResetToken() to throw by breaking localStorage.getItem
-      vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
-        throw new Error("boom");
+    it("should call API and return success", async () => {
+      (api.post as any).mockResolvedValueOnce({
+        data: { success: true, message: "Password has been reset successfully" },
       });
 
-      vi.useFakeTimers();
+      const result = await resetPassword("valid-token", "NewPassword123!");
 
-      const promise = resetPassword("token123", "NewPassword123");
+      expect(api.post).toHaveBeenCalledWith("/auth/reset-password", {
+        token: "valid-token",
+        password: "NewPassword123!",
+      });
+      expect(result.success).toBe(true);
+      expect(result.message).toBe("Password has been reset successfully");
+    });
 
-      vi.advanceTimersByTime(1200);
+    it("should return failure if API call fails", async () => {
+      (api.post as any).mockRejectedValueOnce({
+        response: {
+          data: { message: "Invalid or expired token" },
+        },
+      });
 
-      const result = await promise;
+      const result = await resetPassword("invalid-token", "NewPassword123!");
 
       expect(result.success).toBe(false);
-      expect(result.message).toBe("Failed to reset password. Please try again.");
-
-      vi.useRealTimers();
+      expect(result.message).toBe("Invalid or expired token");
     });
   });
 

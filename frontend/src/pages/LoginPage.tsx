@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogIn, Mail, Lock, AlertCircle, Eye, EyeOff, Globe, Clock, MapPin } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Eye, EyeOff, Globe, Clock, MapPin } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../services/AuthContext';
@@ -7,7 +7,10 @@ import {
   loginWithEmailPassword,
   getDeviceType
 } from '../utils/authService';
-
+import TitleAnimation from '../components/ui/TitleAnimation';
+import Background from '../components/ui/Background';
+import axios from 'axios';
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 /**
  * Login activity interface for tracking user login history
  * @interface LoginActivity
@@ -40,15 +43,6 @@ interface LoginError {
  * This component renders a login form with email/password fields, "Remember Me" functionality,
  * and displays recent login activities for security awareness. It integrates with the 
  * application's authentication context and handles form validation, submission, and error states.
- * 
- * @component
- * @example
- * ```tsx
- * // In your router configuration
- * <Route path="/login" element={<LoginPage />} />
- * ```
- * 
- * @returns {JSX.Element} The rendered login page with form and activity log
  */
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -64,13 +58,6 @@ const LoginPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState<boolean>(false);
   const [recentActivities, setRecentActivities] = useState<LoginActivity[]>([]);
 
-  /**
-   * Checks for verification/success messages from navigation state
-   * Clears the state to prevent message persistence on refresh
-   * 
-   * @effect
-   * @listens location.state.message
-   */
   useEffect(() => {
     if (location.state?.message) {
       setError({
@@ -83,13 +70,6 @@ const LoginPage: React.FC = () => {
     }
   }, [location.state]);
 
-  /**
-   * Loads recent login activities and remembered email on component mount
-   * Fetches up to 3 most recent activities from localStorage
-   * 
-   * @effect
-   * @listens [] (runs once on mount)
-   */
   useEffect(() => {
     const activities = JSON.parse(localStorage.getItem('login_activities') || '[]');
     setRecentActivities(activities.slice(0, 3));
@@ -102,23 +82,6 @@ const LoginPage: React.FC = () => {
     }
   }, []);
 
-  /**
-   * Handles login form submission
-   * Validates input, makes authentication API call, and manages authentication state
-   * 
-   * @async
-   * @param {React.FormEvent<HTMLFormElement>} e - Form submission event
-   * @returns {Promise<void>}
-   * 
-   * @throws {Error} When server connection fails or credentials are invalid
-   * 
-   * @example
-   * ```tsx
-   * <form onSubmit={handleSubmit}>
-   *   {/* form fields * /}
-   * </form>
-   * ```
-   */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError(null);
@@ -159,7 +122,6 @@ const LoginPage: React.FC = () => {
         const from = location.state?.from?.pathname || '/dashboard';
         navigate(from, { replace: true });
       } else {
-        // Display the specific error message from the backend
         setError({
           title: 'Login Failed',
           message: result.message || 'An error occurred during login',
@@ -168,36 +130,28 @@ const LoginPage: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Login error:', err);
-
-      // Check if we have a response from the server
       if (err.response) {
-        // Server responded with an error status
         const statusCode = err.response.status;
         const errorMessage = err.response.data?.message;
-
         if (statusCode === 401) {
-          // Unauthorized - Invalid credentials
           setError({
             title: 'Authentication Failed',
             message: errorMessage || 'Invalid email or password',
             type: 'error'
           });
         } else if (statusCode === 403) {
-          // Forbidden - Email not verified
           setError({
             title: 'Email Not Verified',
             message: errorMessage || 'Please verify your email before logging in',
             type: 'error'
           });
         } else if (statusCode === 500) {
-          // Server Error
           setError({
             title: 'Server Error',
             message: errorMessage || 'An error occurred on the server. Please try again later.',
             type: 'error'
           });
         } else {
-          // Other error codes
           setError({
             title: 'Login Failed',
             message: errorMessage || 'An unexpected error occurred',
@@ -205,14 +159,12 @@ const LoginPage: React.FC = () => {
           });
         }
       } else if (err.request) {
-        // Request was made but no response received (network error)
         setError({
           title: 'Connection Error',
           message: 'Could not connect to the server. Please check your internet connection and try again.',
           type: 'error'
         });
       } else {
-        // Something else happened
         setError({
           title: 'Error',
           message: 'An unexpected error occurred. Please try again.',
@@ -224,17 +176,6 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  /**
-   * Formats a timestamp string into a readable time format
-   * 
-   * @param {string} timestamp - ISO timestamp string to format
-   * @returns {string} Formatted time string (HH:MM)
-   * 
-   * @example
-   * ```typescript
-   * formatTimestamp('2024-01-15T10:30:00Z'); // Returns '10:30'
-   * ```
-   */
   const formatTimestamp = (timestamp: string): string => {
     try {
       const date = new Date(timestamp);
@@ -245,17 +186,10 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  /**
-   * Renders a recent activity item with device and IP information
-   * 
-   * @param {LoginActivity} activity - The login activity data
-   * @param {number} index - Index for React key
-   * @returns {JSX.Element} Activity card component
-   */
   const renderActivityItem = (activity: LoginActivity, index: number) => (
-    <div key={index} className="p-4 rounded-lg border bg-slate-50 border-slate-200">
+    <div key={index} className="p-4 rounded-lg border bg-white border-slate-200">
       <div className="flex justify-between items-start">
-        <span className="font-medium text-slate-700">Successful Login</span>
+        <span className="font-medium text-slate-800">Successful Login</span>
         <span className="text-xs text-slate-500">{formatTimestamp(activity.timestamp)}</span>
       </div>
       <div className="flex gap-4 mt-2 text-xs text-slate-500">
@@ -271,29 +205,58 @@ const LoginPage: React.FC = () => {
     </div>
   );
 
+const handleGoogleSuccess = async (credentialResponse: any) => {
+  try {
+    const { data } = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/google-login`, {
+      credential: credentialResponse.credential,
+    });
+    
+    if (data.success) {
+      login(data.token, data.user); // Update your global Auth state
+      navigate('/dashboard');
+    }
+  } catch (err) {
+    console.error("Google Login Error:", err);
+  }
+};
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
-      <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-8">
+    <div className="relative min-h-screen flex flex-col items-center justify-center p-4">
+      {/* Dynamic Background */}
+      <Background />
+
+      {/* Floating Title (using TitleAnimation) */}
+      <div className="absolute top-12 left-0 w-full text-center z-10 pointer-events-none mb-24">
+        <TitleAnimation />
+      </div>
+
+      {/* Container with top margin to avoid touching/overlapping the title */}
+      <div className="w-full max-w-2xl flex flex-col lg:flex-row gap-6 z-20 mt-32">
 
         {/* Left column - Login form */}
         <div className="lg:w-1/2">
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+          <div className="bg-white rounded-xl shadow-2xl p-6 border border-slate-100 h-full flex flex-col justify-center">
 
             {/* Header Section */}
-            <div className="text-center mb-8">
-              <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <LogIn className="text-blue-600" size={32} aria-hidden="true" />
+            <div className="text-center mb-6">
+              <div className="mb-4 flex justify-center">
+                <img
+                  src="/CollabCanvas/logo.png"
+                  alt="CollabCanvas Logo"
+                  style={{ height: '64px', width: 'auto' }}
+                  className="object-contain mx-auto"
+                />
               </div>
-              <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
-              <p className="text-slate-500">Log in to continue your session</p>
+              <h1 className="text-xl font-bold text-black border-t-2 border-black pt-2 inline-block">Welcome back</h1>
+              <p className="text-slate-600 text-xs mt-1">Log in to continue your session</p>
             </div>
 
             {/* Error/Success message display */}
             {error && (
               <div
                 className={`mb-6 p-4 rounded-lg border ${error.type === 'error'
-                    ? 'bg-red-50 border-red-200 text-red-800'
-                    : 'bg-green-50 border-green-200 text-green-800'
+                  ? 'bg-red-50 border-red-200 text-red-800'
+                  : 'bg-green-50 border-green-200 text-green-800'
                   }`}
                 role="alert"
                 aria-live="polite"
@@ -301,8 +264,8 @@ const LoginPage: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <AlertCircle size={20} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
                   <div className="flex-1">
-                    <h3 className="font-semibold mb-1">{error.title}</h3>
-                    <p className="text-sm">{error.message}</p>
+                    <h3 className="font-semibold mb-1 text-sm">{error.title}</h3>
+                    <p className="text-xs">{error.message}</p>
                   </div>
                 </div>
               </div>
@@ -312,22 +275,21 @@ const LoginPage: React.FC = () => {
             <form className="space-y-4" onSubmit={handleSubmit} noValidate>
               {/* Email Input */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="email" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1">
                   Email Address
                 </label>
                 <div className="relative">
                   <Mail
                     className="absolute left-3 top-3 text-slate-400"
-                    size={20}
+                    size={18}
                     aria-hidden="true"
                   />
                   <input
                     id="email"
                     type="email"
-                    placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"
                     required
                     disabled={isLoading}
                     autoComplete="email"
@@ -337,13 +299,13 @@ const LoginPage: React.FC = () => {
 
               {/* Password Input */}
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+                <div className="flex justify-between items-center mb-1 px-1">
+                  <label htmlFor="password" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
                     Password
                   </label>
                   <Link
                     to="/forgot-password"
-                    className="text-sm text-blue-600 hover:underline"
+                    className="text-xs text-blue-600 hover:text-purple-700 transition-colors font-medium"
                     aria-label="Forgot password? Click to reset"
                   >
                     Forgot?
@@ -352,16 +314,15 @@ const LoginPage: React.FC = () => {
                 <div className="relative">
                   <Lock
                     className="absolute left-3 top-3 text-slate-400"
-                    size={20}
+                    size={18}
                     aria-hidden="true"
                   />
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-12 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    className="w-full pl-10 pr-12 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"
                     required
                     disabled={isLoading}
                     autoComplete="current-password"
@@ -373,22 +334,38 @@ const LoginPage: React.FC = () => {
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     aria-pressed={showPassword}
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
 
+              <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+                <div className="mt-6">
+                  <GoogleLogin 
+                    onSuccess={handleGoogleSuccess} 
+                    onError={() => {
+                      setError({  
+                        title: 'Login Failed',
+                        message: 'Google Authentication was unsuccessful',
+                        type: 'error'
+                      });
+                    }}
+                    useOneTap
+                  />
+                </div>
+              </GoogleOAuthProvider>
+
               {/* Remember Me Checkbox */}
-              <div className="flex items-center">
+              <div className="flex items-center px-1">
                 <input
                   id="remember"
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                  className="h-3.5 w-3.5 text-black rounded border-slate-300 focus:ring-black accent-black"
                   aria-checked={rememberMe}
                 />
-                <label htmlFor="remember" className="ml-2 text-sm text-slate-700">
+                <label htmlFor="remember" className="ml-2 text-xs text-slate-600 font-medium">
                   Remember me
                 </label>
               </div>
@@ -396,7 +373,7 @@ const LoginPage: React.FC = () => {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full py-3"
+                className="w-full py-3 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-md active:scale-[0.98] mt-2 border-none"
                 isLoading={isLoading}
                 aria-label={isLoading ? "Signing in..." : "Sign in to account"}
               >
@@ -405,11 +382,11 @@ const LoginPage: React.FC = () => {
             </form>
 
             {/* Registration Link */}
-            <p className="text-center mt-8 text-slate-600">
-              New here?{' '}
+            <p className="text-center mt-8 text-slate-600 text-sm">
+              Don't have an account?{' '}
               <Link
                 to="/register"
-                className="text-blue-600 font-semibold hover:underline"
+                className="text-blue-600 font-bold hover:text-purple-700 transition-colors"
                 aria-label="Create a new account"
               >
                 Create account
@@ -420,40 +397,45 @@ const LoginPage: React.FC = () => {
 
         {/* Right column - Activity Log */}
         <div className="lg:w-1/2">
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100 h-full">
+          <div className="bg-white rounded-xl shadow-2xl p-8 border border-slate-100 h-full flex flex-col">
             {/* Activity Header */}
             <div className="flex items-center gap-3 mb-6">
-              <Clock className="text-blue-600" size={24} aria-hidden="true" />
-              <h2 className="text-xl font-bold text-slate-900">Recent Login Activity</h2>
+              <Clock className="text-black" size={22} aria-hidden="true" />
+              <h2 className="text-xl font-bold text-black border-b-2 border-black pb-1">Recent Login Activity</h2>
             </div>
 
             {/* Activity List */}
             {recentActivities.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-4 flex-1">
                 {recentActivities.map(renderActivityItem)}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <p className="text-slate-500">No recent activity found.</p>
+              <div className="text-center py-12 flex-1 flex flex-col justify-center">
+                <p className="text-slate-400 text-sm italic">No recent activity found.</p>
               </div>
             )}
 
             {/* Security Tips Section */}
-            <div className="mt-12 pt-6 border-t border-slate-200">
-              <h3 className="font-semibold text-slate-900 mb-3">Security Tips</h3>
-              <ul className="space-y-2 text-sm text-slate-600">
-                <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5" aria-hidden="true" />
-                  <span>Check the URL for the secure "https" lock icon.</span>
+            <div className="mt-8 pt-6 border-t border-slate-100 bg-slate-50 -mx-8 px-8 rounded-b-xl">
+              <h3 className="text-xs font-bold text-black uppercase tracking-widest mb-4">Security Insights</h3>
+              <ul className="space-y-3 pb-4">
+                <li className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 bg-black rounded-full mt-1.5 flex-shrink-0" aria-hidden="true" />
+                  <span className="text-xs text-slate-600 leading-relaxed font-medium">Ensure the URL matches <strong className="text-black">collabcanvas.com</strong> before logging in.</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5" aria-hidden="true" />
-                  <span>Use a different password for every service.</span>
+                <li className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 bg-black rounded-full mt-1.5 flex-shrink-0" aria-hidden="true" />
+                  <span className="text-xs text-slate-600 leading-relaxed font-medium">Enable 2FA in your security settings for enhanced protection.</span>
                 </li>
               </ul>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Footer hint */}
+      <div className="absolute bottom-4 text-[10px] text-slate-400 font-medium tracking-tight uppercase z-10">
+        &copy; 2026 CollabCanvas v1.0.0
       </div>
     </div>
   );

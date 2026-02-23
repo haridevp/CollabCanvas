@@ -1,16 +1,17 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { vi, describe, test, expect, it } from "vitest";
 import ColorPicker from "../../../components/ui/ColorPicker";
 
 describe("ColorPicker", () => {
   it("renders the toggle button", () => {
-    render(<ColorPicker value="#3b82f6" onChange={jest.fn()} />);
+    render(<ColorPicker value="#3b82f6" onChange={vi.fn()} />);
 
     expect(screen.getByRole("button", { name: /open color picker/i })).toBeInTheDocument();
   });
 
   it("opens the dialog when clicking the button", () => {
-    render(<ColorPicker value="#3b82f6" onChange={jest.fn()} />);
+    render(<ColorPicker value="#3b82f6" onChange={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: /open color picker/i }));
 
@@ -19,7 +20,7 @@ describe("ColorPicker", () => {
   });
 
   it("closes the dialog when clicking Done", () => {
-    render(<ColorPicker value="#3b82f6" onChange={jest.fn()} />);
+    render(<ColorPicker value="#3b82f6" onChange={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: /open color picker/i }));
     expect(screen.getByRole("dialog", { name: /color picker/i })).toBeInTheDocument();
@@ -29,7 +30,7 @@ describe("ColorPicker", () => {
   });
 
   it("calls onChange when a preset color is clicked", () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
 
     render(<ColorPicker value="#3b82f6" onChange={onChange} />);
 
@@ -43,7 +44,7 @@ describe("ColorPicker", () => {
   });
 
   it("shows check icon only for selected preset (aria-pressed=true)", () => {
-    render(<ColorPicker value="#ef4444" onChange={jest.fn()} />);
+    render(<ColorPicker value="#ef4444" onChange={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: /open color picker/i }));
 
@@ -55,7 +56,7 @@ describe("ColorPicker", () => {
   });
 
   it("changes color when valid hex is typed", () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
 
     render(<ColorPicker value="#3b82f6" onChange={onChange} />);
 
@@ -68,7 +69,7 @@ describe("ColorPicker", () => {
   });
 
   it("does NOT call onChange when invalid hex is typed", () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
 
     render(<ColorPicker value="#3b82f6" onChange={onChange} />);
 
@@ -81,33 +82,36 @@ describe("ColorPicker", () => {
   });
 
   it("renders opacity UI only when onOpacityChange is provided", () => {
-    const { rerender } = render(<ColorPicker value="#3b82f6" onChange={jest.fn()} />);
+    const { rerender } = render(<ColorPicker value="#3b82f6" onChange={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: /open color picker/i }));
     expect(screen.queryByLabelText(/adjust opacity/i)).not.toBeInTheDocument();
 
+    // Close before rerendering to reset state cleanly
+    fireEvent.click(screen.getByRole("button", { name: /close color picker/i }));
+
     rerender(
       <ColorPicker
         value="#3b82f6"
-        onChange={jest.fn()}
+        onChange={vi.fn()}
         opacity={0.5}
-        onOpacityChange={jest.fn()}
+        onOpacityChange={vi.fn()}
       />
     );
 
-    // Need to reopen because rerender doesn't keep state in a reliable way here
+    // Reopen
     fireEvent.click(screen.getByRole("button", { name: /open color picker/i }));
     expect(screen.getByLabelText(/adjust opacity/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/enter opacity percentage/i)).toBeInTheDocument();
   });
 
   it("calls onOpacityChange when opacity slider changes", () => {
-    const onOpacityChange = jest.fn();
+    const onOpacityChange = vi.fn();
 
     render(
       <ColorPicker
         value="#3b82f6"
-        onChange={jest.fn()}
+        onChange={vi.fn()}
         opacity={1}
         onOpacityChange={onOpacityChange}
       />
@@ -122,12 +126,12 @@ describe("ColorPicker", () => {
   });
 
   it("calls onOpacityChange when opacity percent input changes", () => {
-    const onOpacityChange = jest.fn();
+    const onOpacityChange = vi.fn();
 
     render(
       <ColorPicker
         value="#3b82f6"
-        onChange={jest.fn()}
+        onChange={vi.fn()}
         opacity={1}
         onOpacityChange={onOpacityChange}
       />
@@ -142,7 +146,7 @@ describe("ColorPicker", () => {
   });
 
   it("closes when clicking outside (mousedown)", () => {
-    render(<ColorPicker value="#3b82f6" onChange={jest.fn()} />);
+    render(<ColorPicker value="#3b82f6" onChange={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: /open color picker/i }));
     expect(screen.getByRole("dialog", { name: /color picker/i })).toBeInTheDocument();
@@ -152,7 +156,7 @@ describe("ColorPicker", () => {
   });
 
   it("changes hue slider -> triggers onChange with a hex value", () => {
-    const onChange = jest.fn();
+    const onChange = vi.fn();
 
     render(<ColorPicker value="#3b82f6" onChange={onChange} />);
 

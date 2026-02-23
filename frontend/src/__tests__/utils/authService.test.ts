@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   registerUser,
   loginWithEmailPassword,
@@ -14,12 +15,11 @@ import {
 } from '../../utils/authService';
 
 // IMPORTANT: Mock axios instance used in utils/authService.ts
-jest.mock('../../api/axios', () => ({
-  __esModule: true,
+vi.mock('../../api/axios', () => ({
   default: {
-    post: jest.fn(),
-    get: jest.fn(),
-    put: jest.fn()
+    post: vi.fn(),
+    get: vi.fn(),
+    put: vi.fn()
   }
 }));
 
@@ -27,18 +27,18 @@ import api from '../../api/axios';
 
 describe('utils/authService.ts', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.spyOn(console, 'log').mockImplementation(() => {});
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.clearAllMocks();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('registerUser()', () => {
     test('should call api.post and return response.data', async () => {
-      (api.post as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.post).mockResolvedValueOnce({
         data: { success: true, userId: '123' }
       });
 
@@ -51,7 +51,7 @@ describe('utils/authService.ts', () => {
 
   describe('loginWithEmailPassword()', () => {
     test('should call api.post with merged credentials + activityData', async () => {
-      (api.post as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.post).mockResolvedValueOnce({
         data: { success: true, token: 'abc' }
       });
 
@@ -72,7 +72,7 @@ describe('utils/authService.ts', () => {
 
   describe('checkUsernameAvailability()', () => {
     test('should call api.get and return response.data', async () => {
-      (api.get as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.get).mockResolvedValueOnce({
         data: { available: true }
       });
 
@@ -85,7 +85,7 @@ describe('utils/authService.ts', () => {
 
   describe('updateProfile()', () => {
     test('should return response.data on success', async () => {
-      (api.put as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.put).mockResolvedValueOnce({
         data: { success: true, message: 'Updated' }
       });
 
@@ -96,7 +96,7 @@ describe('utils/authService.ts', () => {
     });
 
     test('should return formatted error response on failure', async () => {
-      (api.put as jest.Mock).mockRejectedValueOnce({
+      vi.mocked(api.put).mockRejectedValueOnce({
         response: { data: { message: 'Bad Request' } }
       });
 
@@ -106,7 +106,7 @@ describe('utils/authService.ts', () => {
     });
 
     test('should return default message if error has no response.data.message', async () => {
-      (api.put as jest.Mock).mockRejectedValueOnce(new Error('Network'));
+      vi.mocked(api.put).mockRejectedValueOnce(new Error('Network'));
 
       const result = await updateProfile({ displayName: 'Sid' });
 
@@ -116,7 +116,7 @@ describe('utils/authService.ts', () => {
 
   describe('verifyEmailToken()', () => {
     test('should return response.data on success', async () => {
-      (api.post as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.post).mockResolvedValueOnce({
         data: { success: true }
       });
 
@@ -127,7 +127,7 @@ describe('utils/authService.ts', () => {
     });
 
     test('should return error.response.data on failure', async () => {
-      (api.post as jest.Mock).mockRejectedValueOnce({
+      vi.mocked(api.post).mockRejectedValueOnce({
         response: { data: { success: false, message: 'Invalid token' } }
       });
 
@@ -137,7 +137,7 @@ describe('utils/authService.ts', () => {
     });
 
     test('should return default error if no response data exists', async () => {
-      (api.post as jest.Mock).mockRejectedValueOnce(new Error('Network'));
+      vi.mocked(api.post).mockRejectedValueOnce(new Error('Network'));
 
       const result = await verifyEmailToken('bad');
 
@@ -186,7 +186,7 @@ describe('utils/authService.ts', () => {
 
   describe('forgotPassword()', () => {
     test('should call api.post and return response.data', async () => {
-      (api.post as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.post).mockResolvedValueOnce({
         data: { success: true }
       });
 
@@ -202,7 +202,7 @@ describe('utils/authService.ts', () => {
 
   describe('resetPassword()', () => {
     test('should call api.post and return response.data', async () => {
-      (api.post as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.post).mockResolvedValueOnce({
         data: { success: true }
       });
 
@@ -219,7 +219,7 @@ describe('utils/authService.ts', () => {
 
   describe('searchUsers()', () => {
     test('should return response.data on success', async () => {
-      (api.get as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.get).mockResolvedValueOnce({
         data: { success: true, users: [{ id: 1 }] }
       });
 
@@ -230,7 +230,7 @@ describe('utils/authService.ts', () => {
     });
 
     test('should return fallback object on failure', async () => {
-      (api.get as jest.Mock).mockRejectedValueOnce({
+      vi.mocked(api.get).mockRejectedValueOnce({
         response: { data: { message: 'Nope' } }
       });
 
@@ -246,7 +246,7 @@ describe('utils/authService.ts', () => {
 
   describe('inviteUsersToRoom()', () => {
     test('should return response.data on success', async () => {
-      (api.post as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.post).mockResolvedValueOnce({
         data: { success: true, results: { sent: 2 } }
       });
 
@@ -260,7 +260,7 @@ describe('utils/authService.ts', () => {
     });
 
     test('should return fallback object on failure', async () => {
-      (api.post as jest.Mock).mockRejectedValueOnce({
+      vi.mocked(api.post).mockRejectedValueOnce({
         response: { data: { message: 'Fail' } }
       });
 
@@ -278,7 +278,7 @@ describe('utils/authService.ts', () => {
     test('should return blob response.data on success', async () => {
       const mockBlob = new Blob(['hello'], { type: 'image/png' });
 
-      (api.get as jest.Mock).mockResolvedValueOnce({
+      vi.mocked(api.get).mockResolvedValueOnce({
         data: mockBlob
       });
 
@@ -292,7 +292,7 @@ describe('utils/authService.ts', () => {
     });
 
     test('should throw Error with backend message if export fails', async () => {
-      (api.get as jest.Mock).mockRejectedValueOnce({
+      vi.mocked(api.get).mockRejectedValueOnce({
         response: { data: { message: 'Export denied' } }
       });
 
@@ -300,7 +300,7 @@ describe('utils/authService.ts', () => {
     });
 
     test('should throw Error with default message if export fails without backend message', async () => {
-      (api.get as jest.Mock).mockRejectedValueOnce(new Error('Network'));
+      vi.mocked(api.get).mockRejectedValueOnce(new Error('Network'));
 
       await expect(exportDrawing('room-1', 'png')).rejects.toThrow(
         'Failed to export drawing'

@@ -1,30 +1,43 @@
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as logoutModule from "../../utils/logoutHandler";
 import { performLogout } from "../../utils/logoutHandler";
 
 describe("performLogout()", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Default mock for window.confirm
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    // Mock window.location.href
+    Object.defineProperty(window, "location", {
+      writable: true,
+      value: { href: "" },
+    });
   });
 
-  test("should return early if confirmation enabled and user cancels", async () => {
-    jest.spyOn(window, "confirm").mockReturnValue(false);
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
-    const clearSpy = jest.spyOn(logoutModule, "clearAuthTokens");
+  it("should return early if confirmation enabled and user cancels", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    // Set some data to check if it's NOT cleared
+    localStorage.setItem("auth_token", "test-token");
 
     await performLogout({ showConfirmation: true });
 
-    expect(clearSpy).not.toHaveBeenCalled();
+    expect(localStorage.getItem("auth_token")).toBe("test-token");
   });
 
-  test("should clear tokens and redirect if confirmed", async () => {
-    jest.spyOn(window, "confirm").mockReturnValue(true);
+  it("should clear tokens and redirect if confirmed", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
 
-    const clearSpy = jest.spyOn(logoutModule, "clearAuthTokens");
-
-    // ✅ mock window.location safely
-    const locationSpy = jest
-      .spyOn(window, "location", "get")
-      .mockReturnValue({ href: "" } as any);
+    localStorage.setItem("auth_token", "test-token");
+    localStorage.setItem("user", JSON.stringify({ name: "Test" }));
 
     await performLogout({
       showConfirmation: true,
@@ -32,18 +45,14 @@ describe("performLogout()", () => {
       redirectTo: "/login"
     });
 
-    expect(clearSpy).toHaveBeenCalled();
+    expect(localStorage.getItem("auth_token")).toBeNull();
+    expect(localStorage.getItem("user")).toBeNull();
     expect(window.location.href).toBe("/login");
-
-    locationSpy.mockRestore();
   });
 
-  test("should not redirect if redirectTo is empty string", async () => {
-    jest.spyOn(window, "confirm").mockReturnValue(true);
-
-    const locationSpy = jest
-      .spyOn(window, "location", "get")
-      .mockReturnValue({ href: "" } as any);
+  it("should not redirect if redirectTo is empty string", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    window.location.href = "current-page";
 
     await performLogout({
       showConfirmation: true,
@@ -51,17 +60,11 @@ describe("performLogout()", () => {
       redirectTo: ""
     });
 
-    expect(window.location.href).toBe("");
-
-    locationSpy.mockRestore();
+    expect(window.location.href).toBe("current-page");
   });
 
-  test("should skip confirmation if showConfirmation is false", async () => {
-    const confirmSpy = jest.spyOn(window, "confirm");
-
-    const locationSpy = jest
-      .spyOn(window, "location", "get")
-      .mockReturnValue({ href: "" } as any);
+  it("should skip confirmation if showConfirmation is false", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm");
 
     await performLogout({
       showConfirmation: false,
@@ -71,7 +74,5 @@ describe("performLogout()", () => {
 
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(window.location.href).toBe("/login");
-
-    locationSpy.mockRestore();
   });
 });

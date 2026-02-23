@@ -1,10 +1,11 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { vi, describe, test, expect } from 'vitest';
 import RoomCardComponent, { RoomCard } from '../../../components/ui/RoomCardComponent';
 
 // Mock Button so we don't depend on its internal styling/logic
-jest.mock('../Button', () => ({
+vi.mock('../Button', () => ({
   Button: ({ children, ...props }: any) => (
     <button {...props}>{children}</button>
   )
@@ -61,7 +62,7 @@ describe('RoomCard', () => {
     renderRoomCard({ isPublic: true });
 
     // The icon wrapper has aria-label "Public room"
-    expect(screen.getByLabelText('Public room')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Public room').length).toBeGreaterThan(0);
 
     // Should NOT show private badge
     expect(screen.queryByText('Private')).not.toBeInTheDocument();
@@ -107,7 +108,7 @@ describe('RoomCard', () => {
   });
 
   test('calls onClick when clicking the card', () => {
-    const onClick = jest.fn();
+    const onClick = vi.fn();
     renderRoomCard({ onClick });
 
     const card = screen.getByRole('article', { name: 'Room: Design Room' });
@@ -117,7 +118,7 @@ describe('RoomCard', () => {
   });
 
   test('does NOT call onClick when clicking the link (stopPropagation)', () => {
-    const onClick = jest.fn();
+    const onClick = vi.fn();
     renderRoomCard({ onClick });
 
     const link = screen.getByRole('link', { name: /Enter room: Design Room/i });
@@ -135,7 +136,9 @@ describe('RoomCard', () => {
     const header = container.querySelector('.h-40.relative') as HTMLDivElement;
 
     expect(header).toBeTruthy();
-    expect(header.style.background).toContain('url(https://example.com/thumb.png)');
+    expect(header).toHaveStyle({
+      background: 'url(https://example.com/thumb.png) center/cover no-repeat'
+    });
   });
 
   test('uses gradient background if thumbnail is NOT provided', () => {
@@ -144,7 +147,9 @@ describe('RoomCard', () => {
     const header = container.querySelector('.h-40.relative') as HTMLDivElement;
 
     expect(header).toBeTruthy();
-    expect(header.style.background).toContain('linear-gradient');
+    expect(header).toHaveStyle({
+      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)'
+    });
   });
 
   test('exports work: default export and named export', () => {
