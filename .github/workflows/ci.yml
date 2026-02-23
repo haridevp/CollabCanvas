@@ -39,7 +39,7 @@ jobs:
     - name: Run Unit Tests
       run: |
         cd frontend
-        npm test -- --watchAll=false --ci
+        npm test -- --ci
 
   build-backend:
     runs-on: ubuntu-latest

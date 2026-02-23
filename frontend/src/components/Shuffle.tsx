@@ -70,9 +70,14 @@ const Shuffle: React.FC<ShuffleProps> = ({
 
   useEffect(() => {
     if ('fonts' in document) {
-      if (document.fonts.status === 'loaded') setFontsLoaded(true);
-      else document.fonts.ready.then(() => setFontsLoaded(true));
-    } else setFontsLoaded(true);
+      if (document.fonts.status === 'loaded') {
+        requestAnimationFrame(() => setFontsLoaded(true));
+      } else {
+        document.fonts.ready.then(() => setFontsLoaded(true));
+      }
+    } else {
+      requestAnimationFrame(() => setFontsLoaded(true));
+    }
   }, []);
 
   const scrollTriggerStart = useMemo(() => {
@@ -117,7 +122,9 @@ const Shuffle: React.FC<ShuffleProps> = ({
         }
         try {
           splitRef.current?.revert();
-        } catch {}
+        } catch {
+          // Ignore revert errors on teardown
+        }
         splitRef.current = null;
         playingRef.current = false;
       };
@@ -406,7 +413,7 @@ const Shuffle: React.FC<ShuffleProps> = ({
   const commonStyle: React.CSSProperties = useMemo(() => ({ textAlign, ...style }), [textAlign, style]);
   const classes = useMemo(() => `shuffle-parent ${ready ? 'is-ready' : ''} ${className}`, [ready, className]);
   const Tag = (tag || 'p') as keyof JSX.IntrinsicElements;
-  return React.createElement(Tag, { ref: ref as any, className: classes, style: commonStyle }, text);
+  return <Tag ref={ref} className={classes} style={commonStyle}>{text}</Tag>;
 };
 
 export default Shuffle;

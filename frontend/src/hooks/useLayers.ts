@@ -27,11 +27,24 @@ export function useLayers(
   elements: DrawingElement[],
   setElements: (elements: DrawingElement[] | ((prev: DrawingElement[]) => DrawingElement[])) => void
 ) {
-  const [layerState, setLayerState] = useState<LayerPanelState>({
-    layers: [],
-    activeLayerId: null,
-    isExpanded: true,
-    panelWidth: 280
+  const [layerState, setLayerState] = useState<LayerPanelState>(() => {
+    const defaultLayerId = `layer-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    return {
+      layers: [{
+        id: defaultLayerId,
+        name: 'Background',
+        visible: true,
+        locked: false,
+        opacity: 1,
+        blendMode: 'normal',
+        index: 0,
+        elementIds: [],
+        color: LAYER_COLORS[0]
+      }],
+      activeLayerId: defaultLayerId,
+      isExpanded: true,
+      panelWidth: 280
+    };
   });
 
   /**
@@ -58,15 +71,6 @@ export function useLayers(
 
     return newLayer;
   }, [layerState.layers]);
-
-  /**
-   * Initialize default layer if none exist
-   */
-  useEffect(() => {
-    if (layerState.layers.length === 0) {
-      createLayer('Background', true);
-    }
-  }, [createLayer, layerState.layers.length]);
 
   /**
    * Ensure all elements have valid layerIds

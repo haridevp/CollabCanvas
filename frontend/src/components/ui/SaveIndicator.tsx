@@ -22,6 +22,14 @@ export const SaveIndicator: React.FC<SaveIndicatorProps> = ({
     isAutoSaveEnabled = true,
     className = ''
 }) => {
+    const [now, setNow] = React.useState(0);
+
+    React.useEffect(() => {
+        setNow(Date.now());
+        const interval = setInterval(() => setNow(Date.now()), 5000);
+        return () => clearInterval(interval);
+    }, []);
+
     const getStatusIcon = () => {
         if (isSaving) return <Loader size={14} className="text-blue-500 animate-spin" />;
         if (error) return <AlertCircle size={14} className="text-red-500" />;
@@ -33,8 +41,8 @@ export const SaveIndicator: React.FC<SaveIndicatorProps> = ({
         if (isSaving) return 'Saving...';
         if (error) return `Save failed: ${error.message}`;
         if (unsavedChanges > 0) return `${unsavedChanges} unsaved change${unsavedChanges !== 1 ? 's' : ''}`;
-        if (lastSaveTime) {
-            const timeAgo = Math.floor((Date.now() - lastSaveTime.getTime()) / 1000);
+        if (lastSaveTime && now > 0) {
+            const timeAgo = Math.floor((now - lastSaveTime.getTime()) / 1000);
             if (timeAgo < 60) return `Saved ${timeAgo} second${timeAgo !== 1 ? 's' : ''} ago`;
             if (timeAgo < 3600) return `Saved ${Math.floor(timeAgo / 60)} minute${Math.floor(timeAgo / 60) !== 1 ? 's' : ''} ago`;
             return `Saved at ${lastSaveTime.toLocaleTimeString()}`;
