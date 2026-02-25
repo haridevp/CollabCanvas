@@ -89,9 +89,52 @@ jobs:
         cd frontend
         npm run build
 
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: test-backend
+
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: "18.x"
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libcairo2-dev libpango1.0-dev \
+          libjpeg-dev libgif-dev librsvg2-dev pkg-config libpixman-1-dev
+
+    - name: Install Backend Dependencies
+      run: |
+        cd backend
+        npm install
+
+    - name: Run Integration Tests
+      env:
+        MONGO_URI: mongodb://localhost:27017/collabcanvas-integration
+        JWT_SECRET: integration-test-secret
+        NODE_ENV: test
+      run: |
+        cd backend
+        npm test
+
   docker-build:
     runs-on: ubuntu-latest
-    needs: [build-backend, build-frontend]
+    needs: [build-backend, build-frontend, integration-test]
     steps:
     - uses: actions/checkout@v3
     - name: Build Docker Images
