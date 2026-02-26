@@ -300,8 +300,45 @@ const restoreCanvasVersion = async (req, res) => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/rooms/:id/canvas/state
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Return the current full canvas drawing state for a room.
+ * This is used as an HTTP fallback for state reconciliation when a client
+ * reconnects and cannot use the socket `request-sync` event.
+ *
+ * @async
+ * @function getCanvasState
+ */
+const getCanvasState = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const room = await resolveRoom(id);
+    if (!room) {
+      return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+
+    const member = await isRoomMember(room._id.toString(), req.user._id.toString());
+    if (!member) {
+      return res.status(403).json({ success: false, message: 'Not a room member' });
+    }
+
+    res.json({
+      success: true,
+      drawingData: room.drawingData || [],
+      elementCount: (room.drawingData || []).length,
+      updatedAt: room.updatedAt,
+    });
+  } catch (error) {
+    console.error('Canvas state fetch error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch canvas state' });
+  }
+};
+
 module.exports = {
   saveCanvas,
   getCanvasVersions,
   restoreCanvasVersion,
+  getCanvasState,
 };

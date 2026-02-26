@@ -24,6 +24,7 @@ const {
   saveCanvas,
   getCanvasVersions,
   restoreCanvasVersion,
+  getCanvasState,
 } = require('../controllers/canvasController');
 // Import the authentication middleware to secure room-specific routes
 const auth = require("../middleware/authh");
@@ -146,6 +147,13 @@ router.post("/:id/invite", auth, asyncHandler(inviteUsers));
 router.post("/:id/participants/:userId", auth, asyncHandler(manageParticipant));
 
 /**
+ * @route   GET /api/rooms/:id/canvas/state
+ * @desc    Get the current full canvas drawing state (HTTP fallback for reconnection sync).
+ * @access  Private
+ */
+router.get('/:id/canvas/state', auth, asyncHandler(getCanvasState));
+
+/**
  * @route   PUT /api/rooms/:id
  * @desc    Update room details (name, description, visibility).
  * @access  Private (Owner only)
@@ -160,6 +168,7 @@ router.put("/:id", auth, asyncHandler(updateRoom));
  */
 // Endpoint to permanently close and remove a room session
 router.delete("/:id", auth, asyncHandler(deleteRoom));
+
 
 // Export the router to be used by the main express application
 module.exports = router;
