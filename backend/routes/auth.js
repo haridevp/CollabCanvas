@@ -135,6 +135,16 @@ router.get("/profile", authh, async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
+    // Sort loginActivities newest-first, return at most the last 10 entries
+    const recentActivity = [...(user.loginActivities || [])]
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 10)
+      .map((a) => ({
+        status: a.status,
+        deviceType: a.deviceType || 'Desktop',
+        timestamp: a.timestamp,
+      }));
+
     // Respond with success and the sanitized user profile data
     res.json({
       success: true,
@@ -146,6 +156,7 @@ router.get("/profile", authh, async (req, res) => {
         displayName: user.displayName,
         avatar: user.avatar,
         bio: user.bio,
+        loginActivities: recentActivity,
       },
     });
   } catch (err) {
@@ -324,8 +335,19 @@ router.post("/login", async (req, res) => {
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
 
-    // Track successful login activity in the database
-    user.loginActivities.push({ status: "success", timestamp: new Date() });
+    // Derive a human-readable device type from the User-Agent header
+    const ua = req.headers['user-agent'] || '';
+    let deviceType = 'Desktop';
+    if (/mobile|android|iphone|ipad|tablet/i.test(ua)) {
+      deviceType = /tablet|ipad/i.test(ua) ? 'Tablet' : 'Mobile';
+    }
+
+    // Track successful login activity with device info in the database
+    user.loginActivities.push({ status: "success", deviceType, timestamp: new Date() });
+    // Keep only the last 50 activity entries to prevent unbounded growth
+    if (user.loginActivities.length > 50) {
+      user.loginActivities = user.loginActivities.slice(-50);
+    }
     // Commit the activity update
     await user.save();
 
