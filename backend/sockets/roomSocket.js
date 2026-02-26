@@ -8,6 +8,8 @@ const mongoose = require("mongoose");
 const Room = require("../models/Room");
 // Import the Participant model to manage user-room membership and roles
 const Participant = require("../models/Participant");
+// Import the CanvasVersion model for save-canvas snapshot creation
+const CanvasVersion = require('../models/CanvasVersion');
 
 // In-memory store for active object locks: { roomId: { objectId: { userId, socketId, timestamp } } }
 const roomLocks = new Map();
@@ -221,10 +223,11 @@ const roomSocketHandler = (io, socket) => {
   /**
    * Event: cursor-move
    * Broadcasts user cursor position for real-time presence/ghost cursors.
+   * Forwards tool and color metadata so clients can render the correct tool icon.
    */
-  socket.on("cursor-move", ({ roomId, x, y, userId }) => {
+  socket.on("cursor-move", ({ roomId, x, y, userId, username, tool, color }) => {
     // Send volatile updates (dropped if network is slow) to others in the room
-    socket.volatile.to(roomId).emit("cursor-update", { userId, x, y });
+    socket.volatile.to(roomId).emit("cursor-update", { userId, x, y, username, tool, color });
   });
 
   /**
@@ -350,6 +353,59 @@ const roomSocketHandler = (io, socket) => {
     } catch (err) {
       // Log errors if the database reset fails
       console.error("Clear canvas DB update failed:", err);
+    }
+  });
+
+  /**
+   * Event: save-canvas
+   * Explicitly saves the current full element array for a room.
+   * Emitted by the frontend's useAutoSave hook every 30 seconds and on Ctrl+S.
+   * Also creates a CanvasVersion snapshot for history.
+   *
+   * Payload: { roomId, elements: DrawingElement[], timestamp, userId }
+   */
+  socket.on('save-canvas', async ({ roomId, elements, timestamp, userId }) => {
+    if (!roomId || !Array.isArray(elements)) {
+      socket.emit('save-error', { error: 'Invalid save payload' });
+      return;
+    }
+
+    try {
+      // Overwrite the room's live drawing data
+      await Room.findByIdAndUpdate(roomId, {
+        drawingData: elements,
+        updatedAt: new Date(),
+      });
+
+      // Create a versioned snapshot
+      const snapshot = new CanvasVersion({
+        room: roomId,
+        savedBy: userId || null,
+        elements,
+        label: 'Auto-save',
+        isAutoSave: true,
+      });
+      await snapshot.save();
+
+      // Rotate old auto-saves – keep at most 20
+      const autoCount = await CanvasVersion.countDocuments({ room: roomId, isAutoSave: true });
+      if (autoCount > 20) {
+        const oldest = await CanvasVersion.find(
+          { room: roomId, isAutoSave: true },
+          { _id: 1 },
+          { sort: { createdAt: 1 }, limit: autoCount - 20 }
+        );
+        await CanvasVersion.deleteMany({ _id: { $in: oldest.map((v) => v._id) } });
+      }
+
+      // Confirm back to the saving client
+      socket.emit('save-confirmed', {
+        timestamp: timestamp || Date.now(),
+        versionId: snapshot._id,
+      });
+    } catch (err) {
+      console.error('save-canvas error:', err);
+      socket.emit('save-error', { error: 'Failed to persist canvas' });
     }
   });
 

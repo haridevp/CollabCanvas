@@ -19,6 +19,12 @@ const {
   exportDrawing,
   getParticipants,
 } = require("../controllers/roomController");
+// Import canvas-specific controller functions
+const {
+  saveCanvas,
+  getCanvasVersions,
+  restoreCanvasVersion,
+} = require('../controllers/canvasController');
 // Import the authentication middleware to secure room-specific routes
 const auth = require("../middleware/authh");
 // Import the asyncHandler utility to handle internal errors gracefully
@@ -82,6 +88,38 @@ router.get("/:id/participants", auth, asyncHandler(getParticipants));
  */
 // Endpoint to generate a static image or data dump of the current canvas
 router.get("/:id/export", auth, asyncHandler(exportDrawing));
+
+/**
+ * @route   POST /api/rooms/:id/canvas/save
+ * @desc    Persist the full drawing element array for a room (auto-save / manual save / emergency beacon).
+ * @access  Private (members); also accepts sendBeacon with no Auth header
+ */
+router.post(
+  '/:id/canvas/save',
+  // Attempt auth but fall through gracefully for unauthenticated beacon saves
+  (req, res, next) => {
+    if (req.headers.authorization) {
+      return auth(req, res, next);
+    }
+    // No auth header — allow the request through (emergency beacon save)
+    next();
+  },
+  asyncHandler(saveCanvas)
+);
+
+/**
+ * @route   GET /api/rooms/:id/canvas/versions
+ * @desc    List canvas snapshot versions for a room (newest first).
+ * @access  Private
+ */
+router.get('/:id/canvas/versions', auth, asyncHandler(getCanvasVersions));
+
+/**
+ * @route   POST /api/rooms/:id/canvas/restore/:versionId
+ * @desc    Restore the room canvas to a historical snapshot (owner / moderator only).
+ * @access  Private
+ */
+router.post('/:id/canvas/restore/:versionId', auth, asyncHandler(restoreCanvasVersion));
 
 /**
  * @route   POST /api/rooms/:id/leave
