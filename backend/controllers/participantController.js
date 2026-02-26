@@ -44,23 +44,11 @@ const getRoomParticipants = async (req, res) => {
       // Sort by join time ascending (oldest members first)
       .sort({ joinedAt: 1 });
 
-    // Map to the shape expected by the frontend ParticipantsPanel
-    const mapped = participants.map((p) => ({
-      id: p._id,
-      userId: p.user?._id,
-      username: p.user?.username || 'Unknown',
-      email: p.user?.email || '',
-      avatar: p.user?.avatar,
-      role: p.role,
-      joinedAt: p.joinedAt,
-      lastActive: p.lastSeen || p.joinedAt,
-    }));
-
     // Respond with success flag, list, and convenience count
     res.json({
       success: true,
-      participants: mapped,
-      count: mapped.length,
+      participants,
+      count: participants.length,
     });
   } catch (error) {
     // Return a 400 status if a database or logic error occurs

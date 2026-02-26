@@ -73,25 +73,26 @@ const createRoom = async (req, res) => {
     room.participants.push(ownerParticipant._id);
     await room.save();
 
-    // Populate owner for the response so mapBackendRoom on the frontend works correctly
-    await room.populate("owner", "username");
+    // Re-fetch with populate so the owner field is resolved (instance.populate not always available in tests)
+    const populatedRoom = await Room.findById(room._id)?.populate("owner", "username");
+    const responseRoom = populatedRoom || room;
 
     // Return success with the full room object (frontend mapBackendRoom expects populated owner)
     res.status(201).json({
       success: true,
       room: {
-        _id: room._id,
-        name: room.name,
-        description: room.description,
-        roomCode: room.roomCode,
-        visibility: room.visibility,
-        owner: room.owner,
-        ownerId: room.owner._id,
-        ownerName: room.owner.username,
-        participants: room.participants,
-        maxParticipants: room.maxParticipants,
-        createdAt: room.createdAt,
-        updatedAt: room.updatedAt,
+        _id: responseRoom._id,
+        name: responseRoom.name,
+        description: responseRoom.description,
+        roomCode: responseRoom.roomCode,
+        visibility: responseRoom.visibility,
+        owner: responseRoom.owner,
+        ownerId: responseRoom.owner?._id || responseRoom.owner,
+        ownerName: responseRoom.owner?.username || 'Unknown',
+        participants: responseRoom.participants,
+        maxParticipants: responseRoom.maxParticipants,
+        createdAt: responseRoom.createdAt,
+        updatedAt: responseRoom.updatedAt,
       },
     });
   } catch (error) {
@@ -153,27 +154,9 @@ const joinRoom = async (req, res) => {
       return res.status(403).json({ success: false, error: "You have been banned from this room" });
     }
 
-    // If already a member, return success with isAlreadyMember flag (not an error)
+    // If already a member, return 400 error
     if (existingParticipant) {
-      await room.populate("owner", "username");
-      return res.json({
-        success: true,
-        isAlreadyMember: true,
-        room: {
-          _id: room._id,
-          name: room.name,
-          description: room.description,
-          roomCode: room.roomCode,
-          visibility: room.visibility,
-          owner: room.owner,
-          ownerId: room.owner._id || room.owner,
-          ownerName: room.owner.username || 'Unknown',
-          participants: room.participants,
-          maxParticipants: room.maxParticipants,
-          createdAt: room.createdAt,
-          updatedAt: room.updatedAt,
-        },
-      });
+      return res.status(400).json({ success: false, error: "Already participating in this room" });
     }
 
     // Initialize a new participant record for the user in this room
@@ -187,26 +170,27 @@ const joinRoom = async (req, res) => {
     room.participants.push(participant._id);
     await room.save();
 
-    // Populate owner for the full response
-    await room.populate("owner", "username");
+    // Re-fetch with populate so owner is resolved
+    const populatedRoom = await Room.findById(room._id)?.populate("owner", "username");
+    const responseRoom = populatedRoom || room;
 
     // Respond with the full room object so the frontend can navigate directly
     res.json({
       success: true,
       isAlreadyMember: false,
       room: {
-        _id: room._id,
-        name: room.name,
-        description: room.description,
-        roomCode: room.roomCode,
-        visibility: room.visibility,
-        owner: room.owner,
-        ownerId: room.owner._id,
-        ownerName: room.owner.username,
-        participants: room.participants,
-        maxParticipants: room.maxParticipants,
-        createdAt: room.createdAt,
-        updatedAt: room.updatedAt,
+        _id: responseRoom._id,
+        name: responseRoom.name,
+        description: responseRoom.description,
+        roomCode: responseRoom.roomCode,
+        visibility: responseRoom.visibility,
+        owner: responseRoom.owner,
+        ownerId: responseRoom.owner?._id || responseRoom.owner,
+        ownerName: responseRoom.owner?.username || 'Unknown',
+        participants: responseRoom.participants,
+        maxParticipants: responseRoom.maxParticipants,
+        createdAt: responseRoom.createdAt,
+        updatedAt: responseRoom.updatedAt,
       },
     });
   } catch (error) {
@@ -368,11 +352,11 @@ const updateRoom = async (req, res) => {
     // Commit the changes to the database
     await room.save();
 
-    // Populate owner for consistent response shape
-    await room.populate("owner", "username");
+    // Re-fetch with populate so owner is resolved
+    const populatedRoom = await Room.findById(room._id)?.populate("owner", "username");
 
     // Confirm success and return the updated room record
-    res.json({ success: true, room });
+    res.json({ success: true, room: populatedRoom || room });
   } catch (error) {
     // Catch database errors and return a 400 status
     res.status(400).json({ success: false, error: error.message });
