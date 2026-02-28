@@ -28,61 +28,76 @@ const { createCanvas } = require("canvas");
  */
 const createRoom = async (req, res) => {
   try {
-    // Destructure initial room settings from the request body
-    const { name, description, visibility, password } = req.body;
+    // Accept both frontend-style (isPublic, maxParticipants) and legacy (visibility) field names
+    const { name, description, isPublic, visibility, password, maxParticipants } = req.body;
+
+    // Resolve visibility: frontend sends isPublic (boolean), legacy sends visibility string
+    const resolvedVisibility =
+      visibility ||
+      (isPublic === false || isPublic === 'false' ? 'private' : 'public');
 
     // Loop until a unique room code is generated
     let roomCode;
     let existingRoom;
     do {
-      // Generate a new 4-digit code
+      // Generate a new short code
       roomCode = generateRoomCode();
       // Check if any existing room is already using this code
       existingRoom = await Room.findOne({ roomCode });
-    } while (existingRoom); // If code exists, retry
+    } while (existingRoom);
 
     // Initialize the new Room document with user-provided information
     const room = new Room({
       name,
       description,
       roomCode,
-      visibility,
+      visibility: resolvedVisibility,
       password,
-      // Assign the current user as the record owner
       owner: req.user._id,
+      // Cap maxParticipants between 2 and 50; default to 50
+      maxParticipants: Math.min(50, Math.max(2, parseInt(maxParticipants) || 50)),
     });
 
     // Save the room document to the database
     await room.save();
 
-    // Automatically join the room creator as the first participant
+    // Automatically join the room creator as the first participant with 'owner' role
     const ownerParticipant = new Participant({
       user: req.user._id,
       room: room._id,
-      // Grant the creator the 'owner' role permissions
       role: "owner",
     });
-    // Save the participant record
     await ownerParticipant.save();
 
     // Link the participant record back to the Room document's participants list
     room.participants.push(ownerParticipant._id);
-    // Commit the update to the Room record
     await room.save();
 
-    // Return success status and basic room metadata to the frontend
+    // Re-fetch with populate so the owner field is resolved (instance.populate not always available in tests)
+    const populatedRoom = await Room.findById(room._id)?.populate("owner", "username");
+    const responseRoom = populatedRoom || room;
+
+    // Return success with the full room object (frontend mapBackendRoom expects populated owner)
     res.status(201).json({
       success: true,
       room: {
-        id: room._id,
-        name: room.name,
-        roomCode: room.roomCode,
-        visibility: room.visibility,
+        _id: responseRoom._id,
+        name: responseRoom.name,
+        description: responseRoom.description,
+        roomCode: responseRoom.roomCode,
+        visibility: responseRoom.visibility,
+        owner: responseRoom.owner,
+        ownerId: responseRoom.owner?._id || responseRoom.owner,
+        ownerName: responseRoom.owner?.username || 'Unknown',
+        participants: responseRoom.participants,
+        maxParticipants: responseRoom.maxParticipants,
+        createdAt: responseRoom.createdAt,
+        updatedAt: responseRoom.updatedAt,
       },
     });
   } catch (error) {
     // Handle validation or database errors with a 400 status code
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 };
 
@@ -134,12 +149,14 @@ const joinRoom = async (req, res) => {
       room: room._id,
     });
 
-    // If already a member, return the existing status to avoid duplicates
+    // If banned, deny access
+    if (existingParticipant && existingParticipant.isBanned) {
+      return res.status(403).json({ success: false, error: "You have been banned from this room" });
+    }
+
+    // If already a member, return 400 error
     if (existingParticipant) {
-      return res.status(400).json({
-        error: "Already participating in this room",
-        participant: existingParticipant,
-      });
+      return res.status(400).json({ success: false, error: "Already participating in this room" });
     }
 
     // Initialize a new participant record for the user in this room
@@ -147,30 +164,38 @@ const joinRoom = async (req, res) => {
       user: req.user._id,
       room: room._id,
     });
-    // Save the new connection to the database
     await participant.save();
 
     // Add the participant's unique ID to the Room's internal list
     room.participants.push(participant._id);
-    // Commit the update to the Room record
     await room.save();
 
-    // Respond with success and summarized metadata
+    // Re-fetch with populate so owner is resolved
+    const populatedRoom = await Room.findById(room._id)?.populate("owner", "username");
+    const responseRoom = populatedRoom || room;
+
+    // Respond with the full room object so the frontend can navigate directly
     res.json({
       success: true,
+      isAlreadyMember: false,
       room: {
-        id: room._id,
-        name: room.name,
-        roomCode: room.roomCode,
-      },
-      participant: {
-        id: participant._id,
-        role: participant.role,
+        _id: responseRoom._id,
+        name: responseRoom.name,
+        description: responseRoom.description,
+        roomCode: responseRoom.roomCode,
+        visibility: responseRoom.visibility,
+        owner: responseRoom.owner,
+        ownerId: responseRoom.owner?._id || responseRoom.owner,
+        ownerName: responseRoom.owner?.username || 'Unknown',
+        participants: responseRoom.participants,
+        maxParticipants: responseRoom.maxParticipants,
+        createdAt: responseRoom.createdAt,
+        updatedAt: responseRoom.updatedAt,
       },
     });
   } catch (error) {
     // Catch-all for unexpected database or logic failures
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 };
 
@@ -185,8 +210,8 @@ const joinRoom = async (req, res) => {
  */
 const getPublicRooms = async (req, res) => {
   try {
-    // Destructure search string and pagination settings from query
-    const { search, page = 1, limit = 10 } = req.query;
+    // Destructure search string, sort order, and pagination settings from query
+    const { search, sort, page = 1, limit = 20 } = req.query;
     // Set base filtering criteria for public, active rooms
     const query = {
       visibility: "public",
@@ -198,16 +223,25 @@ const getPublicRooms = async (req, res) => {
       query.name = { $regex: search, $options: "i" };
     }
 
+    // Map frontend sort values to MongoDB sort expressions
+    let sortExpr = { createdAt: -1 }; // default: newest first
+    if (sort === "popular") {
+      // Sort by number of participants descending (highest activity first)
+      sortExpr = { "participants.length": -1, createdAt: -1 };
+    } else if (sort === "name") {
+      // Alphabetical AZ by room name
+      sortExpr = { name: 1 };
+    }
+
     // Fetch the matching room records from the database
     const rooms = await Room.find(query)
       // Attach owner username for display
       .populate("owner", "username")
       // Cap the results according to the limit
-      .limit(limit * 1)
+      .limit(parseInt(limit))
       // Skip results based on the current page number
-      .skip((page - 1) * limit)
-      // Sort so that the newest rooms appear at the top
-      .sort({ createdAt: -1 });
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .sort(sortExpr);
 
     // Count the total number of documents matching our filter for UI paging
     const total = await Room.countDocuments(query);
@@ -220,7 +254,7 @@ const getPublicRooms = async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
-        pages: Math.ceil(total / limit),
+        pages: Math.ceil(total / parseInt(limit)),
       },
     });
   } catch (error) {
@@ -282,7 +316,7 @@ const updateRoom = async (req, res) => {
   try {
     // Retrieve identifiers from the request parameters and payload
     const { id } = req.params;
-    const updates = req.body;
+    const updates = { ...req.body };
 
     // Verify that the room exists AND ensures that only the actual owner can modify it
     const room = await Room.findOne({
@@ -294,19 +328,38 @@ const updateRoom = async (req, res) => {
     if (!room) {
       return res
         .status(404)
-        .json({ error: "Room not found or not authorized" });
+        .json({ success: false, error: "Room not found or not authorized" });
     }
 
-    // Merge the provided update fields into the existing room document
+    // Translate frontend field names to backend schema field names
+    // Frontend sends isPublic (boolean); backend stores visibility (string)
+    if (updates.isPublic !== undefined) {
+      updates.visibility = updates.isPublic ? 'public' : 'private';
+      delete updates.isPublic;
+    }
+
+    // Clamp maxParticipants to valid range if provided
+    if (updates.maxParticipants !== undefined) {
+      updates.maxParticipants = Math.min(50, Math.max(2, parseInt(updates.maxParticipants) || 50));
+    }
+
+    // Prevent direct overwriting of protected system fields
+    const PROTECTED_FIELDS = ['_id', 'owner', 'roomCode', 'participants', 'isActive', 'drawingData'];
+    PROTECTED_FIELDS.forEach(field => delete updates[field]);
+
+    // Merge the sanitized update fields into the existing room document
     Object.assign(room, updates);
     // Commit the changes to the database
     await room.save();
 
+    // Re-fetch with populate so owner is resolved
+    const populatedRoom = await Room.findById(room._id)?.populate("owner", "username");
+
     // Confirm success and return the updated room record
-    res.json({ success: true, room });
+    res.json({ success: true, room: populatedRoom || room });
   } catch (error) {
     // Catch database errors and return a 400 status
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 };
 
@@ -587,26 +640,33 @@ const validateRoom = async (req, res) => {
       return res.status(403).json({ error: "You have been banned from this room" });
     }
 
-    // Return success and a sanitized object of room metadata for the frontend
+    // Return success and a fully-populated room metadata object for the frontend
     res.json({
       success: true,
       room: {
+        _id: room._id,
         id: room._id,
         name: room.name,
         description: room.description,
         roomCode: room.roomCode,
         visibility: room.visibility,
+        // Provide separate owner fields so frontend can identify ownerId without guessing
+        ownerId: room.owner?._id || room.owner,
+        ownerName: room.owner?.username || 'Unknown',
+        owner: room.owner,
+        participantCount: room.participants.length,
+        maxParticipants: room.maxParticipants,
+        createdAt: room.createdAt,
+        updatedAt: room.updatedAt,
         // Helper flag to trigger password prompt on the client
         requiresPassword: room.visibility === "private" && !!room.password,
-        owner: room.owner?.username,
-        participantCount: room.participants.length,
         // Helper flag to show 'Go to Canvas' vs 'Join Room' buttons
-        isAlreadyMember: !!isParticipant,
+        isAlreadyMember: !!isParticipant && !isBanned,
       },
     });
   } catch (error) {
     // Catch invalid IDs or other database failures
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 };
 

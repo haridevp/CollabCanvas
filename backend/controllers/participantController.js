@@ -20,35 +20,39 @@ const User = require("../models/User");
  */
 const getRoomParticipants = async (req, res) => {
   try {
-    // Extract the room ID from the URL parameters
     const { roomId } = req.params;
 
-    // Verify that the requesting user is actually a member of this room
+    // Verify that the requesting user is actually an active member of this room
     const userParticipant = await Participant.findOne({
       user: req.user._id,
       room: roomId,
+      isBanned: { $ne: true },
     });
 
-    // If no membership is found, deny access to the participant list
+    // If no active membership is found, deny access to the participant list
     if (!userParticipant) {
-      return res.status(403).json({ error: "Not authorized for this room" });
+      return res.status(403).json({ success: false, error: "Not authorized for this room" });
     }
 
-    // Retrieve all active participants for the specified room
-    const participants = await Participant.find({ room: roomId })
-      // Populate user field with basic account credentials
-      .populate("user", "username email")
-      // Sort by the time they joined (most recent first)
-      .sort({ joinedAt: -1 });
+    // Retrieve all non-banned participants for the specified room
+    const participants = await Participant.find({
+      room: roomId,
+      isBanned: { $ne: true }, // exclude banned users
+    })
+      // Populate user field with basic account credentials and avatar
+      .populate("user", "username email avatar")
+      // Sort by join time ascending (oldest members first)
+      .sort({ joinedAt: 1 });
 
-    // Respond with the list and a convenience count
+    // Respond with success flag, list, and convenience count
     res.json({
+      success: true,
       participants,
       count: participants.length,
     });
   } catch (error) {
     // Return a 400 status if a database or logic error occurs
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 };
 

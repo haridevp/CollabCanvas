@@ -8,16 +8,49 @@ const mongoose = require("mongoose");
 const Room = require("../models/Room");
 // Import the Participant model to manage user-room membership and roles
 const Participant = require("../models/Participant");
+// Import the CanvasVersion model for save-canvas snapshot creation
+const CanvasVersion = require('../models/CanvasVersion');
 
-// In-memory store for active object locks: { roomId: { objectId: { userId, socketId, timestamp } } }
+// In-memory store for active object locks: { roomId: { objectId: { userId, socketId, username, color, timestamp } } }
 const roomLocks = new Map();
 // Define how long a lock stays active before being considered stale (30 seconds)
-const LOCK_TIMEOUT = 30000; 
+const LOCK_TIMEOUT = 30000;
 
 // Memory buffer for drawing updates to batch multiple strokes into fewer DB writes: { roomId: [drawingElements] }
 const drawingBuffer = new Map();
 // Interval for flushing the drawing buffer to the MongoDB database (5 seconds)
-const FLUSH_INTERVAL = 5000; 
+const FLUSH_INTERVAL = 5000;
+
+// Per-element last-modified timestamps for server-side conflict resolution (LWW)
+// Structure: { roomId: { elementId: { timestamp, version } } }
+const elementVersions = new Map();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stale lock sweeper — runs every 10 s, force-unlocks any lock older than
+// LOCK_TIMEOUT so idle/crashed clients don't permanently hold elements.
+// ─────────────────────────────────────────────────────────────────────────────
+setInterval(() => {
+  const now = Date.now();
+  roomLocks.forEach((locks, roomId) => {
+    Object.keys(locks).forEach((elementId) => {
+      const lock = locks[elementId];
+      if (now - lock.timestamp > LOCK_TIMEOUT) {
+        delete locks[elementId];
+        // Notify all clients in the room that this lock has expired
+        // Uses both new and legacy event names for full compatibility
+        const { Server } = require('socket.io');
+        // We can't access `io` here, so we store a reference at module level
+        if (globalIo) {
+          globalIo.to(roomId).emit('force-unlock', { elementId, reason: 'timeout' });
+          globalIo.to(roomId).emit('object-unlocked', { elementId, reason: 'timeout' });
+        }
+      }
+    });
+  });
+}, 10000);
+
+// Module-level io reference populated by the first roomSocketHandler call
+let globalIo = null; 
 
 /**
  * Main handler for room-related socket events.
@@ -27,6 +60,8 @@ const FLUSH_INTERVAL = 5000;
  * @param {import('socket.io').Socket} socket - Socket instance for a specific client.
  */
 const roomSocketHandler = (io, socket) => {
+  // Store global io reference for the stale lock sweeper
+  if (!globalIo) globalIo = io;
   /**
    * Cleans up all locks held by a specific socket upon disconnection or leaving.
    * @param {string} socketId - Unique ID of the socket connection.
@@ -212,126 +247,142 @@ const roomSocketHandler = (io, socket) => {
 
   /**
    * Event: ping
-   * Connection health monitoring.
+   * Connection health monitoring — echoes back id and server timestamp so the
+   * client can calculate round-trip latency.
+   *
+   * Payload: { id: number, timestamp?: number } | acknowledgement callback
    */
-  socket.on("ping", (cb) => {
-    if (typeof cb === "function") cb();
+  socket.on('ping', (data, cb) => {
+    // Support both: ping(callback) and ping({ id, timestamp }, callback)
+    if (typeof data === 'function') {
+      // Legacy: ping(cb) — just acknowledge
+      data({ id: Date.now(), timestamp: Date.now() });
+    } else if (typeof cb === 'function') {
+      // New: ping({ id, timestamp }, cb) — echo back the id + server time
+      cb({ id: data && data.id ? data.id : Date.now(), timestamp: Date.now() });
+    }
   });
 
   /**
    * Event: cursor-move
    * Broadcasts user cursor position for real-time presence/ghost cursors.
+   * Forwards tool and color metadata so clients can render the correct tool icon.
    */
-  socket.on("cursor-move", ({ roomId, x, y, userId }) => {
+  socket.on("cursor-move", ({ roomId, x, y, userId, username, tool, color }) => {
     // Send volatile updates (dropped if network is slow) to others in the room
-    socket.volatile.to(roomId).emit("cursor-update", { userId, x, y });
+    socket.volatile.to(roomId).emit("cursor-update", { userId, x, y, username, tool, color });
   });
 
   /**
    * Event: drawing-update
-   * Broadcasts drawing strokes/elements and stores them in the memory buffer for later persistence.
+   * Broadcasts drawing strokes/elements and stores them in the memory buffer.
+   * Implements last-write-wins conflict resolution using per-element timestamps.
    */
-  socket.on("drawing-update", (data) => {
-    // Broadcast the update immediately to all other participants for low-latency visual feedback
-    socket.to(data.roomId).emit("drawing-update", data);
+  socket.on('drawing-update', (data) => {
+    const element = data.element;
 
-    // If the data payload contains a full element and is flagged for persistence
-    if (data.element && data.saveToDb) {
-      // Ensure the buffer exists for this specific room
+    // ── Conflict Resolution (LWW per element) ──────────────────────────────
+    if (element && element.id && data.saveToDb) {
+      if (!elementVersions.has(data.roomId)) {
+        elementVersions.set(data.roomId, {});
+      }
+      const versions = elementVersions.get(data.roomId);
+      const incomingTs = element.updatedAt || element._clientTs || Date.now();
+      const existing = versions[element.id];
+
+      if (existing && existing.timestamp > incomingTs) {
+        // Server already has a newer version — reject silently (client is behind)
+        // Optionally: socket.emit('element-conflict', { elementId: element.id })
+        return;
+      }
+      // Accept this version
+      versions[element.id] = { timestamp: incomingTs, version: (existing ? existing.version + 1 : 1) };
+    }
+
+    // Broadcast the update immediately to all other participants
+    socket.to(data.roomId).emit('drawing-update', data);
+
+    // Buffer for persistence
+    if (element && data.saveToDb) {
       if (!drawingBuffer.has(data.roomId)) {
         drawingBuffer.set(data.roomId, []);
       }
-      // Add the element to the room's draw buffer for the next periodic flush
-      drawingBuffer.get(data.roomId).push(data.element);
+      drawingBuffer.get(data.roomId).push(element);
     }
   });
 
   /**
    * Event: request-lock
-   * Requests an exclusive lock on a drawing element to prevent concurrent edits.
+   * Requests an exclusive lock on a drawing element.
+   * Emits `lock-granted` (new) and `object-locked` (legacy) on success.
+   * Emits `lock-denied` on failure.
    */
-  socket.on("request-lock", ({ roomId, objectId, userId }) => {
-    // Initialize the lock tracking object for the room if it doesn't exist
-    if (!roomLocks.has(roomId)) {
-      roomLocks.set(roomId, {});
-    }
+  socket.on('request-lock', ({ roomId, objectId, elementId, userId, username, color }) => {
+    // Support both objectId (legacy) and elementId (new)
+    const id = elementId || objectId;
+    if (!id || !roomId) return;
 
+    if (!roomLocks.has(roomId)) roomLocks.set(roomId, {});
     const roomLocksMap = roomLocks.get(roomId);
-    const currentLock = roomLocksMap[objectId];
+    const currentLock = roomLocksMap[id];
     const now = Date.now();
 
-    // Check if the object is already locked by someone else and the lock hasn't timed out
-    if (
-      currentLock &&
-      currentLock.userId !== userId &&
-      now - currentLock.timestamp < LOCK_TIMEOUT
-    ) {
-      // If locked, inform the requester that access is denied
-      socket.emit("lock-denied", { objectId, lockedBy: currentLock.userId });
+    // If locked by someone else and within timeout window → deny
+    if (currentLock && currentLock.userId !== userId && now - currentLock.timestamp < LOCK_TIMEOUT) {
+      socket.emit('lock-denied', { elementId: id, objectId: id, lockedBy: currentLock.userId, reason: 'locked' });
       return;
     }
 
-    // Assign the lock to the requesting user/socket with a timestamp
-    roomLocksMap[objectId] = { userId, socketId: socket.id, timestamp: now };
-    // Broadcast the lock acquisition to everyone in the room
-    io.to(roomId).emit("object-locked", { objectId, userId });
+    // Grant the lock
+    roomLocksMap[id] = { userId, socketId: socket.id, username: username || 'User', color: color || '#3b82f6', timestamp: now };
+
+    // Emit new-style `lock-granted` to everyone (so other clients see the lock indicator)
+    io.to(roomId).emit('lock-granted', { elementId: id, userId, username: username || 'User', color: color || '#3b82f6' });
+    // Also emit legacy `object-locked` for backward compatibility
+    io.to(roomId).emit('object-locked', { elementId: id, objectId: id, userId, username: username || 'User', color: color || '#3b82f6' });
   });
 
   /**
    * Event: release-lock
-   * Explicitly releases an exclusive lock on a drawing element.
+   * Explicitly releases a lock on a drawing element.
+   * Emits `lock-released` (new) and `object-unlocked` (legacy).
    */
-  socket.on("release-lock", ({ roomId, objectId, userId }) => {
+  socket.on('release-lock', ({ roomId, objectId, elementId, userId, isAutoRelease }) => {
+    const id = elementId || objectId;
+    if (!id || !roomId) return;
+
     const roomLocksMap = roomLocks.get(roomId);
-    // Verify that a lock exists and that it belongs to the user requesting the release
-    if (
-      roomLocksMap &&
-      roomLocksMap[objectId] &&
-      roomLocksMap[objectId].userId === userId
-    ) {
-      // Remove the lock from memory
-      delete roomLocksMap[objectId];
-      // Notify all participants that the object is now available for editing
-      io.to(roomId).emit("object-unlocked", { objectId });
+    if (roomLocksMap && roomLocksMap[id] && roomLocksMap[id].userId === userId) {
+      delete roomLocksMap[id];
+      io.to(roomId).emit('lock-released', { elementId: id, userId, isAutoRelease: !!isAutoRelease });
+      io.to(roomId).emit('object-unlocked', { elementId: id, objectId: id, userId });
     }
   });
 
   /**
-   * Event: lock-object
-   * Active alternative event for locking (triggered when starting a new shape/stroke).
+   * Event: lock-object (legacy alias — kept for backward compatibility).
+   * Behaves identically to request-lock.
    */
-  socket.on("lock-object", ({ roomId, elementId, userId, username, color }) => {
-    // Ensure room tracking exists
-    if (!roomLocks.has(roomId)) {
-      roomLocks.set(roomId, {});
-    }
-
+  socket.on('lock-object', ({ roomId, elementId, userId, username, color }) => {
+    if (!elementId || !roomId) return;
+    if (!roomLocks.has(roomId)) roomLocks.set(roomId, {});
     const roomLocksMap = roomLocks.get(roomId);
-    // Record the metadata associated with this active edit lock
-    roomLocksMap[elementId] = {
-      userId,
-      socketId: socket.id,
-      username,
-      color,
-      timestamp: Date.now(),
-    };
-
-    // Broadcast the lock details to aid UI feedback (like highlighting the element)
-    io.to(roomId).emit("object-locked", { elementId, userId, username, color });
+    roomLocksMap[elementId] = { userId, socketId: socket.id, username: username || 'User', color: color || '#3b82f6', timestamp: Date.now() };
+    io.to(roomId).emit('lock-granted', { elementId, userId, username: username || 'User', color: color || '#3b82f6' });
+    io.to(roomId).emit('object-locked', { elementId, userId, username: username || 'User', color: color || '#3b82f6' });
   });
 
   /**
-   * Event: unlock-object
-   * Active alternative event for unlocking (triggered when finishing a shape/stroke).
+   * Event: unlock-object (legacy alias — kept for backward compatibility).
+   * Behaves identically to release-lock.
    */
-  socket.on("unlock-object", ({ roomId, elementId }) => {
+  socket.on('unlock-object', ({ roomId, elementId, userId }) => {
+    if (!elementId || !roomId) return;
     const roomLocksMap = roomLocks.get(roomId);
-    // Look up and remove the specific element lock
     if (roomLocksMap && roomLocksMap[elementId]) {
       delete roomLocksMap[elementId];
-
-      // Broadcast the unlocking so others know they can now select/edit the element
-      io.to(roomId).emit("object-unlocked", { elementId });
+      io.to(roomId).emit('lock-released', { elementId, userId });
+      io.to(roomId).emit('object-unlocked', { elementId });
     }
   });
 
@@ -350,6 +401,108 @@ const roomSocketHandler = (io, socket) => {
     } catch (err) {
       // Log errors if the database reset fails
       console.error("Clear canvas DB update failed:", err);
+    }
+  });
+
+  /**
+   * Event: save-canvas
+   * Explicitly saves the current full element array for a room.
+   * Emitted by the frontend's useAutoSave hook every 30 seconds and on Ctrl+S.
+   * Also creates a CanvasVersion snapshot for history.
+   *
+   * Payload: { roomId, elements: DrawingElement[], timestamp, userId }
+   */
+  socket.on('save-canvas', async ({ roomId, elements, timestamp, userId }) => {
+    if (!roomId || !Array.isArray(elements)) {
+      socket.emit('save-error', { error: 'Invalid save payload' });
+      return;
+    }
+
+    try {
+      // Overwrite the room's live drawing data
+      await Room.findByIdAndUpdate(roomId, {
+        drawingData: elements,
+        updatedAt: new Date(),
+      });
+
+      // Create a versioned snapshot
+      const snapshot = new CanvasVersion({
+        room: roomId,
+        savedBy: userId || null,
+        elements,
+        label: 'Auto-save',
+        isAutoSave: true,
+      });
+      await snapshot.save();
+
+      // Rotate old auto-saves – keep at most 20
+      const autoCount = await CanvasVersion.countDocuments({ room: roomId, isAutoSave: true });
+      if (autoCount > 20) {
+        const oldest = await CanvasVersion.find(
+          { room: roomId, isAutoSave: true },
+          { _id: 1 },
+          { sort: { createdAt: 1 }, limit: autoCount - 20 }
+        );
+        await CanvasVersion.deleteMany({ _id: { $in: oldest.map((v) => v._id) } });
+      }
+
+      // Confirm back to the saving client
+      socket.emit('save-confirmed', {
+        timestamp: timestamp || Date.now(),
+        versionId: snapshot._id,
+      });
+    } catch (err) {
+      console.error('save-canvas error:', err);
+      socket.emit('save-error', { error: 'Failed to persist canvas' });
+    }
+  });
+
+  /**
+   * Event: request-sync
+   * State reconciliation on reconnection (5.3.4).
+   * A client emits this after reconnecting to get the full authoritative canvas
+   * state + the current lock map so it can reconcile its local queue.
+   *
+   * Payload: { roomId, lastSyncTimestamp?: number }
+   * Response (room-state event back to requesting socket):
+   *   { drawingData, resolvedRoomId, locks, participants, serverTimestamp }
+   */
+  socket.on('request-sync', async ({ roomId, lastSyncTimestamp }) => {
+    if (!roomId) return;
+
+    try {
+      const room = await Room.findById(roomId).lean();
+      if (!room) {
+        socket.emit('sync-error', { error: 'Room not found' });
+        return;
+      }
+
+      // Collect active locks for this room
+      const lockMap = roomLocks.get(roomId) || {};
+      const activeLocks = Object.entries(lockMap).map(([elementId, lock]) => ({
+        elementId,
+        userId: lock.userId,
+        username: lock.username,
+        color: lock.color,
+        timestamp: lock.timestamp,
+      }));
+
+      // Get current participants
+      const participantsList = await getParticipantsList(roomId);
+
+      // If the client provides a lastSyncTimestamp, we could delta-filter but
+      // since elements don't have server-side timestamps yet, send the full state.
+      socket.emit('room-state', {
+        drawingData: room.drawingData || [],
+        resolvedRoomId: room._id,
+        locks: activeLocks,
+        participants: participantsList,
+        serverTimestamp: Date.now(),
+        isSyncResponse: true,
+      });
+    } catch (err) {
+      console.error('request-sync error:', err);
+      socket.emit('sync-error', { error: 'Failed to sync state' });
     }
   });
 

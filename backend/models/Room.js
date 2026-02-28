@@ -66,6 +66,13 @@ const roomSchema = new mongoose.Schema({
       ref: "Participant",
     },
   ],
+  // Maximum number of users allowed in the room at any one time
+  maxParticipants: {
+    type: Number,
+    default: 50,
+    min: 2,
+    max: 50,
+  },
   // Soft-delete flag; false indicates the room is closed or deleted
   isActive: {
     type: Boolean,
