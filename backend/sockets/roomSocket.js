@@ -16,9 +16,18 @@ const roomLocks = new Map();
 // Define how long a lock stays active before being considered stale (30 seconds)
 const LOCK_TIMEOUT = 30000;
 
-// Memory buffer for drawing updates to batch multiple strokes into fewer DB writes: { roomId: [drawingElements] }
-const drawingBuffer = new Map();
-// Interval for flushing the drawing buffer to the MongoDB database (5 seconds)
+// ─────────────────────────────────────────────────────────────────────────────
+// High-Performance In-Memory Room State (Excalidraw-style)
+// ─────────────────────────────────────────────────────────────────────────────
+// Structure: { roomId: [decompressedDrawingElements] }
+const activeRooms = new Map();
+
+// Import payload decompression utility
+const { decompressDrawingData } = require("../utils/payloadDecompression");
+
+// Keep track of which rooms have un-saved changes to optimize DB writes
+const pendingSaves = new Set();
+// Interval for flushing the memory state to the MongoDB database (5 seconds)
 const FLUSH_INTERVAL = 5000;
 
 // Per-element last-modified timestamps for server-side conflict resolution (LWW)
@@ -50,7 +59,7 @@ setInterval(() => {
 }, 10000);
 
 // Module-level io reference populated by the first roomSocketHandler call
-let globalIo = null; 
+let globalIo = null;
 
 /**
  * Main handler for room-related socket events.
@@ -95,8 +104,8 @@ const roomSocketHandler = (io, socket) => {
         room: roomId,
         isBanned: false,
       })
-      // Populate foreign keys with specific display-oriented user fields
-      .populate("user", "username email avatar");
+        // Populate foreign keys with specific display-oriented user fields
+        .populate("user", "username email avatar");
 
       // Map DB documents into a clean array format for the frontend
       return participants.map((p) => ({
@@ -117,28 +126,31 @@ const roomSocketHandler = (io, socket) => {
     }
   };
 
-  // Setup a background interval to periodically persist buffered drawing data to the database
+  // Setup a background interval to periodically persist authoritative drawing data to the database
   const flushBufferInterval = setInterval(async () => {
-    // Iterate through all room entries in the drawing data buffer
-    for (const [roomId, elements] of drawingBuffer.entries()) {
-      // Only proceed if there is data waiting to be saved for this room
-      if (elements.length > 0) {
-        try {
-          // De-duplicate elements in the buffer based on their unique ID before saving
-          const uniqueElements = [
-            ...new Map(elements.map((item) => [item.id, item])).values(),
-          ];
+    // Iterate through all rooms that have pending un-saved changes
+    for (const roomId of pendingSaves) {
+      const elements = activeRooms.get(roomId);
 
-          // Bulk append the new elements to the room's drawingData array in MongoDB
+      if (elements && elements.length > 0) {
+        try {
+          // Overwrite the entire drawing data field with the authoritative memory state
           await Room.findByIdAndUpdate(roomId, {
-            $push: { drawingData: { $each: uniqueElements } },
+            drawingData: elements,
+            updatedAt: new Date()
           });
-          // Reset the buffer for this room to an empty state
-          drawingBuffer.set(roomId, []);
+          // Remove room from pending saves after successful flush
+          pendingSaves.delete(roomId);
         } catch (err) {
           // Log errors if the batch write operation fails
-          console.error(`Failed to flush buffer for room ${roomId}:`, err);
+          console.error(`Failed to flush memory state for room ${roomId}:`, err);
         }
+      } else if (elements && elements.length === 0) {
+        // Handle edge case where canvas was cleared
+        try {
+          await Room.findByIdAndUpdate(roomId, { drawingData: [], updatedAt: new Date() });
+          pendingSaves.delete(roomId);
+        } catch (e) { }
       }
     }
   }, FLUSH_INTERVAL);
@@ -204,9 +216,13 @@ const roomSocketHandler = (io, socket) => {
         participants: participantsList,
       });
 
-      // Merge elements from the DB with any "volatile" data still in the flush buffer
-      const bufferedData = drawingBuffer.get(resolvedRoomId) || [];
-      const currentDrawingData = [...(room.drawingData || []), ...bufferedData];
+      // Initialize authoritative memory state for the room if it doesn't exist
+      if (!activeRooms.has(resolvedRoomId)) {
+        activeRooms.set(resolvedRoomId, room.drawingData || []);
+      }
+
+      // Synchronize client with the high-performance memory state
+      const authoritativeState = activeRooms.get(resolvedRoomId);
 
       // Retrieve any active object locks currently held for this room in memory
       const currentLocks = roomLocks.get(resolvedRoomId) || {};
@@ -215,7 +231,7 @@ const roomSocketHandler = (io, socket) => {
       // Include the resolvedRoomId so the frontend uses the canonical _id for all socket events
       socket.emit("room-state", {
         room,
-        drawingData: currentDrawingData,
+        drawingData: authoritativeState,
         activeLocks: currentLocks,
         resolvedRoomId: resolvedRoomId,
       });
@@ -275,40 +291,78 @@ const roomSocketHandler = (io, socket) => {
 
   /**
    * Event: drawing-update
-   * Broadcasts drawing strokes/elements and stores them in the memory buffer.
+   * Broadcasts drawing strokes/elements and immediately applies them to memory.
    * Implements last-write-wins conflict resolution using per-element timestamps.
    */
   socket.on('drawing-update', (data) => {
-    const element = data.element;
+    // ── Pre-process elements to handle both single and compressed arrays ──
+    let elementsToProcess = [];
 
-    // ── Conflict Resolution (LWW per element) ──────────────────────────────
-    if (element && element.id && data.saveToDb) {
-      if (!elementVersions.has(data.roomId)) {
-        elementVersions.set(data.roomId, {});
-      }
-      const versions = elementVersions.get(data.roomId);
+    if (data.compressed && Array.isArray(data.elements)) {
+      // Decompress incoming elements first
+      elementsToProcess = decompressDrawingData(data.elements);
+    } else if (data.element) {
+      elementsToProcess = [data.element];
+    } else if (Array.isArray(data.elements)) {
+      elementsToProcess = data.elements;
+    }
+
+    // Broadcast decompressed elements individually to bypass the frontend bug
+    // where it drops the rest of the array (decompressed[0]) during live sync.
+    if (elementsToProcess.length > 0) {
+      elementsToProcess.forEach(el => {
+        socket.to(data.roomId).emit('drawing-update', {
+          roomId: data.roomId,
+          element: el,
+          compressed: false,
+          saveToDb: false // Sender handles persistence trigger
+        });
+      });
+    }
+
+    if (elementsToProcess.length === 0 || !data.saveToDb) return;
+
+    if (!elementVersions.has(data.roomId)) {
+      elementVersions.set(data.roomId, {});
+    }
+    const versions = elementVersions.get(data.roomId);
+
+    // Ensure the room exists in the authoritative memory state
+    if (!activeRooms.has(data.roomId)) {
+      activeRooms.set(data.roomId, []);
+    }
+    const authoritativeState = activeRooms.get(data.roomId);
+
+    elementsToProcess.forEach(element => {
+      if (!element || !element.id) return;
+
+      const elementId = element.id;
+
+      // ── Conflict Resolution (LWW per element) ──────────────────────────────
       const incomingTs = element.updatedAt || element._clientTs || Date.now();
-      const existing = versions[element.id];
+      const existing = versions[elementId];
 
       if (existing && existing.timestamp > incomingTs) {
         // Server already has a newer version — reject silently (client is behind)
-        // Optionally: socket.emit('element-conflict', { elementId: element.id })
         return;
       }
+
       // Accept this version
-      versions[element.id] = { timestamp: incomingTs, version: (existing ? existing.version + 1 : 1) };
-    }
+      versions[elementId] = { timestamp: incomingTs, version: (existing ? existing.version + 1 : 1) };
 
-    // Broadcast the update immediately to all other participants
-    socket.to(data.roomId).emit('drawing-update', data);
-
-    // Buffer for persistence
-    if (element && data.saveToDb) {
-      if (!drawingBuffer.has(data.roomId)) {
-        drawingBuffer.set(data.roomId, []);
+      // Update the authoritative in-memory state
+      const elementIndex = authoritativeState.findIndex(el => el.id === elementId);
+      if (elementIndex !== -1) {
+        // Replace existing element
+        authoritativeState[elementIndex] = element;
+      } else {
+        // Push new element
+        authoritativeState.push(element);
       }
-      drawingBuffer.get(data.roomId).push(element);
-    }
+    });
+
+    // Mark room as needing a background DB save
+    pendingSaves.add(data.roomId);
   });
 
   /**
@@ -393,8 +447,9 @@ const roomSocketHandler = (io, socket) => {
   socket.on("clear-canvas", async ({ roomId }) => {
     // Trigger an immediate UI clear for all connected participants
     io.to(roomId).emit("canvas-cleared");
-    // Wipe the local volatile buffer for this room
-    drawingBuffer.set(roomId, []);
+    // Clear the active authoritative memory state
+    activeRooms.set(roomId, []);
+    pendingSaves.add(roomId);
     try {
       // Clear the persistent drawing data in the database
       await Room.findByIdAndUpdate(roomId, { drawingData: [] });
@@ -419,11 +474,19 @@ const roomSocketHandler = (io, socket) => {
     }
 
     try {
-      // Overwrite the room's live drawing data
+      // Decompress incoming elements if needed before applying to authoritative state
+      let elementsToSave = elements;
+
+      // Update memory state
+      activeRooms.set(roomId, elementsToSave);
+
+      // Write explicitly to DB (since save-canvas is an explicit action)
       await Room.findByIdAndUpdate(roomId, {
-        drawingData: elements,
+        drawingData: elementsToSave,
         updatedAt: new Date(),
       });
+      // Clear pending saves since we did a hard commit
+      pendingSaves.delete(roomId);
 
       // Create a versioned snapshot
       const snapshot = new CanvasVersion({
@@ -490,10 +553,17 @@ const roomSocketHandler = (io, socket) => {
       // Get current participants
       const participantsList = await getParticipantsList(roomId);
 
+      // Synchronize client with the high-performance memory state
+      // Provide fallback gracefully if room not active in memory yet
+      if (!activeRooms.has(roomId)) {
+        activeRooms.set(roomId, room.drawingData || []);
+      }
+      const authoritativeState = activeRooms.get(roomId);
+
       // If the client provides a lastSyncTimestamp, we could delta-filter but
       // since elements don't have server-side timestamps yet, send the full state.
       socket.emit('room-state', {
-        drawingData: room.drawingData || [],
+        drawingData: authoritativeState,
         resolvedRoomId: room._id,
         locks: activeLocks,
         participants: participantsList,

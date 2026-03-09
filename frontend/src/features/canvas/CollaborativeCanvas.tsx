@@ -152,22 +152,24 @@ class BrushEngine {
    * @param {number} velocity - Current drawing velocity in pixels/ms
    * @returns {number} Calculated stroke width in pixels
    */
-  calculateStrokeWidth(velocity: number): number {
-    // Return fixed width if pressure sensitivity is disabled
+  calculateStrokeWidth(velocity: number, baseStrokeWidth: number = 3): number {
+    // Return base width if pressure sensitivity is disabled
     if (!this.config.pressureSensitive) {
-      return (
-        this.config.minWidth + (this.config.maxWidth - this.config.minWidth) / 2
-      );
+      return baseStrokeWidth;
     }
 
     // Simulate pressure: slower movement = thicker stroke
     const pressureFactor = Math.max(0.1, Math.min(2, 1 / (velocity + 0.1)));
-    const width = this.config.minWidth +
-      (this.config.maxWidth - this.config.minWidth) *
-      pressureFactor * this.pressure;
+    const width = baseStrokeWidth * pressureFactor * this.pressure;
+    const clampedWidth = Math.max(baseStrokeWidth * 0.3, Math.min(baseStrokeWidth * 2.5, width));
+
+    // Initialize lastWidth with baseStrokeWidth if it's the default 3
+    if (this.lastWidth === 3 && baseStrokeWidth !== 3) {
+      this.lastWidth = baseStrokeWidth;
+    }
 
     // Smooth width transitions for more natural appearance
-    this.lastWidth = this.lastWidth * 0.7 + width * 0.3;
+    this.lastWidth = this.lastWidth * 0.7 + clampedWidth * 0.3;
     return this.lastWidth;
   }
 
@@ -777,12 +779,31 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         ctx.setLineDash([]);
       }
 
+      // Apply brush-specific properties and filters
+      if (el.type === 'pencil' && el.brushProperties) {
+        if (el.brushProperties.type === 'highlighter') {
+          ctx.globalAlpha = 0.5;
+          ctx.globalCompositeOperation = 'multiply';
+        } else if (el.brushProperties.type === 'marker') {
+          ctx.lineCap = 'square';
+          ctx.lineJoin = 'bevel';
+        } else if (el.brushProperties.type === 'airbrush') {
+          ctx.shadowBlur = el.strokeWidth * 2;
+          ctx.shadowColor = el.color;
+        } else if (el.brushProperties.type === 'brush') {
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+        }
+      }
+
       switch (el.type) {
         case "pencil":
         case "eraser":
           if (el.type === "eraser") {
             ctx.globalCompositeOperation = 'destination-out';
             ctx.strokeStyle = "rgba(0,0,0,1)";
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
           }
           if (el.points && el.points.length > 1) {
             ctx.moveTo(el.points[0].x, el.points[0].y);
@@ -954,12 +975,31 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         ctx.setLineDash([]);
       }
 
+      // Apply brush-specific properties and filters
+      if (el.type === 'pencil' && el.brushProperties) {
+        if (el.brushProperties.type === 'highlighter') {
+          ctx.globalAlpha = 0.5 * layerOpacity;
+          ctx.globalCompositeOperation = 'multiply';
+        } else if (el.brushProperties.type === 'marker') {
+          ctx.lineCap = 'square';
+          ctx.lineJoin = 'bevel';
+        } else if (el.brushProperties.type === 'airbrush') {
+          ctx.shadowBlur = el.strokeWidth * 2;
+          ctx.shadowColor = el.color;
+        } else if (el.brushProperties.type === 'brush') {
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+        }
+      }
+
       switch (el.type) {
         case "pencil":
         case "eraser":
           if (el.type === "eraser") {
             ctx.globalCompositeOperation = 'destination-out';
             ctx.strokeStyle = "rgba(0,0,0,1)";
+            ctx.globalAlpha = 1;
+            ctx.shadowBlur = 0;
           }
           if (el.points && el.points.length > 1) {
             ctx.moveTo(el.points[0].x, el.points[0].y);
@@ -1366,6 +1406,12 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       opacity,
       strokeStyle: { ...strokeStyle },
       layerId: layerState.activeLayerId, // ✅ Assign layer HERE
+      brushProperties: tool === 'pencil' ? {
+        color: color,
+        width: strokeWidth,
+        opacity: opacity,
+        type: brushType,
+      } : undefined
     };
 
     const newElement: DrawingElement =
@@ -1489,8 +1535,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       const updatedElement: DrawingElement = {
         ...currentElement,
         points: brushEngineRef.current.getPoints(),
-        strokeWidth:
-          brushEngineRef.current.calculateStrokeWidth(velocity),
+        strokeWidth: brushEngineRef.current.calculateStrokeWidth(velocity, strokeWidth),
       };
 
       setCurrentElement(updatedElement);

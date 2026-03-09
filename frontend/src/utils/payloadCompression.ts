@@ -77,6 +77,16 @@ export function compressDrawingData(elements: DrawingElement[]): any[] {
             };
         }
 
+        // Add brush properties if present
+        if (el.brushProperties) {
+            base.bp = {
+                c: el.brushProperties.color,
+                w: el.brushProperties.width,
+                o: el.brushProperties.opacity,
+                t: el.brushProperties.type,
+            };
+        }
+
         return base;
     });
 }
@@ -145,6 +155,16 @@ export function decompressDrawingData(compressed: any[]): DrawingElement[] {
                 dashArray: c.ss.da,
                 lineCap: c.ss.lc,
                 lineJoin: c.ss.lj
+            };
+        }
+
+        // Restore brush properties
+        if (c.bp) {
+            base.brushProperties = {
+                color: c.bp.c,
+                width: c.bp.w,
+                opacity: c.bp.o,
+                type: c.bp.t,
             };
         }
 
