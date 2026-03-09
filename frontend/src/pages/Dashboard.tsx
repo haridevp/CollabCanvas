@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { 
-  Plus, Search, Filter, Lock, Globe, Users, Clock, Calendar, 
-  Grid, List, Star, Bookmark, History, TrendingUp, Hash, User
+  Plus, Search, Filter, Lock, Globe, Users, 
+  Grid, List, Bookmark, History, TrendingUp, Hash, User
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import RoomCardComponent from '../components/ui/RoomCardComponent';
@@ -91,43 +91,23 @@ const Dashboard = () => {
   const loadRooms = async () => {
     setIsLoading(true);
     try {
-      if (activeTab === 'my-rooms') {
-        const result = await roomService.getMyRooms();
-        if (result.success && result.rooms) {
-          setMyRooms(result.rooms);
-        }
-      } else if (activeTab === 'public') {
-        const result = await roomService.getPublicRooms({ sort: sortBy });
-        if (result.success && result.rooms) {
-          setPublicRooms(result.rooms);
-        }
+      // Fetch both in parallel on initial mount or when needed
+      const [myRoomsResult, publicRoomsResult] = await Promise.all([
+        roomService.getMyRooms(),
+        roomService.getPublicRooms({ sort: sortBy })
+      ]);
+
+      if (myRoomsResult.success && myRoomsResult.rooms) {
+        setMyRooms(myRoomsResult.rooms);
+      }
+      if (publicRoomsResult.success && publicRoomsResult.rooms) {
+        setPublicRooms(publicRoomsResult.rooms);
       }
     } catch (error) {
       console.error('Failed to load rooms:', error);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  /**
-   * Handles room creation by navigating to the created room
-   * 
-   * @function handleCreateRoom
-   * @param {string} roomId - ID of the newly created room
-   */
-  const handleCreateRoom = (roomId: string) => {
-    navigate(`/room/${roomId}`);
-    setShowCreateModal(false);
-  };
-
-  /**
-   * Handles room joining by navigating to the joined room
-   * 
-   * @function handleJoinRoom
-   * @param {string} roomId - ID of the room to join
-   */
-  const handleJoinRoom = (roomId: string) => {
-    navigate(`/room/${roomId}`);
   };
 
   /**

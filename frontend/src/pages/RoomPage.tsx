@@ -78,6 +78,46 @@ const RoomPage = () => {
     fetchRoom();
   }, [id]);
 
+  // Handle socket events for real-time updates and moderation
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleParticipantsUpdated = (data: any) => {
+      if (data.participants && roomData) {
+        setRoomData({
+          ...roomData,
+          participantCount: data.participants.length
+        });
+      }
+    };
+
+    const handleUserKicked = (data: any) => {
+      const myId = user?.id || user?._id;
+      if (data.userId === myId) {
+        alert('You have been kicked from the room.');
+        navigate('/dashboard');
+      }
+    };
+
+    const handleUserBanned = (data: any) => {
+      const myId = user?.id || user?._id;
+      if (data.userId === myId) {
+        alert('You have been permanently banned from this room.');
+        navigate('/dashboard');
+      }
+    };
+
+    socket.on('participants-updated', handleParticipantsUpdated);
+    socket.on('participant-kicked', handleUserKicked);
+    socket.on('participant-banned', handleUserBanned);
+
+    return () => {
+      socket.off('participants-updated', handleParticipantsUpdated);
+      socket.off('participant-kicked', handleUserKicked);
+      socket.off('participant-banned', handleUserBanned);
+    };
+  }, [socket, roomData, user, navigate]);
+
   /**
    * Copies the room code to clipboard for sharing with other users
    */
