@@ -61,23 +61,4 @@ export const clearTheme = (): void => {
     html.classList.remove('light', 'dark', 'high-contrast');
 };
 
-export const initializeTheme = (): (() => void) => {
-    const storedTheme = getStoredTheme();
-    const themeToUse = storedTheme || 'system';
-    
-    console.log('🚀 Initializing theme:', themeToUse);
-    applyTheme(themeToUse as ThemeType);
 
-    // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => {
-        const currentTheme = getStoredTheme();
-        if (!currentTheme || currentTheme === 'system') {
-            console.log('🔄 System theme preference changed');
-            applyTheme('system');
-        }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-};
