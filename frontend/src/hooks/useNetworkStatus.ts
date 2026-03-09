@@ -60,12 +60,12 @@ export function useNetworkStatus(socket: any | null, onReconnect?: () => void) {
      */
     useEffect(() => {
         if (!socket) {
-            setIsConnected(false);
+            queueMicrotask(() => setIsConnected(false));
             return;
         }
 
         // Set initial state
-        setIsConnected(socket.connected);
+        queueMicrotask(() => setIsConnected(socket.connected));
 
         const handleConnect = () => {
             setIsConnected(socket.connected);
