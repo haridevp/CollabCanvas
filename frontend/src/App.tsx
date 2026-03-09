@@ -1,13 +1,13 @@
-import { useEffect } from 'react';
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './services/AuthContext';
-import { initializeTheme } from './utils/theme';
+import { ThemeManager } from './components/ThemeManager';
 import RegisterPage from './pages/RegisterPage';
 import RegistrationSuccess from './pages/RegistrationSuccess'; // NEW
 import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
-import EmailVerificationPage from './pages/EmailVerificationPage';
+
 import Dashboard from './pages/Dashboard';
 import ProfilePage from './pages/ProfilePage';
 import RoomPage from './pages/RoomPage';
@@ -52,12 +52,6 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
  * - Redirects: Root path and 404 fallback
  */
 function App() {
-  useEffect(() => {
-    // Initialize theme including system preference listener
-    const cleanup = initializeTheme();
-    return cleanup;
-  }, []);
-
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   return (
@@ -66,6 +60,7 @@ function App() {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <AuthProvider>
         <Router basename={import.meta.env.BASE_URL}>
+          <ThemeManager />
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
 
@@ -73,6 +68,8 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/registration-success" element={<RegistrationSuccess />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
             {/* Other Routes */}
             <Route path="/dashboard" element={<Dashboard />} />

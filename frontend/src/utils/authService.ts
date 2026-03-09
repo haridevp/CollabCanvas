@@ -245,23 +245,6 @@ export const forgotPassword = async (email: string): Promise<AuthResponse> => {
   }
 };
 
-/**
- * Completes the password reset process with a new password
- * 
- * @async
- * @function resetPassword
- * @param {string} token - Password reset token from email
- * @param {string} password - New password to set
- * @returns {Promise<AuthResponse>} Response indicating if password was reset successfully
- * 
- * @example
- * ```typescript
- * const result = await resetPassword('reset-token-123', 'newSecurePassword456') as any;
- * if (result.success) {
- *   console.log('Password reset successful');
- * }
- * ```
- */
 export const resetPassword = async (token: string, password: string): Promise<AuthResponse> => {
   try {
     const response = await api.post('/auth/reset-password', { token, password });
@@ -271,6 +254,28 @@ export const resetPassword = async (token: string, password: string): Promise<Au
     return {
       success: err.response?.data?.success ?? false,
       message: err.response?.data?.message || 'Failed to reset password. Please try again.',
+    };
+  }
+};
+
+/**
+ * Changes a user's password using their current password
+ * 
+ * @async
+ * @function changePassword
+ * @param {string} currentPassword - Current password for verification
+ * @param {string} newPassword - New password to set
+ * @returns {Promise<AuthResponse>} Response indicating if password was changed successfully
+ */
+export const changePassword = async (currentPassword: string, newPassword: string): Promise<AuthResponse> => {
+  try {
+    const response = await api.put('/auth/change-password', { currentPassword, newPassword });
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { message?: string, success?: boolean } } };
+    return {
+      success: err.response?.data?.success ?? false,
+      message: err.response?.data?.message || 'Failed to change password. Please check your current password.',
     };
   }
 };

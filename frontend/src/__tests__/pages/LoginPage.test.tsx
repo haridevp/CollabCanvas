@@ -46,6 +46,12 @@ describe("LoginPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    global.fetch = vi.fn(() => 
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ ip: "127.0.0.1" })
+      })
+    ) as any;
   });
 
   it("renders login UI", () => {
@@ -172,7 +178,7 @@ describe("LoginPage", () => {
     await waitFor(() => {
       expect(mockLoginWithEmailPassword).toHaveBeenCalledWith(
         { email: "user@example.com", password: "pass123" },
-        { deviceType: "Windows", ipAddress: "Auto-detected by server" }
+        { deviceType: "Windows", ipAddress: "127.0.0.1" }
       );
     });
   });

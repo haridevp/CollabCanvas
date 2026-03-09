@@ -3,14 +3,18 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { PasswordStrengthMeter } from '../components/ui/PasswordStrengthMeter';
-import { resetPassword } from '../utils/authService';
+import { resetPassword, changePassword } from '../utils/authService';
+import { useAuth } from '../services/AuthContext';
 import Background from '../components/ui/Background';
 import TitleAnimation from '../components/ui/TitleAnimation';
 
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const token = searchParams.get('token');
+
+  const [currentPassword, setCurrentPassword] = useState<string>('');
 
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
@@ -20,14 +24,24 @@ const ResetPasswordPage: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!token) {
-      setError("No reset token found. Please request a new link.");
+    if (!token && !user) {
+      setError("No reset token found or user not authenticated. Please request a new link or log in.");
     }
-  }, [token]);
+  }, [token, user]);
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setError(null);
+
+    if (!token && !user) {
+      setError("Authentication required.");
+      return;
+    }
+
+    if (!token && user && !currentPassword) {
+      setError("Current password is required to change password.");
+      return;
+    }
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters long.");
@@ -37,19 +51,24 @@ const ResetPasswordPage: React.FC = () => {
       setError("Passwords do not match.");
       return;
     }
-    if (!token) return;
 
     setIsLoading(true);
     try {
-      const result = await resetPassword(token, password);
-      if (result.success) {
+      let result;
+      if (token) {
+        result = await resetPassword(token, password);
+      } else if (user) {
+        result = await changePassword(currentPassword, password);
+      }
+
+      if (result && result.success) {
         setIsSuccess(true);
         setTimeout(() => navigate('/login'), 3000);
       } else {
-        setError(result.message);
+        setError(result?.message || "Failed to update password.");
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to reset password.");
+      setError(err.response?.data?.message || "Failed to update password.");
     } finally {
       setIsLoading(false);
     }
@@ -106,6 +125,25 @@ const ResetPasswordPage: React.FC = () => {
       )}
 
       <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+        {!token && user && (
+          <div>
+            <label htmlFor="current-password" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1">Current Password</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 text-slate-400" size={18} />
+              <input
+                id="current-password"
+                type="password"
+                placeholder="••••••••"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"
+                disabled={isLoading || (!!error && !token && !user)}
+                required
+              />
+            </div>
+          </div>
+        )}
+
         <div>
           <label htmlFor="new-password" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1">New Password</label>
           <div className="relative">
@@ -117,7 +155,7 @@ const ResetPasswordPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full pl-10 pr-12 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"
-              disabled={isLoading || (!!error && !token)}
+              disabled={isLoading || (!!error && !token && !user)}
               required
             />
             <button
@@ -144,7 +182,7 @@ const ResetPasswordPage: React.FC = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"
-              disabled={isLoading || (!!error && !token)}
+              disabled={isLoading || (!!error && !token && !user)}
               required
             />
           </div>
@@ -154,7 +192,7 @@ const ResetPasswordPage: React.FC = () => {
           type="submit"
           className="w-full py-3 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-md active:scale-[0.98] mt-2 border-none"
           isLoading={isLoading}
-          disabled={isLoading || !token}
+          disabled={isLoading || (!token && !user)}
         >
           Update Password
         </Button>

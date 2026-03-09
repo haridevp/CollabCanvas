@@ -472,6 +472,41 @@ router.post("/reset-password", async (req, res) => {
 });
 
 /**
+ * @route   PUT /api/auth/change-password
+ * @desc    Change the current logged-in user's password.
+ * @access  Private
+ */
+router.put("/change-password", authh, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    // Retrieve the user from the database
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Securely compare the current password with the stored hash
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: "Incorrect current password." });
+    }
+
+    // Generate a fresh salt and hash the new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    // Save the updated password to the database
+    await user.save();
+    
+    res.json({ success: true, message: "Password changed successfully!" });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+});
+
+/**
  * @route   DELETE /api/auth/delete-account
  * @desc    Permanently delete the current user's account.
  * @access  Private

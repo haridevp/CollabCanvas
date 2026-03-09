@@ -8,6 +8,7 @@ import {
   getDeviceType,
   forgotPassword,
   resetPassword,
+  changePassword,
   searchUsers,
   inviteUsersToRoom,
   exportDrawing,
@@ -217,6 +218,23 @@ describe('utils/authService.ts', () => {
     });
   });
 
+  describe('changePassword()', () => {
+    test('should call api.put and return response.data', async () => {
+      vi.mocked(api.put).mockResolvedValueOnce({
+        data: { success: true }
+      });
+
+      const result = await changePassword('oldpass', 'newpass');
+
+      expect(api.put).toHaveBeenCalledWith('/auth/change-password', {
+        currentPassword: 'oldpass',
+        newPassword: 'newpass'
+      });
+
+      expect(result).toEqual({ success: true });
+    });
+  });
+
   describe('searchUsers()', () => {
     test('should return response.data on success', async () => {
       vi.mocked(api.get).mockResolvedValueOnce({
@@ -323,7 +341,7 @@ describe('utils/authService.ts', () => {
 
       expect(localStorage.getItem('auth_token')).toBeNull();
       expect(localStorage.getItem('user')).toBeNull();
-      expect(localStorage.getItem('login_activities')).toBeNull();
+      expect(localStorage.getItem('login_activities')).toBe('[]');
       expect(localStorage.getItem('remembered_email')).toBeNull();
 
       // Theme should still exist
