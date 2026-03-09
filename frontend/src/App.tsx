@@ -7,7 +7,7 @@ import RegistrationSuccess from './pages/RegistrationSuccess'; // NEW
 import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
-import EmailVerificationPage from './pages/EmailVerificationPage';
+
 import Dashboard from './pages/Dashboard';
 import ProfilePage from './pages/ProfilePage';
 import AppearancePage from './pages/AppearancePage';
