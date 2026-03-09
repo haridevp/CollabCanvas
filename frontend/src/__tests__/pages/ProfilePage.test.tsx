@@ -12,6 +12,10 @@ import {
 } from '../../services/accountDeletionService';
 
 // ============ MOCKS ============
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+}));
 
 // Sidebar
 vi.mock('../../components/Sidebar', () => ({

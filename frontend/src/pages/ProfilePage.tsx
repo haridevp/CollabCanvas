@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ThemeSelector from '../components/ui/ThemeSelector';
 import CharacterCounter from '../components/ui/CharacterCounter';
+import { useNavigate } from 'react-router-dom';
 import FileUpload from '../components/ui/FileUpload';
 import ImageCropper from '../components/ui/ImageCropper';
 import { useAuth } from '../services/AuthContext';
@@ -100,6 +101,7 @@ interface ProfileTab {
  */
 const ProfilePage: React.FC = () => {
   const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('personal');
 
   // Profile picture and Identity states
@@ -951,7 +953,7 @@ const ProfilePage: React.FC = () => {
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
                     Change your password to keep your account secure.
                   </p>
-                  <Button className="gap-2">
+                  <Button className="gap-2" onClick={() => navigate('/reset-password')}>
                     <Key size={16} /> Change Password
                   </Button>
                 </div>

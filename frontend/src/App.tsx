@@ -73,6 +73,8 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/registration-success" element={<RegistrationSuccess />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
             {/* Other Routes */}
             <Route path="/dashboard" element={<Dashboard />} />
