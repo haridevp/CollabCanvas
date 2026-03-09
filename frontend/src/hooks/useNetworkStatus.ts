@@ -19,7 +19,7 @@ interface QueuedAction {
  */
 export function useNetworkStatus(socket: any | null, onReconnect?: () => void) {
     const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
-    const [isConnected, setIsConnected] = useState<boolean>(false);
+    const [isConnected, setIsConnected] = useState<boolean>(socket?.connected || false);
     const [latency, setLatency] = useState<number>(0);
     const [packetLoss, setPacketLoss] = useState<number>(0);
     const [actionQueue, setActionQueue] = useState<QueuedAction[]>([]);
@@ -59,11 +59,17 @@ export function useNetworkStatus(socket: any | null, onReconnect?: () => void) {
      * Monitor socket connection status
      */
     useEffect(() => {
-        if (!socket) return;
+        if (!socket) {
+            setIsConnected(false);
+            return;
+        }
+
+        // Set initial state
+        setIsConnected(socket.connected);
 
         const handleConnect = () => {
-            setIsConnected(true);
-            console.log('Socket connected');
+            setIsConnected(socket.connected);
+            console.log('Socket connected. socket.connected:', socket.connected);
 
             // Trigger reconnection callback
             if (onReconnect) {
@@ -72,9 +78,16 @@ export function useNetworkStatus(socket: any | null, onReconnect?: () => void) {
         };
 
         const handleDisconnect = (reason: string) => {
-            setIsConnected(false);
-            console.log(`Socket disconnected: ${reason}`);
+            setIsConnected(socket.connected);
+            console.log(`Socket disconnected: ${reason}. socket.connected:`, socket.connected);
         };
+
+        // Manual polling fallback because socket.io state and events can sometimes de-sync in React
+        const intervalId = setInterval(() => {
+            if (socket.connected !== isConnected) {
+                setIsConnected(socket.connected);
+            }
+        }, 1000);
 
         const handleReconnecting = (attempt: number) => {
             console.log(`Reconnecting attempt ${attempt}`);
@@ -100,6 +113,7 @@ export function useNetworkStatus(socket: any | null, onReconnect?: () => void) {
         socket.on('reconnect_failed', handleReconnectFailed);
 
         return () => {
+            clearInterval(intervalId);
             socket.off('connect', handleConnect);
             socket.off('disconnect', handleDisconnect);
             socket.off('reconnecting', handleReconnecting);
@@ -192,7 +206,8 @@ export function useNetworkStatus(socket: any | null, onReconnect?: () => void) {
      * Process queued actions when connection is restored
      */
     const processQueue = useCallback(async () => {
-        if (!socket || !isConnected || actionQueue.length === 0 || isSyncing) return;
+        const socketConnected = socket?.connected || isConnected;
+        if (!socket || !socketConnected || (actionQueue.length === 0 && !localStorage.getItem('actionQueue')) || isSyncing) return;
 
         setIsSyncing(true);
         console.log(`Processing ${actionQueue.length} queued actions...`);

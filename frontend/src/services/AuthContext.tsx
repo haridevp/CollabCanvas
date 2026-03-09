@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { clearTheme } from '../utils/theme';
 
 /**
  * Interface representing the authentication context structure
@@ -111,6 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
+    clearTheme();
     window.location.assign('/login');
   };
 

@@ -51,6 +51,16 @@ export const applyTheme = (theme: ThemeType) => {
     console.log('   - Has .high-contrast:', html.classList.contains('high-contrast'));
 };
 
+/**
+ * Clears the stored theme and resets to default (no theme classes).
+ * Used during logout so auth pages are rendered without any user theme.
+ */
+export const clearTheme = (): void => {
+    localStorage.removeItem(THEME_KEY);
+    const html = document.documentElement;
+    html.classList.remove('light', 'dark', 'high-contrast');
+};
+
 export const initializeTheme = (): (() => void) => {
     const storedTheme = getStoredTheme();
     const themeToUse = storedTheme || 'system';

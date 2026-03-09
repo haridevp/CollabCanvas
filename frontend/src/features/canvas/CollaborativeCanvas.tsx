@@ -263,9 +263,11 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
+  // State-backed socket so hooks like useNetworkStatus re-run when it changes
+  const [socketState, setSocketState] = useState<Socket | null>(null);
 
   // Resolved room ID (canonical MongoDB _id returned by the backend socket)
-  const resolvedRoomIdRef = useRef<string | undefined>(roomId);
+  const [resolvedRoomId, setResolvedRoomId] = useState<string | undefined>(roomId);
 
   // Performance optimization refs
   const spatialIndexRef = useRef<SpatialIndex | null>(null);
@@ -410,7 +412,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     processQueue,
     clearQueue,
     getQueueStatus
-  } = useNetworkStatus(socketRef.current, () => {
+  } = useNetworkStatus(socketState, () => {
     // On reconnect callback
     console.log('Connection restored, processing queue...');
     processQueue();
@@ -425,8 +427,8 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     isLockedByMe,
     getLockInfo
   } = useObjectLocks({
-    socket: socketRef.current,
-    roomId: resolvedRoomIdRef.current,
+    socket: socketState,
+    roomId: resolvedRoomId,
     userId: user?.id || user?._id,
     username: user?.username || user?.fullName,
     userColor: color,
@@ -446,7 +448,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     resetTimer
   } = useAutoSave({
     elements,
-    roomId: resolvedRoomIdRef.current,
+    roomId: resolvedRoomId,
     enabled: true,
     interval: 30000, // 30 seconds
     onSave: async (elementsToSave, roomId) => {
@@ -546,17 +548,26 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   useEffect(() => {
     if (!roomId || !user) return;
 
-    const socketUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+    const socketUrl = import.meta.env.VITE_API_URL?.replace('/api', '') ||
+      import.meta.env.VITE_API_BASE_URL?.replace('/api', '') ||
+      'http://localhost:5000';
     const socket = io(socketUrl);
     socketRef.current = socket;
+    setSocketState(socket);
+
+    socket.on('connect_error', (err) => {
+      console.error('Socket connection error:', err);
+      // Force state update to re-trigger hooks
+      setSocketState((prev) => (prev === socket ? socket : socket));
+    });
 
     // Join the specified room
     socket.emit('join-room', { roomId, userId: user.id || user._id });
 
     // Load existing room state
-    socket.on("room-state", ({ drawingData, resolvedRoomId }) => {
-      if (resolvedRoomId) {
-        resolvedRoomIdRef.current = resolvedRoomId;
+    socket.on("room-state", ({ drawingData, resolvedRoomId: serverRoomId }) => {
+      if (serverRoomId) {
+        setResolvedRoomId(serverRoomId);
       }
 
       if (drawingData) {
@@ -646,6 +657,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     // Cleanup on unmount
     return () => {
       socket.disconnect();
+      setSocketState(null);
     };
   }, [roomId, user, replaceElements, onSocketReady]);
 
@@ -914,7 +926,118 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     );
 
     const drawSingleElement = (el: DrawingElement, layerOpacity: number = 1) => {
-      // ... (keep your existing drawing code)
+      ctx.save();
+      ctx.beginPath();
+      ctx.strokeStyle = el.color;
+      ctx.lineWidth = el.strokeWidth;
+      ctx.lineCap = el.strokeStyle?.lineCap || "round";
+      ctx.lineJoin = el.strokeStyle?.lineJoin || "round";
+      ctx.globalAlpha = (el.opacity || 1) * layerOpacity;
+
+      // Apply dash pattern from strokeStyle
+      if (el.strokeStyle?.dashArray && el.strokeStyle.dashArray.length > 0) {
+        ctx.setLineDash(el.strokeStyle.dashArray);
+      } else if (el.strokeStyle?.type === 'dashed') {
+        ctx.setLineDash([5, 5]);
+      } else if (el.strokeStyle?.type === 'dotted') {
+        ctx.setLineDash([1, 3]);
+      } else {
+        ctx.setLineDash([]);
+      }
+
+      switch (el.type) {
+        case "pencil":
+        case "eraser":
+          if (el.type === "eraser") {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.strokeStyle = "rgba(0,0,0,1)";
+          }
+          if (el.points && el.points.length > 1) {
+            ctx.moveTo(el.points[0].x, el.points[0].y);
+            for (let i = 1; i < el.points.length; i++) {
+              ctx.lineTo(el.points[i].x, el.points[i].y);
+            }
+            ctx.stroke();
+          }
+          break;
+
+        case "rectangle":
+          if (
+            el.x !== undefined &&
+            el.y !== undefined &&
+            el.width !== undefined &&
+            el.height !== undefined
+          ) {
+            ctx.strokeRect(el.x, el.y, el.width, el.height);
+          }
+          break;
+
+        case "circle":
+          if (
+            el.x !== undefined &&
+            el.y !== undefined &&
+            el.width !== undefined &&
+            el.height !== undefined
+          ) {
+            const radius = Math.sqrt(el.width ** 2 + el.height ** 2);
+            ctx.arc(el.x, el.y, Math.abs(radius), 0, 2 * Math.PI);
+            ctx.stroke();
+          }
+          break;
+
+        case "line":
+        case "arrow":
+          if (el.points && el.points.length === 2) {
+            const [start, end] = el.points;
+            ctx.moveTo(start.x, start.y);
+            ctx.lineTo(end.x, end.y);
+            ctx.stroke();
+
+            // Draw arrowhead if it's an arrow
+            if (el.type === 'arrow') {
+              drawArrowhead(ctx, start, end, el.strokeWidth * 3, 1);
+            }
+          }
+          break;
+
+        case "text": {
+          const textEl = el as TextElement;
+          ctx.font = `${textEl.format.fontStyle} ${textEl.format.fontWeight} ${textEl.format.fontSize}px ${textEl.format.fontFamily}`;
+          ctx.fillStyle = textEl.format.color;
+          ctx.textAlign = textEl.format.textAlign;
+          ctx.textBaseline = "top";
+
+          const lines = textEl.text.split("\n");
+          const x = textEl.x!;
+          const y = textEl.y!;
+
+          lines.forEach((line, index) => {
+            ctx.fillText(
+              line,
+              x,
+              y + index * textEl.format.fontSize * 1.2
+            );
+          });
+          break;
+        }
+
+        case "image": {
+          const imageEl = el as ImageElement;
+          const img = new Image();
+          img.src = imageEl.src;
+          if (img.complete) {
+            ctx.drawImage(
+              img,
+              imageEl.x!,
+              imageEl.y!,
+              imageEl.width,
+              imageEl.height
+            );
+          }
+          break;
+        }
+      }
+      ctx.restore();
     };
 
     sortedLayers.forEach((layer) => {
@@ -1087,9 +1210,9 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     setElements([...elements, textElement]);
     resetSaveTimer();
 
-    if (socketRef.current && resolvedRoomIdRef.current) {
+    if (socketRef.current && resolvedRoomId) {
       socketRef.current.emit("drawing-update", {
-        roomId: resolvedRoomIdRef.current,
+        roomId: resolvedRoomId,
         element: textElement,
         saveToDb: true,
       });
@@ -1098,7 +1221,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     // Reset text editing state
     setIsEditingText(false);
     setTextPosition(null);
-  }, [elements, setElements, textPosition, resetSaveTimer]);
+  }, [elements, setElements, textPosition, resetSaveTimer, resolvedRoomId]);
 
   /**
  * Handle image upload and placement on canvas
@@ -1138,9 +1261,9 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     setElements([...elements, imageElement]);
     resetSaveTimer();
 
-    if (socketRef.current && resolvedRoomIdRef.current) {
+    if (socketRef.current && resolvedRoomId) {
       socketRef.current.emit("drawing-update", {
-        roomId: resolvedRoomIdRef.current,
+        roomId: resolvedRoomId,
         element: imageElement,
         saveToDb: true,
       });
@@ -1299,7 +1422,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     // --------------------------------------------------
     if (user) {
       const cursorData = {
-        roomId: resolvedRoomIdRef.current,
+        roomId: resolvedRoomId,
         x: point.x,
         y: point.y,
         userId: user.id || user._id,
@@ -1308,7 +1431,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         color: color,
       };
 
-      if (socketRef.current && resolvedRoomIdRef.current && isConnected) {
+      if (socketRef.current && resolvedRoomId && isConnected) {
         socketRef.current.emit("cursor-move", cursorData);
       } else {
         // Optional: Usually DO NOT queue high-frequency cursor events
@@ -1371,12 +1494,12 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       // ----------------------------------------------
       if (
         socketRef.current &&
-        resolvedRoomIdRef.current &&
+        resolvedRoomId &&
         currentTime - lastEmitTimeRef.current > 50
       ) {
         const element = updatedElement;
         const payload: any = {
-          roomId: resolvedRoomIdRef.current,
+          roomId: resolvedRoomId,
           userId: user?.id || user?._id,
           saveToDb: false,
         };
@@ -1460,7 +1583,6 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         endTransform();
 
         const socket = socketRef.current;
-        const resolvedRoomId = resolvedRoomIdRef.current;
 
         if (
           socket &&
@@ -1534,9 +1656,9 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       setElements((prev) => [...prev, elementWithLayer]);
       resetSaveTimer();
 
-      if (socketRef.current && resolvedRoomIdRef.current) {
+      if (socketRef.current && resolvedRoomId) {
         socketRef.current.emit("drawing-update", {
-          roomId: resolvedRoomIdRef.current,
+          roomId: resolvedRoomId,
           element: elementWithLayer,
           saveToDb: true,
           userId: user?.id || user?._id,
@@ -1548,9 +1670,9 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     // Always release lock after drawing
     // ---------------------------------
 
-    if (socketRef.current && resolvedRoomIdRef.current) {
+    if (socketRef.current && resolvedRoomId) {
       socketRef.current.emit("unlock-object", {
-        roomId: resolvedRoomIdRef.current,
+        roomId: resolvedRoomId,
         elementId: currentElement.id,
       });
     }
@@ -1572,7 +1694,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     getCanvasCoordinates,
     layerState.activeLayerId,
     socketRef,
-    resolvedRoomIdRef,
+    resolvedRoomId,
     resetSaveTimer,
   ]);
 
@@ -2035,11 +2157,11 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         <button
           onClick={() => {
             setElements([]);
-            if (socketRef.current && resolvedRoomIdRef.current) {
+            if (socketRef.current && resolvedRoomId) {
               if (isConnected) {
-                socketRef.current.emit("clear-canvas", { roomId: resolvedRoomIdRef.current });
+                socketRef.current.emit("clear-canvas", { roomId: resolvedRoomId });
               } else {
-                queueAction('clear-canvas', { roomId: resolvedRoomIdRef.current });
+                queueAction('clear-canvas', { roomId: resolvedRoomId });
               }
             }
           }}
@@ -2267,8 +2389,9 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         queueLength={actionQueue.length}
         isSyncing={isSyncing}
         onRetry={() => {
-          if (socketRef.current && !isConnected) {
-            socketRef.current.connect();
+          const socket = socketRef.current || socketState;
+          if (socket && !socket.connected) {
+            socket.connect();
           }
         }}
         onSync={processQueue}
@@ -2396,9 +2519,9 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
               el.id === editingTextElement.id ? updatedElement : el
             ));
 
-            if (socketRef.current && resolvedRoomIdRef.current) {
+            if (socketRef.current && resolvedRoomId) {
               socketRef.current.emit("drawing-update", {
-                roomId: resolvedRoomIdRef.current,
+                roomId: resolvedRoomId,
                 element: updatedElement,
                 saveToDb: true,
               });
