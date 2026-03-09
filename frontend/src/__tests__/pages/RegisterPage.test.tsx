@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from "react-router-dom";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import RegisterPage from '../../pages/RegisterPage';
 import { registerUser } from '../../utils/authService';
 import { validateEmailFormat } from '../../utils/emailValidation';
-import { openInNewTab } from '../../utils/navigation';
 import { useNavigate } from 'react-router-dom';
 
 // ================== MOCKS ==================
@@ -58,6 +58,24 @@ vi.mock('../../utils/navigation', () => ({
   openInNewTab: vi.fn(),
 }));
 
+vi.mock('../../components/ui/Modal', () => ({
+  Modal: ({ isOpen, title, children }: any) =>
+    isOpen ? (
+      <div data-testid="modal">
+        <h2>{title}</h2>
+        {children}
+      </div>
+    ) : null,
+}));
+
+vi.mock('../../components/legal/TermsOfServiceContent', () => ({
+  TermsOfServiceContent: () => <div data-testid="tos-content">TOS Content</div>,
+}));
+
+vi.mock('../../components/legal/PrivacyPolicyContent', () => ({
+  PrivacyPolicyContent: () => <div data-testid="pp-content">PP Content</div>,
+}));
+
 // ================== TESTS ==================
 
 describe('RegisterPage', () => {
@@ -93,26 +111,36 @@ describe('RegisterPage', () => {
     expect(screen.getByTestId('password-meter')).toBeInTheDocument();
   });
 
-  it('clicking Terms of Service opens in new tab', () => {
+  it("clicking Terms of Service opens modal", async () => {
+    const user = userEvent.setup();
     render(
       <MemoryRouter>
         <RegisterPage />
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Open Terms of Service/i }));
-    expect(openInNewTab).toHaveBeenCalledWith('/terms-of-service');
+    const tosLink = screen.getByRole("button", { name: /Terms of Service/i });
+    expect(tosLink).toBeInTheDocument();
+
+    await user.click(tosLink);
+    expect(screen.getByTestId("modal")).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Terms of Service/i })).toBeInTheDocument();
   });
 
-  it('clicking Privacy Policy opens in new tab', () => {
+  it("clicking Privacy Policy opens modal", async () => {
+    const user = userEvent.setup();
     render(
       <MemoryRouter>
         <RegisterPage />
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Open Privacy Policy/i }));
-    expect(openInNewTab).toHaveBeenCalledWith('/privacy-policy');
+    const ppLink = screen.getByRole("button", { name: /Privacy Policy/i });
+    expect(ppLink).toBeInTheDocument();
+
+    await user.click(ppLink);
+    expect(screen.getByTestId("modal")).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Privacy Policy/i })).toBeInTheDocument();
   });
 
   it('email validation: invalid email shows error message and aria-invalid=true', () => {
@@ -321,9 +349,7 @@ describe('RegisterPage', () => {
       expect(registerUser).toHaveBeenCalledTimes(1);
     });
 
-    expect(window.alert).toHaveBeenCalledWith(
-      'Registration failed. Please try again.'
-    );
+    expect(window.alert).toHaveBeenCalledWith('Registration failed. Please try again.');
   });
 
   it('submit button disabled when terms not checked / username not available / email invalid', () => {

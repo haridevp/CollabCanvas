@@ -5,10 +5,16 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import ResetPasswordPage from "../../pages/ResetPasswordPage";
-import { resetPassword } from "../../utils/authService";
+import { resetPassword, changePassword } from "../../utils/authService";
+import { useAuth } from "../../services/AuthContext";
 
 vi.mock("../../utils/authService", () => ({
   resetPassword: vi.fn(),
+  changePassword: vi.fn(),
+}));
+
+vi.mock("../../services/AuthContext", () => ({
+  useAuth: vi.fn(),
 }));
 
 // Mock your Button component to a normal HTML button
@@ -51,6 +57,7 @@ describe("ResetPasswordPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    vi.mocked(useAuth).mockReturnValue({ user: null } as any);
   });
 
   afterEach(() => {
@@ -72,11 +79,11 @@ describe("ResetPasswordPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows error if no token is present", async () => {
+  it("shows error if no token is present and no user is authenticated", async () => {
     renderPage(null);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      /no reset token found/i
+      /no reset token found or user not authenticated/i
     );
 
     const submitBtn = screen.getByRole("button", { name: /update password/i });
@@ -243,7 +250,42 @@ describe("ResetPasswordPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /update password/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      /failed to reset password/i
+      /failed to update password/i
     );
+  });
+
+  it("renders current password field when authenticated but no token", () => {
+    vi.mocked(useAuth).mockReturnValue({ user: { id: "123" } } as any);
+    renderPage(null);
+
+    expect(screen.getByRole("heading", { name: /set new password/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Current Password$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^New Password$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Confirm New Password$/i)).toBeInTheDocument();
+  });
+
+  it("calls changePassword API when authenticated but no token on valid submit", async () => {
+    vi.mocked(useAuth).mockReturnValue({ user: { id: "123" } } as any);
+    vi.mocked(changePassword).mockResolvedValueOnce({ success: true, message: "Success" });
+
+    renderPage(null);
+
+    fireEvent.change(screen.getByLabelText(/^Current Password$/i), {
+      target: { value: "oldPassword123" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/^New Password$/i), {
+      target: { value: "password123" },
+    });
+
+    fireEvent.change(screen.getByLabelText(/^Confirm New Password$/i), {
+      target: { value: "password123" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /update password/i }));
+
+    await waitFor(() => {
+      expect(changePassword).toHaveBeenCalledWith("oldPassword123", "password123");
+    });
   });
 });
