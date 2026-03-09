@@ -141,8 +141,21 @@ const LoginPage: React.FC = () => {
         console.warn('Could not fetch IP address', e);
       }
 
+      // First try to fetch the IP outside to pass to the backend
+      let ipAddress = 'Auto-detected by server';
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        if (res.ok) {
+          const data = await res.json();
+          ipAddress = data.ip;
+        }
+      } catch (e) {
+        console.warn('Could not fetch IP address', e);
+      }
+
       const activityData = {
         deviceType: getDeviceType(),
+        ipAddress
         ipAddress
       };
 
@@ -334,17 +347,6 @@ const LoginPage: React.FC = () => {
       const { data } = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/google-login`, {
         credential: credentialResponse.credential,
       });
-
-      if (data.success && data.requires2FA) {
-        setRequires2FA(true);
-        setTempUserId(data.userId || null);
-        setError({
-          title: 'Verification Needed',
-          message: data.message || 'Please enter the code sent to your email.',
-          type: 'success'
-        });
-        return;
-      }
 
       if (data.success) {
         await recordLogin(getDeviceType());
