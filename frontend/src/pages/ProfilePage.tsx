@@ -115,14 +115,14 @@ const ProfilePage: React.FC = () => {
 
   // UI / Logic states
   const [notifications, setNotifications] = useState<NotificationSettings>({
-    email: true,
-    push: false,
-    reminders: true,
-    marketing: false,
-    securityAlerts: true,
-    soundEnabled: true,
-    desktopNotifications: false,
-    notificationFrequency: 'realtime'
+    email: (user as any)?.notificationSettings?.email ?? true,
+    push: (user as any)?.notificationSettings?.push ?? false,
+    reminders: (user as any)?.notificationSettings?.reminders ?? true,
+    marketing: (user as any)?.notificationSettings?.marketing ?? false,
+    securityAlerts: (user as any)?.notificationSettings?.securityAlerts ?? true,
+    soundEnabled: (user as any)?.notificationSettings?.soundEnabled ?? true,
+    desktopNotifications: (user as any)?.notificationSettings?.desktopNotifications ?? false,
+    notificationFrequency: (user as any)?.notificationSettings?.notificationFrequency ?? 'realtime'
   });
 
   // Keyboard Shortcuts state

@@ -146,6 +146,7 @@ router.get("/profile", authh, async (req, res) => {
       }));
 
     // Respond with success and the sanitized user profile data
+    // Include notificationSettings if they exist on the user document
     res.json({
       success: true,
       user: {
@@ -156,6 +157,7 @@ router.get("/profile", authh, async (req, res) => {
         displayName: user.displayName,
         avatar: user.avatar,
         bio: user.bio,
+        notificationSettings: user.notificationSettings,
         loginActivities: recentActivity,
       },
     });
@@ -556,7 +558,7 @@ router.delete("/delete-account", authh, async (req, res) => {
 router.put("/update-profile", authh, async (req, res) => {
   try {
     // Destructure updateable fields from the request body
-    const { displayName, bio, avatar } = req.body;
+    const { displayName, bio, avatar, notificationSettings } = req.body;
     // Find the user record from the database using the ID from the token
     const user = await User.findById(req.user.id);
 
@@ -582,6 +584,19 @@ router.put("/update-profile", authh, async (req, res) => {
     if (bio !== undefined) user.bio = bio;
     // Update the avatar if provided (including null)
     if (avatar !== undefined) user.avatar = avatar;
+    // Update notification preferences if provided
+    if (notificationSettings && typeof notificationSettings === 'object') {
+      if (!user.notificationSettings) {
+        user.notificationSettings = {};
+      }
+      const allowedKeys = ['email', 'push', 'reminders', 'marketing', 'securityAlerts', 'soundEnabled', 'desktopNotifications', 'notificationFrequency'];
+      for (const key of allowedKeys) {
+        if (notificationSettings[key] !== undefined) {
+          user.notificationSettings[key] = notificationSettings[key];
+        }
+      }
+      user.markModified('notificationSettings');
+    }
 
     // Save the updated document to the database
     await user.save();
@@ -597,6 +612,7 @@ router.put("/update-profile", authh, async (req, res) => {
         fullName: user.displayName, 
         bio: user.bio,
         avatar: user.avatar,
+        notificationSettings: user.notificationSettings,
       },
     });
   } catch (err) {
