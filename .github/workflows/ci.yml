@@ -132,10 +132,13 @@ jobs:
       run: |
         docker compose build
 
+<<<<<<< HEAD
   security-scan:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+=======
+>>>>>>> b732624 (Use official Trivy action to solve installation issues)
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
