@@ -700,6 +700,21 @@ const roomSocketHandler = (io, socket) => {
       });
     }
   });
+
+  /**
+   * Event: chat-message
+   * Broadcasts chat messages to everyone in the room.
+   */
+  socket.on("chat-message", ({ roomId, userId, username, message }) => {
+    if (!roomId) return;
+    io.to(roomId).emit("chat-message", {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+      userId,
+      username,
+      text: message,
+      timestamp: new Date().toISOString()
+    });
+  });
 };
 
 module.exports = roomSocketHandler;
