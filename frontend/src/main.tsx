@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import { initializeTheme } from './utils/theme';
 
 /**
  * Main Entry Point - React Application Bootstrap
@@ -47,8 +46,6 @@ import { initializeTheme } from './utils/theme';
  * ```
  */
 
-// Initialize theme BEFORE React renders to prevent theme flashing
-initializeTheme();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   /**
