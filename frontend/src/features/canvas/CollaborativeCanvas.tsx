@@ -2076,19 +2076,35 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         />
 
         {/* Stroke width and brush settings */}
-        <BrushSettings
-          strokeWidth={strokeWidth}
-          onStrokeWidthChange={setStrokeWidth}
-          brushType={brushType}
-          onBrushTypeChange={setBrushType}
-          pressureSensitive={brushConfig.pressureSensitive}
-          onPressureSensitiveChange={(enabled) =>
-            setBrushConfig((prev) => ({ ...prev, pressureSensitive: enabled }))
-          }
-          strokeStyle={strokeStyle}
-          onStrokeStyleChange={setStrokeStyle}
-          className="border-r border-slate-200 dark:border-slate-700 pr-4"
-        />
+        {tool === 'eraser' ? (
+          <div className="flex items-center gap-3 border-r border-slate-200 dark:border-slate-700 pr-4">
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
+              Eraser Size ({strokeWidth}px)
+            </span>
+            <input
+              type="range"
+              min="1"
+              max="100"
+              value={strokeWidth}
+              onChange={(e) => setStrokeWidth(parseInt(e.target.value))}
+              className="w-32 h-2 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer"
+            />
+          </div>
+        ) : (
+          <BrushSettings
+            strokeWidth={strokeWidth}
+            onStrokeWidthChange={setStrokeWidth}
+            brushType={brushType}
+            onBrushTypeChange={setBrushType}
+            pressureSensitive={brushConfig.pressureSensitive}
+            onPressureSensitiveChange={(enabled) =>
+              setBrushConfig((prev) => ({ ...prev, pressureSensitive: enabled }))
+            }
+            strokeStyle={strokeStyle}
+            onStrokeStyleChange={setStrokeStyle}
+            className="border-r border-slate-200 dark:border-slate-700 pr-4"
+          />
+        )}
 
         {/* Brush settings */}
         <div className="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-4">
