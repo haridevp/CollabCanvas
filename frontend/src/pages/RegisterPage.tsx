@@ -9,7 +9,6 @@ import { TermsOfServiceContent } from '../components/legal/TermsOfServiceContent
 import { PrivacyPolicyContent } from '../components/legal/PrivacyPolicyContent';
 import { registerUser } from '../utils/authService';
 import { validateEmailFormat } from '../utils/emailValidation';
-import { openInNewTab } from '../utils/navigation';
 import Background from '../components/ui/Background';
 import TitleAnimation from '../components/ui/TitleAnimation';
 
@@ -39,11 +38,9 @@ const RegisterPage: React.FC = () => {
 
   const openTermsOfService = (): void => {
     setShowTermsModal(true);
-    openInNewTab('/terms-of-service');
   };
   const openPrivacyPolicy = (): void => {
     setShowPrivacyModal(true);
-    openInNewTab('/privacy-policy');
   };
 
   const handleEmailChange = (newEmail: string): void => {
