@@ -78,39 +78,40 @@ export function useUndoRedo<T>(
      */
     const setState: Dispatch<SetStateAction<T>> = useCallback(
         (action) => {
-            const newState = resolveAction(action);
+            setPresent((currentPresent) => {
+                const newState = typeof action === "function"
+                    ? (action as (prev: T) => T)(currentPresent)
+                    : action;
 
-            // Ignore identical states
-            if (
-                ignoreIdenticalStates &&
-                JSON.stringify(newState) === JSON.stringify(present)
-            ) {
-                return;
-            }
+                // Ignore identical states
+                if (
+                    ignoreIdenticalStates &&
+                    JSON.stringify(newState) === JSON.stringify(currentPresent)
+                ) {
+                    return currentPresent;
+                }
 
-            // Ignore custom rule
-            if (shouldIgnore?.(newState)) {
-                return;
-            }
+                // Ignore custom rule
+                if (shouldIgnore?.(newState)) {
+                    return currentPresent;
+                }
 
-            // Push current present into past
-            setPast((prevPast) => {
-                const updated = [...prevPast, present];
-                return updated.length > maxHistorySize
-                    ? updated.slice(-maxHistorySize)
-                    : updated;
+                // Push current present into past
+                setPast((prevPast) => {
+                    const updated = [...prevPast, currentPresent];
+                    return updated.length > maxHistorySize
+                        ? updated.slice(-maxHistorySize)
+                        : updated;
+                });
+
+                // Clear redo stack
+                setFuture([]);
+
+                previousPresentRef.current = currentPresent;
+                return newState;
             });
-
-            // Clear redo stack
-            setFuture([]);
-
-            // Set new present
-            setPresent(newState);
-            previousPresentRef.current = present;
         },
         [
-            present,
-            resolveAction,
             ignoreIdenticalStates,
             shouldIgnore,
             maxHistorySize,
@@ -122,12 +123,16 @@ export function useUndoRedo<T>(
      */
     const replaceState: Dispatch<SetStateAction<T>> = useCallback(
         (action) => {
-            const newState = resolveAction(action);
-
-            setPresent(newState);
-            previousPresentRef.current = present;
+            setPresent((currentPresent) => {
+                const newState = typeof action === "function"
+                    ? (action as (prev: T) => T)(currentPresent)
+                    : action;
+                
+                previousPresentRef.current = currentPresent;
+                return newState;
+            });
         },
-        [present, resolveAction]
+        []
     );
 
     /**
