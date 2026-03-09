@@ -134,8 +134,7 @@ jobs:
 
     - name: Install Trivy
       run: |
-        wget https://github.com/aquasecurity/trivy/releases/download/v0.57.1/trivy_0.57.1_Linux-64bit.deb
-        sudo dpkg -i trivy_0.57.1_Linux-64bit.deb
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.57.1
 
     - name: Run Trivy vulnerability scanner
       run: |
