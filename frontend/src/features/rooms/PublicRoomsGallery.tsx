@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Search, Filter, Globe, Users, Clock, TrendingUp, Grid, List,
   Loader2, RefreshCw, X, Star, Bookmark
 } from 'lucide-react';
@@ -45,13 +45,13 @@ const PublicRoomsGallery: React.FC<PublicRoomsGalleryProps> = ({
   onJoinRoom
 }) => {
   const navigate = useNavigate();
-  
+
   // State for room data
   const [rooms, setRooms] = useState<Room[]>([]);
   const [filteredRooms, setFilteredRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   // UI and filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -82,7 +82,7 @@ const PublicRoomsGallery: React.FC<PublicRoomsGalleryProps> = ({
    */
   useEffect(() => {
     // Filter rooms based on search query across multiple fields
-    const filtered = rooms.filter(room => 
+    const filtered = rooms.filter(room =>
       room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       room.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       room.ownerName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -116,7 +116,7 @@ const PublicRoomsGallery: React.FC<PublicRoomsGalleryProps> = ({
       // Map UI sort option to API parameter
       // Note: 'participants' sort maps to 'popular' API parameter
       const apiSort = sortBy === 'participants' ? 'popular' : sortBy;
-    
+
       // Call the room service with current filters
       const result = await roomService.getPublicRooms({
         search: searchQuery || undefined, // Only include if not empty
@@ -273,11 +273,10 @@ const PublicRoomsGallery: React.FC<PublicRoomsGalleryProps> = ({
                 <button
                   key={category.id}
                   onClick={() => setCategoryFilter(category.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    categoryFilter === category.id
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${categoryFilter === category.id
                       ? 'bg-blue-600 text-white'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
+                    }`}
                   aria-label={`Filter by ${category.label}`}
                 >
                   <Icon size={16} />
@@ -384,6 +383,7 @@ const PublicRoomsGallery: React.FC<PublicRoomsGalleryProps> = ({
                       maxParticipants={room.maxParticipants}
                       createdAt={room.createdAt}
                       updatedAt={room.updatedAt}
+                      drawingData={room.drawingData}
                       showJoinButton={true}
                       showOwnerInfo={true}
                       onClick={() => handleRoomClick(room)}
@@ -475,7 +475,7 @@ const PublicRoomsGallery: React.FC<PublicRoomsGalleryProps> = ({
                 No Public Rooms Found
               </h3>
               <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
-                {searchQuery 
+                {searchQuery
                   ? 'No rooms match your search criteria. Try different keywords.'
                   : 'There are currently no public rooms available. Be the first to create one!'}
               </p>

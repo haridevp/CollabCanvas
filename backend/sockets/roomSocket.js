@@ -10,6 +10,9 @@ const Room = require("../models/Room");
 const Participant = require("../models/Participant");
 // Import the CanvasVersion model for save-canvas snapshot creation
 const CanvasVersion = require('../models/CanvasVersion');
+// Import notification utilities to create persistent notifications on moderation actions
+const { createNotification } = require('../controllers/notificationController');
+const { sendNotificationViaSocket } = require('./notificationSocket');
 
 // In-memory store for active object locks: { roomId: { objectId: { userId, socketId, username, color, timestamp } } }
 const roomLocks = new Map();
@@ -617,6 +620,22 @@ const roomSocketHandler = (io, socket) => {
         // Notify everyone that the user has been kicked
         io.to(roomId).emit("participant-kicked", { userId: targetUserId });
 
+        // Create a persistent notification for the kicked user
+        const room = await Room.findById(roomId);
+        const notification = await createNotification(
+          targetUserId,
+          'kick',
+          'Removed from Room',
+          `You have been removed from the room "${room?.name || 'Unknown'}" by a moderator.`,
+          { relatedRoomId: roomId, relatedUserId: moderatorId }
+        );
+        if (notification) {
+          sendNotificationViaSocket(io, targetUserId, 'kick', notification.title, notification.message, {
+            relatedUserId: moderatorId,
+            relatedRoomId: roomId
+          });
+        }
+
         // Broadcast the updated participant list for the UI
         const participantsList = await getParticipantsList(roomId);
         io.to(roomId).emit("participants-updated", {
@@ -666,6 +685,22 @@ const roomSocketHandler = (io, socket) => {
 
         // Notify session participants of the ban
         io.to(roomId).emit("participant-banned", { userId: targetUserId });
+
+        // Create a persistent notification for the banned user
+        const room = await Room.findById(roomId);
+        const notification = await createNotification(
+          targetUserId,
+          'ban',
+          'Banned from Room',
+          `You have been banned from the room "${room?.name || 'Unknown'}" by a moderator.`,
+          { relatedRoomId: roomId, relatedUserId: moderatorId }
+        );
+        if (notification) {
+          sendNotificationViaSocket(io, targetUserId, 'ban', notification.title, notification.message, {
+            relatedUserId: moderatorId,
+            relatedRoomId: roomId
+          });
+        }
 
         // Update the participant roster display
         const participantsList = await getParticipantsList(roomId);

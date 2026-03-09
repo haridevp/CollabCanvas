@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
-import { 
-  Plus, Search, Filter, Lock, Globe, Users, 
+import {
+  Plus, Search, Filter, Lock, Globe, Users,
   Grid, List, Bookmark, History, TrendingUp, Hash, User
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
@@ -44,16 +44,16 @@ import roomService from '../services/roomService';
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
-  
+
   // Room data states
   const [myRooms, setMyRooms] = useState<Room[]>([]);
   const [publicRooms, setPublicRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // UI states
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -153,7 +153,7 @@ const Dashboard = () => {
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Sidebar navigation */}
       <Sidebar />
-      
+
       {/* Main content area */}
       <main className="flex-1 p-6 lg:p-8">
         {/* Dashboard header */}
@@ -167,11 +167,11 @@ const Dashboard = () => {
                 Welcome back, <span className="font-semibold text-blue-600 dark:text-blue-400">{user?.fullName || user?.username || 'User'}</span>
               </p>
             </div>
-            
+
             {/* Action buttons */}
             <div className="flex flex-wrap gap-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="gap-2"
                 onClick={() => setShowJoinModal(true)}
                 aria-label="Join existing room"
@@ -179,7 +179,7 @@ const Dashboard = () => {
                 <Hash size={18} />
                 <span className="hidden sm:inline">Join Room</span>
               </Button>
-              <Button 
+              <Button
                 className="gap-2"
                 onClick={() => setShowCreateModal(true)}
                 aria-label="Create new room"
@@ -203,7 +203,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <div>
@@ -217,7 +217,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <div>
@@ -242,22 +242,20 @@ const Dashboard = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    activeTab === tab.id
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id
                       ? 'bg-blue-600 text-white'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
+                    }`}
                   aria-label={`Switch to ${tab.label} tab`}
                   aria-pressed={activeTab === tab.id}
                 >
                   <Icon size={18} />
                   <span className="font-medium">{tab.label}</span>
                   {tab.count !== undefined && (
-                    <span className={`px-1.5 py-0.5 text-xs rounded-full ${
-                      activeTab === tab.id
+                    <span className={`px-1.5 py-0.5 text-xs rounded-full ${activeTab === tab.id
                         ? 'bg-white/20'
                         : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                    }`}>
+                      }`}>
                       {tab.count}
                     </span>
                   )}
@@ -270,16 +268,16 @@ const Dashboard = () => {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" size={20} />
-              <input 
-                type="text" 
-                placeholder={`Search ${activeTab === 'my-rooms' ? 'your' : 'public'} rooms...`} 
+              <input
+                type="text"
+                placeholder={`Search ${activeTab === 'my-rooms' ? 'your' : 'public'} rooms...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" 
+                className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label="Search rooms"
               />
             </div>
-            
+
             <div className="flex gap-3">
               {/* Sort dropdown */}
               <div className="relative">
@@ -343,6 +341,7 @@ const Dashboard = () => {
                     maxParticipants={room.maxParticipants}
                     createdAt={room.createdAt}
                     updatedAt={room.updatedAt}
+                    drawingData={room.drawingData}
                     showJoinButton={activeTab !== 'my-rooms'}
                     showOwnerInfo={activeTab === 'public'}
                     onClick={() => navigate(`/room/${room.id}`)}
@@ -352,7 +351,7 @@ const Dashboard = () => {
             ) : (
               <div className="space-y-3">
                 {filteredRooms.map((room) => (
-                  <div 
+                  <div
                     key={room.id}
                     className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
                     onClick={() => navigate(`/room/${room.id}`)}
@@ -406,11 +405,11 @@ const Dashboard = () => {
                 )}
               </div>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                {searchQuery ? 'No rooms found' : 
+                {searchQuery ? 'No rooms found' :
                   activeTab === 'my-rooms' ? 'No rooms yet' : 'No public rooms available'}
               </h3>
               <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
-                {searchQuery 
+                {searchQuery
                   ? 'Try adjusting your search terms'
                   : activeTab === 'my-rooms'
                     ? 'Create your first room to start collaborating'

@@ -6,7 +6,7 @@ import ChatPanel from '../features/rooms/ChatPanel';
 import { CollaborativeCanvas } from '../features/canvas/CollaborativeCanvas';
 import { useAuth } from '../services/AuthContext';
 import roomService from '../services/roomService';
-import { Users, MessageSquare, Share2, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
+import { Users, MessageSquare, Share2, Copy, Check, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 
 /**
  * RoomPage component - Main collaborative drawing room interface
@@ -198,6 +198,14 @@ const RoomPage = () => {
 
           {/* Room title, ID, and status */}
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors flex items-center justify-center"
+              aria-label="Back to dashboard"
+              title="Back to dashboard"
+            >
+              <ArrowLeft size={20} />
+            </button>
             <div>
               <h2 className="font-bold text-slate-800 dark:text-white">{roomData.name}</h2>
               <div className="flex items-center gap-2 mt-0.5">
