@@ -82,6 +82,32 @@ const LoginPage: React.FC = () => {
     }
   }, []);
 
+  const recordLogin = async (deviceType: string) => {
+    let ipAddress = 'Unknown IP';
+    try {
+      const res = await fetch('https://api.ipify.org?format=json');
+      if (res.ok) {
+        const data = await res.json();
+        ipAddress = data.ip;
+      }
+    } catch (e) {
+      console.warn('Could not fetch IP address', e);
+    }
+    
+    const newActivity: LoginActivity = {
+      timestamp: new Date().toISOString(),
+      ipAddress,
+      deviceType
+    };
+    
+    const existing = JSON.parse(localStorage.getItem('login_activities') || '[]');
+    const updated = [newActivity, ...existing].slice(0, 3); // Keep only 3 latest
+    localStorage.setItem('login_activities', JSON.stringify(updated));
+    setRecentActivities(updated);
+    
+    return { deviceType, ipAddress };
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError(null);
@@ -99,15 +125,37 @@ const LoginPage: React.FC = () => {
     }
 
     try {
+      // First try to fetch the IP outside to pass to the backend
+      let ipAddress = 'Auto-detected by server';
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        if (res.ok) {
+          const data = await res.json();
+          ipAddress = data.ip;
+        }
+      } catch (e) {
+        console.warn('Could not fetch IP address', e);
+      }
+
       const activityData = {
         deviceType: getDeviceType(),
-        ipAddress: 'Auto-detected by server' // TODO: Implement actual IP detection
+        ipAddress
       };
 
       // Call the backend authentication service
       const result = await loginWithEmailPassword({ email, password }, activityData);
 
       if (result.success && result.token && result.user) {
+        // Record login activity in localStorage
+        const newActivity: LoginActivity = {
+          timestamp: new Date().toISOString(),
+          ipAddress: activityData.ipAddress,
+          deviceType: activityData.deviceType
+        };
+        const existing = JSON.parse(localStorage.getItem('login_activities') || '[]');
+        const updated = [newActivity, ...existing].slice(0, 3);
+        localStorage.setItem('login_activities', JSON.stringify(updated));
+        
         // Sync with AuthContext (token, userData)
         login(result.token, result.user);
 
@@ -205,20 +253,21 @@ const LoginPage: React.FC = () => {
     </div>
   );
 
-const handleGoogleSuccess = async (credentialResponse: any) => {
-  try {
-    const { data } = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/google-login`, {
-      credential: credentialResponse.credential,
-    });
-    
-    if (data.success) {
-      login(data.token, data.user); // Update your global Auth state
-      navigate('/dashboard');
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      const { data } = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/google-login`, {
+        credential: credentialResponse.credential,
+      });
+      
+      if (data.success) {
+        await recordLogin(getDeviceType());
+        login(data.token, data.user); // Update your global Auth state
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      console.error("Google Login Error:", err);
     }
-  } catch (err) {
-    console.error("Google Login Error:", err);
-  }
-};
+  };
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center p-4">

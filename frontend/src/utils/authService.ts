@@ -393,7 +393,7 @@ export const clearAuthTokens = (): void => {
   // Clear authentication data
   localStorage.removeItem('auth_token');
   localStorage.removeItem('user');
-  localStorage.removeItem('login_activities');
+  // Preserve login_activities for the login page history
   localStorage.removeItem('remembered_email');
 
   // Clear session storage completely
