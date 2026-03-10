@@ -141,21 +141,8 @@ const LoginPage: React.FC = () => {
         console.warn('Could not fetch IP address', e);
       }
 
-      // First try to fetch the IP outside to pass to the backend
-      let ipAddress = 'Auto-detected by server';
-      try {
-        const res = await fetch('https://api.ipify.org?format=json');
-        if (res.ok) {
-          const data = await res.json();
-          ipAddress = data.ip;
-        }
-      } catch (e) {
-        console.warn('Could not fetch IP address', e);
-      }
-
       const activityData = {
         deviceType: getDeviceType(),
-        ipAddress
         ipAddress
       };
 
