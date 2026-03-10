@@ -10,6 +10,8 @@ const Room = require("../models/Room");
 const Participant = require("../models/Participant");
 // Import the CanvasVersion model for save-canvas snapshot creation
 const CanvasVersion = require('../models/CanvasVersion');
+// Import the Message model for persistent chats
+const Message = require("../models/Message");
 // Import notification utilities to create persistent notifications on moderation actions
 const { createNotification } = require('../controllers/notificationController');
 const { sendNotificationViaSocket } = require('./notificationSocket');
@@ -737,18 +739,113 @@ const roomSocketHandler = (io, socket) => {
   });
 
   /**
-   * Event: chat-message
-   * Broadcasts chat messages to everyone in the room.
+   * Event: load-messages
+   * Requests the latest chat messages for the room.
    */
-  socket.on("chat-message", ({ roomId, userId, username, message }) => {
+  socket.on("load-messages", async ({ roomId }) => {
     if (!roomId) return;
-    io.to(roomId).emit("chat-message", {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-      userId,
-      username,
-      text: message,
-      timestamp: new Date().toISOString()
-    });
+    try {
+      const messages = await Message.find({ room: roomId })
+        .sort({ createdAt: 1 })
+        .limit(100)
+        .lean();
+
+      // Format for frontend
+      const formattedMessages = messages.map((m) => ({
+        id: m._id.toString(),
+        userId: m.user.toString(),
+        username: m.username,
+        text: m.text,
+        timestamp: m.createdAt,
+        isEdited: m.isEdited,
+        isDeleted: m.isDeleted,
+      }));
+
+      socket.emit("messages-loaded", formattedMessages);
+    } catch (error) {
+      console.error("Failed to load messages:", error);
+    }
+  });
+
+  /**
+   * Event: chat-message
+   * Saves a new chat message to DB and broadcasts it to everyone in the room.
+   */
+  socket.on("chat-message", async ({ roomId, userId, username, message }) => {
+    if (!roomId || !userId) return;
+    try {
+      const newMessage = new Message({
+        room: roomId,
+        user: userId,
+        username,
+        text: message,
+      });
+      await newMessage.save();
+
+      io.to(roomId).emit("chat-message", {
+        id: newMessage._id.toString(),
+        userId,
+        username,
+        text: message,
+        timestamp: newMessage.createdAt,
+        isEdited: false,
+        isDeleted: false,
+      });
+    } catch (error) {
+      console.error("Failed to save message:", error);
+    }
+  });
+
+  /**
+   * Event: edit-message
+   * Edits an existing message and broadcasts the update.
+   */
+  socket.on("edit-message", async ({ roomId, messageId, userId, newText }) => {
+    if (!roomId || !messageId || !userId) return;
+    try {
+      const message = await Message.findById(messageId);
+      if (!message || message.user.toString() !== userId) return; // Only owner can edit
+
+      message.text = newText;
+      message.isEdited = true;
+      await message.save();
+
+      io.to(roomId).emit("message-edited", {
+        id: messageId,
+        text: newText,
+        isEdited: true,
+      });
+    } catch (error) {
+      console.error("Failed to edit message:", error);
+    }
+  });
+
+  /**
+   * Event: delete-message
+   * Soft-deletes a message and broadcasts the update.
+   */
+  socket.on("delete-message", async ({ roomId, messageId, userId }) => {
+    if (!roomId || !messageId || !userId) return;
+    try {
+      const message = await Message.findById(messageId);
+      if (!message) return;
+
+      // Allow owner or room moderators to delete
+      // To keep it simple, checking if the current user is the author
+      if (message.user.toString() !== userId) return;
+
+      message.isDeleted = true;
+      message.text = "This message was deleted";
+      await message.save();
+
+      io.to(roomId).emit("message-deleted", {
+        id: messageId,
+        text: message.text,
+        isDeleted: true,
+      });
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+    }
   });
 };
 

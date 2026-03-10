@@ -27,6 +27,7 @@ const RoomPage = () => {
 
   // Room data from backend
   const [roomData, setRoomData] = useState<{
+    id: string;
     name: string;
     description: string;
     isPublic: boolean;
@@ -56,6 +57,7 @@ const RoomPage = () => {
         const result = await roomService.getRoom(id);
         if (result.success && result.room) {
           setRoomData({
+            id: result.room.id,
             name: result.room.name,
             description: result.room.description,
             isPublic: result.room.isPublic,
@@ -316,11 +318,11 @@ const RoomPage = () => {
       )}
 
       {/* Participants Panel */}
-      {id && (
+      {id && roomData && (
         <ParticipantsPanel
           isOpen={showParticipantsPanel}
           onClose={() => setShowParticipantsPanel(false)}
-          roomId={id}
+          roomId={roomData.id}
           currentUserId={currentUserId}
           currentUserRole={currentUserRole}
           socket={socket}
@@ -332,7 +334,7 @@ const RoomPage = () => {
         <ChatPanel
           isOpen={showChatPanel}
           onClose={() => setShowChatPanel(false)}
-          roomId={id}
+          roomId={roomData.id}
           currentUserId={currentUserId}
           currentUsername={user?.username || 'Guest'}
           socket={socket}
