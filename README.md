@@ -184,7 +184,6 @@ For more detailed technical documentation, please refer to the following guides:
 *   Check if `VITE_API_URL` points to the correct backend host.
 
 ## Team
-
 **Team 12**
 
 *   RATAN RAJA
