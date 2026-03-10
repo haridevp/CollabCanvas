@@ -20,6 +20,7 @@ const { errorHandler, AppError } = require("../middleware/errorHandler");
 const authRoutes = require("../routes/auth");
 const roomRoutes = require("../routes/rooms");
 const notificationRoutes = require("../routes/notifications");
+const adminRoutes = require("../routes/admin");
 
 // Import real-time socket event handlers
 const roomSocketHandler = require("../sockets/roomSocket");
@@ -104,6 +105,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
 // Mount notification management endpoints (fetch, mark as read)
 app.use("/api/notifications", notificationRoutes);
+// Mount admin dashboard endpoints
+app.use("/api/admin", adminRoutes);
 
 /**
  * 404 handler for any requests that don't match the registered routes.

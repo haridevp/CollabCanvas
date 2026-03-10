@@ -126,6 +126,7 @@ router.post("/google-login", async (req, res) => {
         fullName: user.displayName,
         avatar: user.avatar,
         bio: user.bio,
+        role: user.role,
         twoFactorEnabled: user.twoFactorEnabled,
       },
     });
@@ -205,6 +206,7 @@ router.get("/profile", authh, async (req, res) => {
         displayName: user.displayName,
         avatar: user.avatar,
         bio: user.bio,
+        role: user.role,
         notificationSettings: user.notificationSettings,
         loginActivities: recentActivity,
       },
@@ -459,6 +461,7 @@ router.post("/login", async (req, res) => {
         fullName: user.displayName,
         avatar: user.avatar,
         bio: user.bio,
+        role: user.role,
         twoFactorEnabled: user.twoFactorEnabled,
       },
     });
@@ -521,6 +524,7 @@ router.post("/verify-2fa", async (req, res) => {
         fullName: user.displayName,
         avatar: user.avatar,
         bio: user.bio,
+        role: user.role,
         twoFactorEnabled: user.twoFactorEnabled,
       },
     });
@@ -787,6 +791,7 @@ router.put("/update-profile", authh, async (req, res) => {
         fullName: user.displayName,
         bio: user.bio,
         avatar: user.avatar,
+        role: user.role,
         notificationSettings: user.notificationSettings,
       },
     });

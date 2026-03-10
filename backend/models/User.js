@@ -37,6 +37,7 @@ const UserSchema = new mongoose.Schema({
   },
 
   googleId: { type: String, unique: true, sparse: true },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
   avatar: { type: String, default: null },
   bio: { type: String, default: '', maxLength: 500 },
   isVerified: { type: Boolean, default: false },

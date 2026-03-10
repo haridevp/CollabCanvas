@@ -141,8 +141,6 @@ const LoginPage: React.FC = () => {
         console.warn('Could not fetch IP address', e);
       }
 
-
-
       const activityData = {
         deviceType: getDeviceType(),
         ipAddress

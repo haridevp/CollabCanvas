@@ -79,6 +79,11 @@ export const Sidebar = () => {
     { icon: Shield, label: 'Security', path: '/security' },
   ];
 
+  // Dynamically push the Admin Panel if the user has the admin role
+  if (userData?.role === 'admin') {
+    navItems.push({ icon: Shield, label: 'Admin Panel', path: '/admin' });
+  }
+
   return (
     <>
       <aside

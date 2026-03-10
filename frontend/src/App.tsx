@@ -15,6 +15,8 @@ import NotificationSettingsPage from './pages/NotificationSettingsPage';
 import KeyboardShortcutsPage from './pages/KeyboardShortcutsPage';
 import SecurityPage from './pages/SecurityPage';
 import RoomPage from './pages/RoomPage';
+import AdminPage from './pages/AdminPage';
+import AdminRoute from './components/AdminRoute';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 /**
@@ -53,6 +55,13 @@ function App() {
             <Route path="/keyboard-shortcuts" element={<KeyboardShortcutsPage />} />
             <Route path="/security" element={<SecurityPage />} />
             <Route path="/room/:id" element={<RoomPage />} />
+
+            {/* Admin Routes */}
+            <Route path="/admin" element={
+               <AdminRoute>
+                 <AdminPage />
+               </AdminRoute>
+            } />
 
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
