@@ -34,6 +34,10 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: frontend/dist
-          branch: gh-pages
+          repository-name: sid-error/sid-error.github.io
+          branch: main
+          # Note: To push to a different repository, you MUST provide a Personal Access Token (PAT)
+          # Add this token as a repository secret named DEPLOY_PAT in CollabCanvas
+          token: ${{ secrets.DEPLOY_PAT }}
 
 # Trigger workflow refresh

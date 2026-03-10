@@ -182,7 +182,7 @@ const ForgotPasswordPage: React.FC = () => {
         <div className="text-center mb-8">
           <div className="mb-4 flex justify-center">
             <img
-              src="/CollabCanvas/logo.png"
+              src="/logo.png"
               alt="CollabCanvas Logo"
               style={{ height: '64px', width: 'auto' }}
               className="object-contain mx-auto"
@@ -209,7 +209,7 @@ const ForgotPasswordPage: React.FC = () => {
               <input
                 id="email"
                 type="email"
-               
+
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"

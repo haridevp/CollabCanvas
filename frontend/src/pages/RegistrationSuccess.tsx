@@ -25,7 +25,7 @@ const RegistrationSuccess: React.FC = () => {
           <div className="mb-6">
             <div className="mb-4 flex justify-center">
               <img
-                src="/CollabCanvas/logo.png"
+                src="/logo.png"
                 alt="CollabCanvas Logo"
                 style={{ height: '64px', width: 'auto' }}
                 className="object-contain mx-auto"

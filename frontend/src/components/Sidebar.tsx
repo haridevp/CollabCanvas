@@ -58,10 +58,10 @@ export const Sidebar = () => {
       await performLogout({
         showConfirmation: false,
         showSuccess: true,
-        redirectTo: "/CollabCanvas/login",
+        redirectTo: "/login",
       });
       setShowLogoutConfirm(false);
-      navigate("/CollabCanvas/login");
+      navigate("/login");
     } catch (error) {
       console.error("Sign out error:", error);
       alert("Failed to sign out. Please try again.");
@@ -88,9 +88,9 @@ export const Sidebar = () => {
       >
         {/* Application logo/brand section */}
         <div className="flex items-center gap-2 px-2 mb-8">
-          <img 
+          <img
             src={`${import.meta.env.BASE_URL}logo.png`}
-            alt="CollabCanvas logo" 
+            alt="CollabCanvas logo"
             className="w-10 h-10 object-contain"
           />
           <span className="font-bold text-xl tracking-tight text-slate-800 dark:text-white">

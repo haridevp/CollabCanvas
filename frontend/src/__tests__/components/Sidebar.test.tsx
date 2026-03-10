@@ -201,10 +201,10 @@ describe('Sidebar', () => {
     expect(mockedPerformLogout).toHaveBeenCalledWith({
       showConfirmation: false,
       showSuccess: true,
-      redirectTo: '/CollabCanvas/login',
+      redirectTo: '/login',
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith('/CollabCanvas/login');
+    expect(mockNavigate).toHaveBeenCalledWith('/login');
   });
 
   it('shows alert if sign out fails', async () => {

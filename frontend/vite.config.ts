@@ -4,7 +4,7 @@ import path from "path"
 
 export default defineConfig({
   plugins: [react()],
-  base: '/CollabCanvas/',
+  base: '/',
   test: {
     globals: true,
     environment: 'jsdom',
