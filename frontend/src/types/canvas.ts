@@ -146,9 +146,9 @@ export interface DrawingElement {
    * Type of drawing element
    * Determines how the element is rendered and what properties are required
    * 
-   * @type {'pencil' | 'rectangle' | 'circle' | 'text' | 'line' | 'arrow' | 'eraser'}
+   * @type {'pencil' | 'rectangle' | 'circle' | 'triangle' | 'text' | 'line' | 'arrow' | 'eraser' | 'image' | 'wand'}
    */
-  type: 'pencil' | 'rectangle' | 'circle' | 'text' | 'line' | 'arrow' | 'eraser' | 'image';
+  type: 'pencil' | 'rectangle' | 'circle' | 'triangle' | 'text' | 'line' | 'arrow' | 'eraser' | 'image' | 'wand';
 
   /** 
    * Array of points for freehand pencil drawings
