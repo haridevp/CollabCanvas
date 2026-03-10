@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Lock, Globe, Calendar, Clock, ArrowRight, User } from 'lucide-react';
+import { Users, Lock, Globe, Calendar, Clock, ArrowRight, User, Bookmark } from 'lucide-react';
 import { Button } from './Button';
 import { Link } from 'react-router-dom';
 import { RoomPreviewCanvas } from './RoomPreviewCanvas';
@@ -50,6 +50,10 @@ export interface RoomCardProps {
   showJoinButton?: boolean;
   /** Whether to display owner information */
   showOwnerInfo?: boolean;
+  /** Whether the room is bookmarked by the user */
+  isBookmarked?: boolean;
+  /** Optional click handler for when bookmark icon is clicked */
+  onBookmarkToggle?: (id: string, e: React.MouseEvent) => void;
   /** Optional click handler for the entire card */
   onClick?: () => void;
 }
@@ -134,6 +138,8 @@ const RoomCardComponent: React.FC<RoomCardProps> = ({
   drawingData,
   showJoinButton = true,
   showOwnerInfo = true,
+  isBookmarked = false,
+  onBookmarkToggle,
   onClick
 }) => {
   /**
@@ -215,6 +221,22 @@ const RoomCardComponent: React.FC<RoomCardProps> = ({
             <Lock size={12} aria-hidden="true" />
             <span>Private</span>
           </div>
+        )}
+
+        {/* Bookmark toggle button */}
+        {onBookmarkToggle && (
+          <button
+            className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all shadow-sm z-10 ${
+              isBookmarked 
+                ? 'bg-yellow-400 text-white hover:bg-yellow-500' 
+                : 'bg-white/90 dark:bg-slate-900/90 text-slate-400 hover:text-yellow-500 hover:bg-white dark:hover:bg-slate-800'
+            }`}
+            onClick={(e) => onBookmarkToggle(id, e)}
+            aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+            title={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+          >
+            <Bookmark size={16} fill={isBookmarked ? "currentColor" : "none"} />
+          </button>
         )}
 
         {/* Participant count indicator */}

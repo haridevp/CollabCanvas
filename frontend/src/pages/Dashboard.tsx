@@ -60,6 +60,21 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'my-rooms' | 'public' | 'recent' | 'bookmarked'>('my-rooms');
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'name'>('newest');
 
+  // Bookmarks state (persisted to localStorage)
+  const [bookmarkedRoomIds, setBookmarkedRoomIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('bookmarkedRooms');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  // Save bookmarks to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('bookmarkedRooms', JSON.stringify(Array.from(bookmarkedRoomIds)));
+  }, [bookmarkedRoomIds]);
+
   /**
    * Load rooms when component mounts or dependencies change
    * 
@@ -72,7 +87,7 @@ const Dashboard = () => {
    */
   useEffect(() => {
     loadRooms();
-  }, [activeTab, sortBy]);
+  }, [activeTab]);
 
   /**
    * Loads rooms from the API based on current filter settings
@@ -94,7 +109,7 @@ const Dashboard = () => {
       // Fetch both in parallel on initial mount or when needed
       const [myRoomsResult, publicRoomsResult] = await Promise.all([
         roomService.getMyRooms(),
-        roomService.getPublicRooms({ sort: sortBy })
+        roomService.getPublicRooms() // We handle sorting locally now
       ]);
 
       if (myRoomsResult.success && myRoomsResult.rooms) {
@@ -123,15 +138,70 @@ const Dashboard = () => {
   };
 
   /**
-   * Filters rooms based on current search query
-   * 
-   * @constant {Room[]} filteredRooms
-   * Filters rooms by name or description containing search query
+   * Toggles bookmark status for a specific room
    */
-  const filteredRooms = (activeTab === 'my-rooms' ? myRooms : publicRooms).filter(room =>
-    room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    room.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleBookmarkToggle = (roomId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the room
+    setBookmarkedRoomIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(roomId)) {
+        newSet.delete(roomId);
+      } else {
+        newSet.add(roomId);
+      }
+      return newSet;
+    });
+  };
+
+  /**
+   * Derives the base list of rooms depending on the active tab
+   */
+  const getDerivedRooms = () => {
+    switch (activeTab) {
+      case 'my-rooms':
+        // My Rooms simply returns the rooms the user is part of
+        return myRooms;
+      case 'public':
+        // Rooms Gallery returns all public rooms
+        return publicRooms;
+      case 'recent':
+        // Recent filters myRooms for rooms updated in the last 7 days (or just sorted by newest)
+        // We'll return myRooms and rely on the sorting, optionally filtering out very old ones
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        return myRooms.filter(r => new Date(r.updatedAt) > oneWeekAgo);
+      case 'bookmarked':
+        // Bookmarked filters myRooms for bookmarked ones
+        return myRooms.filter(r => bookmarkedRoomIds.has(r.id));
+      default:
+        return myRooms;
+    }
+  };
+
+  /**
+   * Applies search filtering and sorting rules
+   */
+  const getProcessedRooms = () => {
+    let result = getDerivedRooms().filter(room =>
+      room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (room.description || "").toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    result.sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      } else if (sortBy === 'popular') {
+        return b.participantCount - a.participantCount;
+      } else if (sortBy === 'name') {
+        return a.name.localeCompare(b.name);
+      }
+      return 0;
+    });
+
+    return result;
+  };
+
+  const filteredRooms = getProcessedRooms();
 
   /**
    * Dashboard navigation tabs configuration
@@ -144,9 +214,9 @@ const Dashboard = () => {
    */
   const tabs = [
     { id: 'my-rooms', label: 'My Rooms', icon: Grid, count: myRooms.length },
-    { id: 'public', label: 'Public Rooms', icon: Globe, count: publicRooms.length },
+    { id: 'public', label: 'Rooms Gallery', icon: Globe, count: publicRooms.length },
     { id: 'recent', label: 'Recent', icon: History },
-    { id: 'bookmarked', label: 'Bookmarked', icon: Bookmark },
+    { id: 'bookmarked', label: 'Bookmarked', icon: Bookmark, count: bookmarkedRoomIds.size },
   ];
 
   return (
@@ -221,7 +291,7 @@ const Dashboard = () => {
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Public Rooms</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Rooms Gallery</p>
                   <p className="text-2xl font-bold text-slate-900 dark:text-white">{publicRooms.length}</p>
                 </div>
                 <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
@@ -342,8 +412,10 @@ const Dashboard = () => {
                     createdAt={room.createdAt}
                     updatedAt={room.updatedAt}
                     drawingData={room.drawingData}
-                    showJoinButton={activeTab !== 'my-rooms'}
+                    showJoinButton={activeTab === 'public'}
                     showOwnerInfo={activeTab === 'public'}
+                    isBookmarked={bookmarkedRoomIds.has(room.id)}
+                    onBookmarkToggle={activeTab !== 'public' ? handleBookmarkToggle : undefined}
                     onClick={() => navigate(`/room/${room.id}`)}
                   />
                 ))}
@@ -382,13 +454,28 @@ const Dashboard = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm text-slate-500 dark:text-slate-400">
+                      <div className="text-right flex flex-col items-end">
+                        <div className="text-sm text-slate-500 dark:text-slate-400 mb-2">
                           Updated {new Date(room.updatedAt).toLocaleDateString()}
                         </div>
-                        <Button variant="outline" className="mt-2">
-                          {activeTab === 'my-rooms' ? 'Open' : 'Join'}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {activeTab !== 'public' && (
+                            <button
+                              className={`p-2 rounded-lg transition-colors border ${
+                                bookmarkedRoomIds.has(room.id)
+                                  ? 'bg-yellow-50 border-yellow-200 text-yellow-600 dark:bg-yellow-900/20 dark:border-yellow-900/50'
+                                  : 'border-slate-200 text-slate-400 hover:text-yellow-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700'
+                              }`}
+                              onClick={(e) => handleBookmarkToggle(room.id, e)}
+                              title={bookmarkedRoomIds.has(room.id) ? "Remove bookmark" : "Add bookmark"}
+                            >
+                              <Bookmark size={18} fill={bookmarkedRoomIds.has(room.id) ? "currentColor" : "none"} />
+                            </button>
+                          )}
+                          <Button variant="outline">
+                            {activeTab === 'public' ? 'Join' : 'Open'}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
