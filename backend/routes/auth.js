@@ -57,7 +57,7 @@ router.post("/google-login", async (req, res) => {
         email: email.toLowerCase(),
         googleId,
         avatar: picture,
-        isVerified: true, 
+        isVerified: true,
       });
       await user.save();
     } else if (!user.googleId) {
@@ -66,6 +66,53 @@ router.post("/google-login", async (req, res) => {
       user.isVerified = true;
       await user.save();
     }
+
+    if (user.twoFactorEnabled) {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      user.twoFactorCode = code;
+      user.twoFactorExpires = new Date(Date.now() + 10 * 60000);
+      await user.save();
+
+      console.log(`\n\n[DEV] Google OAuth 2FA Code for ${user.email} is: ${code}\n\n`);
+
+      try {
+        await sendEmail({
+          email: user.email,
+          subject: "Your Login Verification Code",
+          html: `
+            <div style="font-family: sans-serif; text-align: center;">
+              <h2>Login Verification</h2>
+              <p>Your Two-Factor Authentication code is:</p>
+              <h1 style="font-size: 32px; letter-spacing: 5px; color: #2563eb;">${code}</h1>
+              <p>This code will expire in 10 minutes.</p>
+            </div>
+          `
+        });
+        return res.json({
+          success: true,
+          requires2FA: true,
+          userId: user._id,
+          message: "Verification code sent to your email."
+        });
+      } catch (emailError) {
+        console.error("2FA Email Error:", emailError.message);
+        return res.json({
+          success: true,
+          requires2FA: true,
+          userId: user._id,
+          message: "Verification code generated (Check your email)."
+        });
+      }
+    }
+
+    const ua = req.headers['user-agent'] || '';
+    let deviceType = 'Desktop';
+    if (/mobile|android|iphone|ipad|tablet/i.test(ua)) {
+      deviceType = /tablet|ipad/i.test(ua) ? 'Tablet' : 'Mobile';
+    }
+    user.loginActivities.push({ status: "success", deviceType, timestamp: new Date() });
+    if (user.loginActivities.length > 50) user.loginActivities = user.loginActivities.slice(-50);
+    await user.save();
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
@@ -79,6 +126,7 @@ router.post("/google-login", async (req, res) => {
         fullName: user.displayName,
         avatar: user.avatar,
         bio: user.bio,
+        twoFactorEnabled: user.twoFactorEnabled,
       },
     });
   } catch (err) {
@@ -219,7 +267,7 @@ router.post("/register", async (req, res) => {
       await sendEmail({
         email: newUser.email,
         subject: "Confirm your Collaborative Canvas Account",
-        verificationUrl: verificationUrl, 
+        verificationUrl: verificationUrl,
       });
     } catch (mailErr) {
       // Log failure in mail delivery
@@ -227,9 +275,9 @@ router.post("/register", async (req, res) => {
       // Rollback: delete the newly created user record so they aren't stuck in an unverified state
       await User.findByIdAndDelete(newUser._id);
       // Return a 500 error to the client
-      return res.status(500).json({ 
-        success: false, 
-        message: "Failed to send verification email. Please try again." 
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send verification email. Please try again."
       });
     }
 
@@ -346,12 +394,21 @@ router.post("/login", async (req, res) => {
       user.twoFactorExpires = new Date(Date.now() + 10 * 60000);
       await user.save();
 
+      console.log(`\n\n[DEV] 2FA Code for ${user.email} is: ${code}\n\n`);
+
       try {
-        await sendEmail(
-          user.email,
-          "Your Login Verification Code",
-          `Your Two-Factor Authentication code is: ${code}\n\nThis code will expire in 10 minutes.`
-        );
+        await sendEmail({
+          email: user.email,
+          subject: "Your Login Verification Code",
+          html: `
+            <div style="font-family: sans-serif; text-align: center;">
+              <h2>Login Verification</h2>
+              <p>Your Two-Factor Authentication code is:</p>
+              <h1 style="font-size: 32px; letter-spacing: 5px; color: #2563eb;">${code}</h1>
+              <p>This code will expire in 10 minutes.</p>
+            </div>
+          `
+        });
         return res.json({
           success: true,
           requires2FA: true,
@@ -359,8 +416,13 @@ router.post("/login", async (req, res) => {
           message: "Verification code sent to your email."
         });
       } catch (emailError) {
-        console.error("2FA Email Error:", emailError);
-        return res.status(500).json({ success: false, message: "Could not send 2FA email. Please try again later." });
+        console.error("2FA Email Error:", emailError.message);
+        return res.json({
+          success: true,
+          requires2FA: true,
+          userId: user._id,
+          message: "Verification code generated (Check server console if email failed)."
+        });
       }
     }
 
@@ -395,8 +457,8 @@ router.post("/login", async (req, res) => {
         username: user.username,
         email: user.email,
         fullName: user.displayName,
-        avatar: user.avatar, 
-        bio: user.bio, 
+        avatar: user.avatar,
+        bio: user.bio,
         twoFactorEnabled: user.twoFactorEnabled,
       },
     });
@@ -444,7 +506,7 @@ router.post("/verify-2fa", async (req, res) => {
 
     user.loginActivities.push({ status: "success", deviceType, timestamp: new Date() });
     if (user.loginActivities.length > 50) user.loginActivities = user.loginActivities.slice(-50);
-    
+
     await user.save();
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
@@ -529,7 +591,7 @@ router.post("/forgot-password", async (req, res) => {
       await sendEmail({
         email: user.email,
         subject: "Password Reset Request",
-        resetUrl: resetUrl, 
+        resetUrl: resetUrl,
       });
       // Respond with confirmation
       res.json({ success: true, message: "Reset link sent to your email." });
@@ -594,7 +656,7 @@ router.post("/reset-password", async (req, res) => {
 router.put("/change-password", authh, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    
+
     // Retrieve the user from the database
     const user = await User.findById(req.user.id);
     if (!user) {
@@ -613,7 +675,7 @@ router.put("/change-password", authh, async (req, res) => {
 
     // Save the updated password to the database
     await user.save();
-    
+
     res.json({ success: true, message: "Password changed successfully!" });
   } catch (err) {
     console.error("Change password error:", err);
@@ -722,7 +784,7 @@ router.put("/update-profile", authh, async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        fullName: user.displayName, 
+        fullName: user.displayName,
         bio: user.bio,
         avatar: user.avatar,
         notificationSettings: user.notificationSettings,
@@ -764,7 +826,7 @@ router.get("/search", authh, async (req, res) => {
           ],
         },
         // Filter out the requesting user's own profile from the results
-        { _id: { $ne: req.user._id } }, 
+        { _id: { $ne: req.user._id } },
       ],
     })
       // Only retrieve necessary public fields for the search results
