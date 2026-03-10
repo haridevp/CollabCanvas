@@ -36,7 +36,7 @@ const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 let frontendOrigin = frontendUrl;
 try {
   const urlObj = new URL(frontendUrl);
-  frontendOrigin = urlObj.origin; 
+  frontendOrigin = urlObj.origin;
 } catch (e) {
   // Fallback if URL parsing fails
   console.log("Could not parse frontend URL, using as-is");
@@ -44,10 +44,10 @@ try {
 
 // Define the list of origins permitted to access this API
 const allowedOrigins = [
-  frontendOrigin, 
-  frontendUrl, 
-  "http://localhost:5173", 
-  "http://localhost:3000", 
+  frontendOrigin,
+  frontendUrl,
+  "http://localhost:5173",
+  "http://localhost:3000",
   "https://haridevp.dev",
   "https://sid-error.github.io"
 ];
@@ -59,10 +59,14 @@ const allowedOrigins = [
 const io = socketIo(server, {
   cors: {
     // Permit connections from any origin (broad permissive policy for collaboration)
-    origin: "*", 
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
+
+// Store io reference so REST controllers can query live socket connections
+const socketStore = require("../utils/socketStore");
+socketStore.setIO(io);
 
 /**
  * Global Socket.IO connection event listener.
@@ -80,7 +84,7 @@ io.on("connection", (socket) => {
  */
 // Enable CORS for all REST API endpoints with a permissive policy
 app.use(cors({
-  origin: "*", 
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));

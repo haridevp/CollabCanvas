@@ -16,6 +16,8 @@ const User = require("../models/User");
 const { generateRoomCode } = require("../utils/generateRoomCode");
 // Import createCanvas from the canvas library for server-side drawing exports
 const { createCanvas } = require("canvas");
+// Import socketStore to query live socket connections for participant counts
+const { getLiveUserCount } = require("../utils/socketStore");
 
 /**
  * Creates a new collaborative drawing room and assigns the requester as the owner.
@@ -54,8 +56,8 @@ const createRoom = async (req, res) => {
       visibility: resolvedVisibility,
       password,
       owner: req.user._id,
-      // Cap maxParticipants between 2 and 50; default to 50
-      maxParticipants: Math.min(50, Math.max(2, parseInt(maxParticipants) || 50)),
+      // Validate maxParticipants (minimum 2); default to 10
+      maxParticipants: Math.max(2, parseInt(maxParticipants) || 10),
     });
 
     // Save the room document to the database
@@ -247,9 +249,16 @@ const getPublicRooms = async (req, res) => {
     const total = await Room.countDocuments(query);
 
     // Respond with the room list and pagination meta-information
+    // Attach live participant count to each room
+    const roomsWithLiveCounts = rooms.map(r => {
+      const obj = r.toObject ? r.toObject() : { ...r };
+      obj.participantCount = getLiveUserCount(r._id.toString());
+      return obj;
+    });
+
     res.json({
       success: true,
-      rooms,
+      rooms: roomsWithLiveCounts,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -295,8 +304,14 @@ const getMyRooms = async (req, res) => {
       // Sort by last active/update time for dashboard relevance
       .sort({ updatedAt: -1 });
 
-    // Respond with the curated list of the user's rooms
-    res.json({ success: true, rooms });
+    // Respond with the curated list of the user's rooms, including live counts
+    const roomsWithLiveCounts = rooms.map(r => {
+      const obj = r.toObject ? r.toObject() : { ...r };
+      obj.participantCount = getLiveUserCount(r._id.toString());
+      return obj;
+    });
+
+    res.json({ success: true, rooms: roomsWithLiveCounts });
   } catch (error) {
     // Respond with error details if the multi-step fetch fails
     res.status(400).json({ success: false, error: error.message });
@@ -340,7 +355,7 @@ const updateRoom = async (req, res) => {
 
     // Clamp maxParticipants to valid range if provided
     if (updates.maxParticipants !== undefined) {
-      updates.maxParticipants = Math.min(50, Math.max(2, parseInt(updates.maxParticipants) || 50));
+      updates.maxParticipants = Math.max(2, parseInt(updates.maxParticipants) || 10);
     }
 
     // Prevent direct overwriting of protected system fields
@@ -640,6 +655,12 @@ const validateRoom = async (req, res) => {
       return res.status(403).json({ error: "You have been banned from this room" });
     }
 
+    // Count only active (non-banned) participants for an accurate member count
+    const activeParticipantCount = await Participant.countDocuments({
+      room: room._id,
+      isBanned: { $ne: true },
+    });
+
     // Return success and a fully-populated room metadata object for the frontend
     res.json({
       success: true,
@@ -654,7 +675,7 @@ const validateRoom = async (req, res) => {
         ownerId: room.owner?._id || room.owner,
         ownerName: room.owner?.username || 'Unknown',
         owner: room.owner,
-        participantCount: room.participants.length,
+        participantCount: getLiveUserCount(room._id.toString()),
         maxParticipants: room.maxParticipants,
         createdAt: room.createdAt,
         updatedAt: room.updatedAt,
@@ -770,7 +791,7 @@ const inviteUsers = async (req, res) => {
           invitedUser: userId,
           invitedBy: req.user._id,
           // Flag as true to trigger downstream notification logic
-          emailSent: true, 
+          emailSent: true,
         });
 
         // Save invitation record

@@ -1,7 +1,8 @@
 import React from 'react';
-import { Users, Lock, Globe, Calendar, Clock, ArrowRight, User } from 'lucide-react';
+import { Users, Lock, Globe, Calendar, Clock, ArrowRight, User, Bookmark } from 'lucide-react';
 import { Button } from './Button';
 import { Link } from 'react-router-dom';
+import { RoomPreviewCanvas } from './RoomPreviewCanvas';
 
 /**
  * Interface defining the properties for the RoomCard component
@@ -17,6 +18,7 @@ import { Link } from 'react-router-dom';
  * @property {string} createdAt - ISO timestamp when the room was created
  * @property {string} updatedAt - ISO timestamp when the room was last updated
  * @property {string} [thumbnail] - Optional thumbnail URL for the room
+ * @property {any[]} [drawingData] - Optional raw drawing data of the room
  * @property {boolean} [showJoinButton=true] - Whether to show a prominent join button
  * @property {boolean} [showOwnerInfo=true] - Whether to display owner information
  * @property {() => void} [onClick] - Optional click handler for the entire card
@@ -42,10 +44,16 @@ export interface RoomCardProps {
   updatedAt: string;
   /** Optional thumbnail URL for the room */
   thumbnail?: string;
+  /** Optional raw drawing data of the room */
+  drawingData?: any[];
   /** Whether to show a prominent join button */
   showJoinButton?: boolean;
   /** Whether to display owner information */
   showOwnerInfo?: boolean;
+  /** Whether the room is bookmarked by the user */
+  isBookmarked?: boolean;
+  /** Optional click handler for when bookmark icon is clicked */
+  onBookmarkToggle?: (id: string, e: React.MouseEvent) => void;
   /** Optional click handler for the entire card */
   onClick?: () => void;
 }
@@ -109,6 +117,7 @@ export interface RoomCardProps {
  * @param {string} props.createdAt - Creation timestamp
  * @param {string} props.updatedAt - Last update timestamp
  * @param {string} [props.thumbnail] - Room thumbnail URL
+ * @param {any[]} [props.drawingData] - Raw drawing data
  * @param {boolean} [props.showJoinButton=true] - Show join button
  * @param {boolean} [props.showOwnerInfo=true] - Show owner info
  * @param {() => void} [props.onClick] - Card click handler
@@ -126,8 +135,11 @@ const RoomCardComponent: React.FC<RoomCardProps> = ({
   createdAt,
   updatedAt,
   thumbnail,
+  drawingData,
   showJoinButton = true,
   showOwnerInfo = true,
+  isBookmarked = false,
+  onBookmarkToggle,
   onClick
 }) => {
   /**
@@ -173,28 +185,35 @@ const RoomCardComponent: React.FC<RoomCardProps> = ({
     }
   };
 
-  // Calculate participant percentage for visual indicators
-  const participantPercentage = (participantCount / maxParticipants) * 100;
+
 
   return (
-    <div 
+    <div
       className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-lg transition-all hover:border-blue-300 dark:hover:border-blue-700 hover:translate-y-[-2px] cursor-pointer"
       onClick={onClick}
       role="article"
       aria-label={`Room: ${name}`}
     >
       {/* Room thumbnail/header section with gradient background */}
-      <div 
+      <div
         className="h-40 relative"
         style={{
-          background: thumbnail 
+          background: (!drawingData && thumbnail)
             ? `url(${thumbnail}) center/cover no-repeat`
-            : 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)'
+            : (!drawingData && 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)') || 'transparent'
         }}
       >
+        {drawingData && (
+          <div className="absolute inset-0 z-0 opacity-90 rounded-t-xl overflow-hidden">
+            <RoomPreviewCanvas drawingData={drawingData} />
+            {/* Add a subtle dark gradient overlay so badges stay readable */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-transparent" />
+          </div>
+        )}
+
         {/* Privacy status badge */}
         {!isPublic && (
-          <div 
+          <div
             className="absolute top-3 left-3 bg-black/70 text-white px-2 py-1 rounded-full flex items-center gap-1 text-xs backdrop-blur-sm"
             role="status"
             aria-label="Private room"
@@ -203,9 +222,25 @@ const RoomCardComponent: React.FC<RoomCardProps> = ({
             <span>Private</span>
           </div>
         )}
-        
+
+        {/* Bookmark toggle button */}
+        {onBookmarkToggle && (
+          <button
+            className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all shadow-sm z-10 ${
+              isBookmarked 
+                ? 'bg-yellow-400 text-white hover:bg-yellow-500' 
+                : 'bg-white/90 dark:bg-slate-900/90 text-slate-400 hover:text-yellow-500 hover:bg-white dark:hover:bg-slate-800'
+            }`}
+            onClick={(e) => onBookmarkToggle(id, e)}
+            aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+            title={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+          >
+            <Bookmark size={16} fill={isBookmarked ? "currentColor" : "none"} />
+          </button>
+        )}
+
         {/* Participant count indicator */}
-        <div 
+        <div
           className="absolute bottom-3 right-3 bg-white/90 dark:bg-slate-900/90 px-3 py-1.5 rounded-lg backdrop-blur-sm"
           role="status"
           aria-label={`${participantCount} of ${maxParticipants} participants`}
@@ -248,7 +283,7 @@ const RoomCardComponent: React.FC<RoomCardProps> = ({
         <div className="space-y-2 mb-4">
           {/* Owner information */}
           {showOwnerInfo && (
-            <div 
+            <div
               className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400"
               aria-label={`Created by ${ownerName}`}
             >
@@ -256,17 +291,17 @@ const RoomCardComponent: React.FC<RoomCardProps> = ({
               <span className="truncate">Created by {ownerName}</span>
             </div>
           )}
-          
+
           {/* Date information */}
           <div className="flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
-            <div 
+            <div
               className="flex items-center gap-1"
               aria-label={`Created on ${formatDate(createdAt)}`}
             >
               <Calendar size={12} aria-hidden="true" />
               <span>Created {formatDate(createdAt)}</span>
             </div>
-            <div 
+            <div
               className="flex items-center gap-1"
               aria-label={`Updated ${formatTimeAgo(updatedAt)}`}
             >
@@ -280,8 +315,8 @@ const RoomCardComponent: React.FC<RoomCardProps> = ({
         <div className="flex gap-2">
           {showJoinButton ? (
             // Prominent "Enter Room" button for main room listings
-            <Link 
-              to={`/room/${id}`} 
+            <Link
+              to={`/room/${id}`}
               className="flex-1"
               aria-label={`Enter room: ${name}`}
               onClick={(e) => {
@@ -296,8 +331,8 @@ const RoomCardComponent: React.FC<RoomCardProps> = ({
             </Link>
           ) : (
             // Simple "Open" button for secondary contexts
-            <Link 
-              to={`/room/${id}`} 
+            <Link
+              to={`/room/${id}`}
               className="flex-1"
               aria-label={`Open room: ${name}`}
               onClick={(e) => {

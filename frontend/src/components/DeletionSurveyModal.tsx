@@ -338,7 +338,7 @@ const DeletionSurveyModal: React.FC<DeletionSurveyModalProps> = ({
             <textarea
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
-              placeholder="What could we have done better? What did you like or dislike?"
+             
               className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none min-h-[100px] resize-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
               rows={3}
               aria-label="Additional feedback"
@@ -353,7 +353,7 @@ const DeletionSurveyModal: React.FC<DeletionSurveyModalProps> = ({
             <textarea
               value={improvementSuggestions}
               onChange={(e) => setImprovementSuggestions(e.target.value)}
-              placeholder="What features would make you consider using our platform again?"
+             
               className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none min-h-[80px] resize-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
               rows={2}
               aria-label="Suggestions for improvement"

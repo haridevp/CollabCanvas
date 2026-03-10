@@ -56,7 +56,6 @@ export const applyTheme = (theme: ThemeType) => {
  * Used during logout so auth pages are rendered without any user theme.
  */
 export const clearTheme = (): void => {
-    localStorage.removeItem(THEME_KEY);
     const html = document.documentElement;
     html.classList.remove('light', 'dark', 'high-contrast');
 };

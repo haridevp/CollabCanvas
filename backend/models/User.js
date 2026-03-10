@@ -58,6 +58,18 @@ const UserSchema = new mongoose.Schema({
   // Expiration timestamp for the reset token security
   resetPasswordExpires: Date,
 
+  // Notification preference settings configured from the Profile page
+  notificationSettings: {
+    email: { type: Boolean, default: true },
+    push: { type: Boolean, default: false },
+    reminders: { type: Boolean, default: true },
+    marketing: { type: Boolean, default: false },
+    securityAlerts: { type: Boolean, default: true },
+    soundEnabled: { type: Boolean, default: true },
+    desktopNotifications: { type: Boolean, default: false },
+    notificationFrequency: { type: String, enum: ['realtime', 'daily', 'weekly'], default: 'realtime' }
+  },
+
   // Array to track historical login attempts for security auditing
   loginActivities: [
     {
@@ -69,6 +81,12 @@ const UserSchema = new mongoose.Schema({
       timestamp: { type: Date, default: Date.now }
     }
   ],
+
+  // Two-Factor Authentication settings
+  twoFactorEnabled: { type: Boolean, default: false },
+  twoFactorCode: { type: String },
+  twoFactorExpires: { type: Date },
+
   // Timestamp of when the user account was first registered
   createdAt: { type: Date, default: Date.now }
 });

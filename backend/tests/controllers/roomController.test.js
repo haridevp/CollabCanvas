@@ -318,7 +318,7 @@ describe("getPublicRooms", () => {
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         success: true,
-        rooms: mockRooms,
+        rooms: mockRooms.map(r => ({ ...r, participantCount: 0 })),
         pagination: expect.objectContaining({
           page: 1,
           limit: 10,
@@ -390,7 +390,7 @@ describe("getMyRooms", () => {
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
         success: true,
-        rooms: mockRooms,
+        rooms: mockRooms.map(r => ({ ...r, participantCount: 0 })),
       })
     );
   });
@@ -787,7 +787,7 @@ describe("validateRoom", () => {
         room: expect.objectContaining({
           name: "Valid Room",
           isAlreadyMember: true,
-          participantCount: 2,
+          participantCount: 0,
         }),
       })
     );

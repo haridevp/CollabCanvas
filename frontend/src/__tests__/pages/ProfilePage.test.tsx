@@ -1,15 +1,9 @@
 // src/__tests__/pages/ProfilePage.test.tsx
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import ProfilePage from '../../pages/ProfilePage';
 import { updateProfile } from '../../utils/authService';
 import { useAuth } from '../../services/AuthContext';
-import {
-  hasPendingDeletion,
-  getPendingDeletion,
-  requestAccountDeletion,
-} from '../../services/accountDeletionService';
 
 // ============ MOCKS ============
 const mockNavigate = vi.fn();
@@ -46,19 +40,6 @@ vi.mock('../../components/ui/Modal', () => ({
     ) : null,
 }));
 
-vi.mock('../../components/ui/ThemeSelector', () => ({
-  __esModule: true,
-  default: ({ currentTheme, onThemeChange }: any) => (
-    <div data-testid="theme-selector">
-      <span>ThemeSelector: {currentTheme}</span>
-      <button onClick={() => onThemeChange('dark')}>Set Dark</button>
-      <button onClick={() => onThemeChange('light')}>Set Light</button>
-      <button onClick={() => onThemeChange('system')}>Set System</button>
-      <button onClick={() => onThemeChange('high-contrast')}>Set High Contrast</button>
-    </div>
-  ),
-}));
-
 vi.mock('../../components/ui/CharacterCounter', () => ({
   __esModule: true,
   default: ({ currentLength, maxLength }: any) => (
@@ -92,11 +73,6 @@ vi.mock('../../components/ui/ImageCropper', () => ({
   ),
 }));
 
-vi.mock('../../components/DeletionSurveyModal', () => ({
-  __esModule: true,
-  default: ({ isOpen }: any) => (isOpen ? <div>Deletion Survey</div> : null),
-}));
-
 // Services
 vi.mock('../../utils/authService', () => ({
   updateProfile: vi.fn(),
@@ -106,19 +82,13 @@ vi.mock('../../services/AuthContext', () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('../../services/accountDeletionService', () => ({
-  requestAccountDeletion: vi.fn(),
-  hasPendingDeletion: vi.fn(),
-  getPendingDeletion: vi.fn(),
-  cancelAccountDeletion: vi.fn(),
-  clearUserData: vi.fn(),
-}));
-
 // ============ HELPERS ============
 const mockUpdateUser = vi.fn();
 const mockLogout = vi.fn();
 
 const baseUser = {
+  id: 'user-123',
+  username: 'testuser',
   email: 'test@example.com',
   fullName: 'Test User',
   bio: 'Hello bio',
@@ -141,9 +111,6 @@ describe('ProfilePage', () => {
 
     setupAuthMock();
 
-    vi.mocked(hasPendingDeletion).mockReturnValue(false);
-    vi.mocked(getPendingDeletion).mockReturnValue(null);
-
     // Avoid crash for URL.createObjectURL
     global.URL.createObjectURL = vi.fn(() => 'blob:mock');
 
@@ -165,66 +132,29 @@ describe('ProfilePage', () => {
     vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
-  test('renders base layout and personal tab by default', () => {
+  test('renders base layout with personal info (no tab navigation)', () => {
     render(<ProfilePage />);
 
-    expect(screen.getByText('Profile Settings')).toBeInTheDocument();
+    expect(screen.getByText('Profile')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar')).toBeInTheDocument();
 
-    // Tabs
-    expect(screen.getByRole('button', { name: /Personal Info/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Appearance/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Notifications/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Keyboard Shortcuts/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Security/i })).toBeInTheDocument();
-
-    // Personal tab content
+    // Personal info content is displayed directly
     expect(screen.getByText(/Upload a new profile picture/i)).toBeInTheDocument();
     expect(screen.getByText('Test User')).toBeInTheDocument();
     expect(screen.getByTestId('file-upload')).toBeInTheDocument();
     expect(screen.getByTestId('character-counter')).toBeInTheDocument();
-  });
 
-  test('switches tabs: appearance tab shows ThemeSelector', () => {
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Appearance/i }));
-    expect(screen.getByTestId('theme-selector')).toBeInTheDocument();
-  });
-
-  test('switches tabs: notifications tab shows enable/disable all', () => {
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Notifications/i }));
-
-    expect(screen.getByRole('button', { name: /Enable All/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Disable All/i })).toBeInTheDocument();
-  });
-
-  test('switches tabs: shortcuts tab renders shortcut inputs', () => {
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Keyboard Shortcuts/i }));
-
-    expect(screen.getByText(/Keyboard Shortcuts Customization/i)).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Ctrl+Z')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Ctrl+Y')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('B')).toBeInTheDocument();
-  });
-
-  test('switches tabs: security tab shows danger zone', () => {
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Security/i }));
-
-    expect(screen.getByText(/Danger Zone/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Delete Account Permanently/i })).toBeInTheDocument();
+    // Tab buttons should NOT exist (no tab navigation)
+    expect(screen.queryByRole('button', { name: /Appearance/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Notifications/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Keyboard Shortcuts/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Security/i })).not.toBeInTheDocument();
   });
 
   test('display name validation: too short shows error', () => {
     render(<ProfilePage />);
 
-    const displayNameInput = screen.getByPlaceholderText(/Enter your display name/i);
+    const displayNameInput = screen.getByRole('textbox', { name: /Display Name/i });
 
     fireEvent.change(displayNameInput, { target: { value: 'ab' } });
 
@@ -234,7 +164,7 @@ describe('ProfilePage', () => {
   test('display name validation: invalid characters shows error', () => {
     render(<ProfilePage />);
 
-    const displayNameInput = screen.getByPlaceholderText(/Enter your display name/i);
+    const displayNameInput = screen.getByRole('textbox', { name: /Display Name/i });
 
     fireEvent.change(displayNameInput, { target: { value: 'Bad@Name' } });
 
@@ -244,65 +174,13 @@ describe('ProfilePage', () => {
   test('bio updates and CharacterCounter updates', () => {
     render(<ProfilePage />);
 
-    const bioTextarea = screen.getByPlaceholderText(/Share your creative journey/i);
+    const bioTextarea = screen.getByRole('textbox', { name: /Bio/i });
 
     fireEvent.change(bioTextarea, { target: { value: 'New bio text' } });
 
     expect(screen.getByTestId('character-counter')).toHaveTextContent(
       `${'New bio text'.length}/500`
     );
-  });
-
-  test('theme change: clicking quick toggle applies theme classes and updates user + localStorage', () => {
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Appearance/i }));
-
-    // Click quick theme toggle button "Dark"
-    fireEvent.click(screen.getByRole('button', { name: /Dark/i }));
-
-    expect(mockUpdateUser).toHaveBeenCalledWith({ theme: 'dark' });
-    expect(localStorage.getItem('user-theme')).toBe('dark');
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-  });
-
-  test('theme change: system theme uses matchMedia (dark matches -> adds dark)', () => {
-    (window.matchMedia as any).mockImplementation((query: string) => ({
-      matches: query.includes('prefers-color-scheme: dark'),
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    }));
-
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Appearance/i }));
-
-    // Click System
-    fireEvent.click(screen.getByRole('button', { name: /System/i }));
-
-    expect(mockUpdateUser).toHaveBeenCalledWith({ theme: 'system' });
-    expect(localStorage.getItem('user-theme')).toBe('system');
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-  });
-
-  test('theme change: high-contrast adds both high-contrast and dark classes', () => {
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Appearance/i }));
-
-    // Use ThemeSelector mock button
-    fireEvent.click(screen.getByRole('button', { name: /Set High Contrast/i }));
-
-    expect(mockUpdateUser).toHaveBeenCalledWith({ theme: 'high-contrast' });
-    expect(localStorage.getItem('user-theme')).toBe('high-contrast');
-
-    expect(document.documentElement.classList.contains('high-contrast')).toBe(true);
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
   test('upload flow: selecting file opens cropper, crop completes updates avatar', async () => {
@@ -330,7 +208,7 @@ describe('ProfilePage', () => {
   test('save changes: invalid display name prevents updateProfile call', async () => {
     render(<ProfilePage />);
 
-    const displayNameInput = screen.getByPlaceholderText(/Enter your display name/i);
+    const displayNameInput = screen.getByRole('textbox', { name: /Display Name/i });
     fireEvent.change(displayNameInput, { target: { value: 'a' } });
 
     fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
@@ -347,7 +225,7 @@ describe('ProfilePage', () => {
 
     render(<ProfilePage />);
 
-    const displayNameInput = screen.getByPlaceholderText(/Enter your display name/i);
+    const displayNameInput = screen.getByRole('textbox', { name: /Display Name/i });
     fireEvent.change(displayNameInput, { target: { value: 'New Name' } });
 
     fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
@@ -389,125 +267,5 @@ describe('ProfilePage', () => {
     });
 
     expect(window.alert).toHaveBeenCalledWith('An error occurred while saving.');
-  });
-
-  test('notifications: enable all turns on all toggles', () => {
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Notifications/i }));
-
-    // Disable all first
-    fireEvent.click(screen.getByRole('button', { name: /Disable All/i }));
-
-    const emailToggle = screen.getByLabelText(/Email Notifications/i, { selector: 'label' });
-    expect(emailToggle).toBeInTheDocument();
-
-    // Enable all
-    fireEvent.click(screen.getByRole('button', { name: /Enable All/i }));
-
-    // checkboxes are sr-only inputs, easiest check: find by id
-    const emailInput = document.getElementById('email-notifications') as HTMLInputElement;
-    const pushInput = document.getElementById('in-app-notifications') as HTMLInputElement;
-    const desktopInput = document.getElementById('desktop-notifications') as HTMLInputElement;
-    const soundInput = document.getElementById('sound-notifications') as HTMLInputElement;
-
-    expect(emailInput.checked).toBe(true);
-    expect(pushInput.checked).toBe(true);
-    expect(desktopInput.checked).toBe(true);
-    expect(soundInput.checked).toBe(true);
-  });
-
-  test('shortcuts: entering duplicate shortcut shows conflict warning', () => {
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Keyboard Shortcuts/i }));
-
-    // Change redo to Ctrl+Z (conflicts with undo)
-    const redoInput = screen.getByDisplayValue('Ctrl+Y');
-    fireEvent.change(redoInput, { target: { value: 'Ctrl+Z' } });
-
-    expect(screen.getByText(/Conflict with undo/i)).toBeInTheDocument();
-  });
-
-  test('shortcuts: reset button restores defaults and clears conflict', () => {
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Keyboard Shortcuts/i }));
-
-    // Make a conflict first
-    fireEvent.change(screen.getByDisplayValue('Ctrl+Y'), { target: { value: 'Ctrl+Z' } });
-    expect(screen.getByText(/Conflict with undo/i)).toBeInTheDocument();
-
-    // Reset
-    fireEvent.click(screen.getByRole('button', { name: /Reset to Defaults/i }));
-
-    expect(screen.queryByText(/Conflict with/i)).not.toBeInTheDocument();
-    expect(screen.getByDisplayValue('Ctrl+Y')).toBeInTheDocument();
-  });
-
-  test('security: clicking delete account permanently shows confirm UI', () => {
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Security/i }));
-
-    fireEvent.click(screen.getByRole('button', { name: /Delete Account Permanently/i }));
-
-    expect(screen.getByText(/Confirm Account Deletion/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Current password/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Type DELETE here/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Yes, Delete My Account/i })).toBeInTheDocument();
-  });
-
-  test('security: delete account requires password and DELETE text', async () => {
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Security/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Delete Account Permanently/i }));
-
-    fireEvent.click(screen.getByRole('button', { name: /Yes, Delete My Account/i }));
-
-    expect(window.alert).toHaveBeenCalledWith('Please enter your password');
-    expect(requestAccountDeletion).not.toHaveBeenCalled();
-
-    fireEvent.change(screen.getByPlaceholderText(/Current password/i), {
-      target: { value: 'pass123' },
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Yes, Delete My Account/i }));
-
-    expect(window.alert).toHaveBeenCalledWith('Please type "DELETE"');
-    expect(requestAccountDeletion).not.toHaveBeenCalled();
-  });
-
-  test('security: successful delete calls requestAccountDeletion and redirects', async () => {
-    vi.mocked(requestAccountDeletion).mockResolvedValueOnce({ success: true });
-
-    delete (window as any).location;
-    (window as any).location = { href: '' };
-
-    render(<ProfilePage />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Security/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Delete Account Permanently/i }));
-
-    fireEvent.change(screen.getByPlaceholderText(/Current password/i), {
-      target: { value: 'pass123' },
-    });
-
-    fireEvent.change(screen.getByPlaceholderText(/Type DELETE here/i), {
-      target: { value: 'DELETE' },
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Yes, Delete My Account/i }));
-
-    await waitFor(() => {
-      expect(requestAccountDeletion).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'pass123',
-      });
-    });
-
-    expect(window.alert).toHaveBeenCalledWith('Account deleted.');
-    expect(window.location.href).toBe('/login');
   });
 });

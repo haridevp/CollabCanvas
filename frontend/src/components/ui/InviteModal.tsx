@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   X, Copy, Check, Mail, Link, Users, Share2, MessageSquare,
-  Facebook, Twitter, Linkedin, MessageCircle, Search, Loader2,
+  Facebook, Twitter, Linkedin, MessageCircle, Search, Loader2, Download,
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Button } from './Button';
 import { searchUsers, inviteUsersToRoom } from '../../utils/authService';
 
@@ -111,22 +112,22 @@ const InviteModal: React.FC<InviteModalProps> = ({
 }) => {
   // Track which item was recently copied to clipboard (for feedback)
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
-  
+
   // Current active invite method
   const [inviteMethod, setInviteMethod] = useState<'link' | 'email' | 'users' | 'social'>('link');
-  
+
   // Email invite inputs
   const [emailInput, setEmailInput] = useState<string>('');
   const [emailList, setEmailList] = useState<string[]>([]);
-  
+
   // Custom invitation message
   const [customMessage, setCustomMessage] = useState<string>(`Join me in "${roomName}" on CanvasCollab!`);
-  
+
   // User search inputs
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
-  
+
   // Loading states
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [isSendingInvites, setIsSendingInvites] = useState<boolean>(false);
@@ -138,13 +139,13 @@ const InviteModal: React.FC<InviteModalProps> = ({
    * @constant {string} roomLink
    */
   const roomLink: string = `${window.location.origin}/room/${roomId}`;
-  
+
   /**
    * Full invitation link including password for private rooms
    * 
    * @constant {string} inviteLink
    */
-  const inviteLink: string = roomPassword 
+  const inviteLink: string = roomPassword
     ? `${roomLink}?password=${encodeURIComponent(roomPassword)}`
     : roomLink;
 
@@ -374,7 +375,7 @@ const InviteModal: React.FC<InviteModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/80 dark:bg-black/90 flex items-center justify-center z-50 p-4"
       role="dialog"
       aria-label="Invite collaborators modal"
@@ -409,11 +410,10 @@ const InviteModal: React.FC<InviteModalProps> = ({
           <div className="flex gap-2 mb-6" role="tablist" aria-label="Invitation methods">
             <button
               onClick={() => setInviteMethod('link')}
-              className={`flex-1 py-3 rounded-lg border transition-colors flex items-center justify-center gap-2 ${
-                inviteMethod === 'link'
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
+              className={`flex-1 py-3 rounded-lg border transition-colors flex items-center justify-center gap-2 ${inviteMethod === 'link'
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
               role="tab"
               aria-selected={inviteMethod === 'link'}
               aria-controls="link-panel"
@@ -423,11 +423,10 @@ const InviteModal: React.FC<InviteModalProps> = ({
             </button>
             <button
               onClick={() => setInviteMethod('email')}
-              className={`flex-1 py-3 rounded-lg border transition-colors flex items-center justify-center gap-2 ${
-                inviteMethod === 'email'
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
+              className={`flex-1 py-3 rounded-lg border transition-colors flex items-center justify-center gap-2 ${inviteMethod === 'email'
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
               role="tab"
               aria-selected={inviteMethod === 'email'}
               aria-controls="email-panel"
@@ -437,11 +436,10 @@ const InviteModal: React.FC<InviteModalProps> = ({
             </button>
             <button
               onClick={() => setInviteMethod('users')}
-              className={`flex-1 py-3 rounded-lg border transition-colors flex items-center justify-center gap-2 ${
-                inviteMethod === 'users'
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
+              className={`flex-1 py-3 rounded-lg border transition-colors flex items-center justify-center gap-2 ${inviteMethod === 'users'
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
               role="tab"
               aria-selected={inviteMethod === 'users'}
               aria-controls="users-panel"
@@ -451,11 +449,10 @@ const InviteModal: React.FC<InviteModalProps> = ({
             </button>
             <button
               onClick={() => setInviteMethod('social')}
-              className={`flex-1 py-3 rounded-lg border transition-colors flex items-center justify-center gap-2 ${
-                inviteMethod === 'social'
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
+              className={`flex-1 py-3 rounded-lg border transition-colors flex items-center justify-center gap-2 ${inviteMethod === 'social'
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
               role="tab"
               aria-selected={inviteMethod === 'social'}
               aria-controls="social-panel"
@@ -527,7 +524,7 @@ const InviteModal: React.FC<InviteModalProps> = ({
                   <MessageSquare className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                   <div>
                     <p className="text-sm text-blue-800 dark:text-blue-300">
-                      {isPublic 
+                      {isPublic
                         ? 'Anyone with the link can join this public room.'
                         : 'Only users with both the link and password can join this private room.'
                       }
@@ -536,33 +533,69 @@ const InviteModal: React.FC<InviteModalProps> = ({
                 </div>
               </div>
 
-              {/* QR Code Placeholder Section */}
+              {/* QR Code Section */}
               <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
                 <h3 className="font-semibold text-slate-800 dark:text-white mb-4">
                   Quick Join with QR Code
                 </h3>
                 <div className="flex flex-col md:flex-row items-center gap-6">
-                  {/* QR Code Placeholder */}
-                  <div className="w-48 h-48 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-slate-400 dark:text-slate-500 mb-2">QR Code</div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">
-                        (In production, generate QR for: {roomLink})
-                      </div>
-                    </div>
+                  {/* Live QR Code */}
+                  <div
+                    id="qr-code-container"
+                    className="p-4 bg-white rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"
+                  >
+                    <QRCodeSVG
+                      value={inviteLink}
+                      size={176}
+                      bgColor="#ffffff"
+                      fgColor="#0f172a"
+                      level="H"
+                      includeMargin={false}
+                    />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                       Scan this QR code with a mobile device to join the room instantly.
                     </p>
-                    <Button
-                      onClick={() => copyToClipboard(roomLink, 'qr')}
-                      variant="outline"
-                      className="gap-2"
-                    >
-                      {copiedItem === 'qr' ? <Check size={16} /> : <Copy size={16} />}
-                      Copy Link for QR Generation
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        onClick={() => {
+                          const svg = document.querySelector('#qr-code-container svg');
+                          if (!svg) return;
+                          const svgData = new XMLSerializer().serializeToString(svg);
+                          const canvas = document.createElement('canvas');
+                          canvas.width = 512;
+                          canvas.height = 512;
+                          const ctx = canvas.getContext('2d');
+                          const img = new Image();
+                          img.onload = () => {
+                            if (ctx) {
+                              ctx.fillStyle = '#ffffff';
+                              ctx.fillRect(0, 0, 512, 512);
+                              ctx.drawImage(img, 0, 0, 512, 512);
+                              const a = document.createElement('a');
+                              a.download = `${roomName.replace(/\s+/g, '_')}_QR.png`;
+                              a.href = canvas.toDataURL('image/png');
+                              a.click();
+                            }
+                          };
+                          img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+                        }}
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        <Download size={16} />
+                        Download QR Code
+                      </Button>
+                      <Button
+                        onClick={() => copyToClipboard(inviteLink, 'qr')}
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        {copiedItem === 'qr' ? <Check size={16} /> : <Copy size={16} />}
+                        {copiedItem === 'qr' ? 'Copied!' : 'Copy Room Link'}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -583,7 +616,7 @@ const InviteModal: React.FC<InviteModalProps> = ({
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Enter email addresses (comma separated)"
+                   
                     className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                     aria-label="Email addresses to invite"
                   />
@@ -680,12 +713,12 @@ const InviteModal: React.FC<InviteModalProps> = ({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by username or name..."
+                   
                     className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                     aria-label="Search users"
                   />
                   {isSearching && (
-                    <Loader2 className="absolute right-3 top-3.5 w-5 h-5 text-slate-400 animate-spin" 
+                    <Loader2 className="absolute right-3 top-3.5 w-5 h-5 text-slate-400 animate-spin"
                       aria-label="Searching users" />
                   )}
                 </div>
@@ -707,11 +740,10 @@ const InviteModal: React.FC<InviteModalProps> = ({
                           <button
                             key={user.id}
                             onClick={() => toggleUserSelection(user)}
-                            className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                              selectedUsers.some(u => u.id === user.id)
-                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700'
-                                : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
-                            }`}
+                            className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${selectedUsers.some(u => u.id === user.id)
+                              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700'
+                              : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                              }`}
                             aria-label={`Select ${user.displayName || user.username}`}
                             aria-pressed={selectedUsers.some(u => u.id === user.id)}
                           >

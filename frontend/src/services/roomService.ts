@@ -32,6 +32,8 @@ export interface Room {
   thumbnail?: string;
   /** Unique join code for the room (optional depending on backend) */
   roomCode?: string;
+  /** The raw drawing data of the room */
+  drawingData?: any[];
 }
 
 /**
@@ -103,11 +105,12 @@ function mapBackendRoom(raw: any): Room {
     isPublic,
     hasPassword: raw.hasPassword ?? raw.requiresPassword ?? (raw.visibility === 'private' && !!raw.password),
     participantCount,
-    maxParticipants: raw.maxParticipants ?? 50,
+    maxParticipants: raw.maxParticipants ?? 10,
     createdAt: raw.createdAt || new Date().toISOString(),
     updatedAt: raw.updatedAt || new Date().toISOString(),
     thumbnail: raw.thumbnail,
     roomCode: raw.roomCode,
+    drawingData: raw.drawingData,
   };
 }
 
@@ -151,6 +154,7 @@ class RoomService {
         description: roomData.description,
         visibility: roomData.isPublic ? 'public' : 'private',
         password: roomData.password,
+        maxParticipants: roomData.maxParticipants,
       });
 
       const data = response.data;
@@ -521,7 +525,7 @@ class RoomService {
         message: data.message,
       };
     } catch (error: any) {
-    return {
+      return {
         success: false,
         message: error.response?.data?.error || error.response?.data?.message || 'Room not found',
       };

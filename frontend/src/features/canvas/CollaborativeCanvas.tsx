@@ -26,7 +26,7 @@ import {
   Square, Circle, Edit2, Trash2, Grid, Minus, Plus, X, Lock,
   Eraser, MinusCircle, PlusCircle, Zap, ZapOff, Download, RotateCcw, RotateCw,
   Type, Minus as LineIcon, ArrowRight, Image as ImageIcon, Move, Copy, Scissors,
-  ArrowUp, ArrowDown, Trash, Clipboard
+  ArrowUp, ArrowDown, Trash, Clipboard, Keyboard
 } from 'lucide-react';
 
 
@@ -334,6 +334,9 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number; y: number; username: string; tool?: string; color?: string }>>({});
   const [isExporting, setIsExporting] = useState<boolean>(false);
+
+  // Keyboard shortcuts reference panel
+  const [showShortcutsPanel, setShowShortcutsPanel] = useState<boolean>(false);
 
   // Brush engine instance
   const brushEngineRef = useRef<BrushEngine | null>(null);
@@ -1878,15 +1881,19 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             e.preventDefault();
           }
           break;
+        case 'b': setTool('pencil'); e.preventDefault(); break; // B for brush
         case 'p': setTool('pencil'); e.preventDefault(); break;
         case 'r': setTool('rectangle'); e.preventDefault(); break;
         case 'c': setTool('circle'); e.preventDefault(); break;
         case 'l': setTool('line'); e.preventDefault(); break;
         case 'a': setTool('arrow'); e.preventDefault(); break;
+        case 'h': setTool('select'); e.preventDefault(); break; // H for hand/pan
         case 't': setTool('text'); e.preventDefault(); break;
         case 'i': setTool('image'); e.preventDefault(); break;
         case 'e': setTool('eraser'); e.preventDefault(); break;
         case 'g': setShowGrid(prev => !prev); e.preventDefault(); break;
+        case '?': setShowShortcutsPanel(prev => !prev); e.preventDefault(); break; // ? to toggle shortcuts panel
+        case 'Escape': setShowShortcutsPanel(false); break;
       }
 
       // Clipboard operations (with Ctrl/Cmd)
@@ -2260,6 +2267,20 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             {isExporting ? 'Exporting...' : 'JPEG'}
           </button>
         </div>
+
+        {/* Keyboard shortcuts reference button */}
+        <button
+          onClick={() => setShowShortcutsPanel(!showShortcutsPanel)}
+          className={`p-2 rounded-lg transition-colors ${showShortcutsPanel
+            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+          aria-label="Keyboard shortcuts"
+          title="Keyboard Shortcuts (?)"
+          aria-pressed={showShortcutsPanel}
+        >
+          <Keyboard size={20} />
+        </button>
       </div>
       {/* Layer Panel */}
       <LayerPanel
@@ -2641,6 +2662,93 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           hasSelection={selection.selectedIds.length > 0}
           hasClipboard={hasClipboardContent()}
         />
+      )}
+
+      {/* Keyboard Shortcuts Reference Panel */}
+      {showShortcutsPanel && (
+        <div className="absolute top-20 right-4 w-80 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800">
+            <div className="flex items-center gap-2">
+              <Keyboard size={18} className="text-blue-600 dark:text-blue-400" />
+              <h3 className="font-bold text-slate-800 dark:text-white text-sm">Keyboard Shortcuts</h3>
+            </div>
+            <button
+              onClick={() => setShowShortcutsPanel(false)}
+              className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Close shortcuts panel"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <div className="p-4 max-h-[60vh] overflow-y-auto">
+            <div className="space-y-4">
+              {/* Tools Section */}
+              <div>
+                <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Tools</h4>
+                <div className="space-y-1">
+                  {[
+                    { key: 'V', desc: 'Select / Move' },
+                    { key: 'B / P', desc: 'Brush / Pencil' },
+                    { key: 'R', desc: 'Rectangle' },
+                    { key: 'C', desc: 'Circle' },
+                    { key: 'L', desc: 'Line' },
+                    { key: 'A', desc: 'Arrow' },
+                    { key: 'H', desc: 'Hand / Pan' },
+                    { key: 'T', desc: 'Text' },
+                    { key: 'I', desc: 'Image' },
+                    { key: 'E', desc: 'Eraser' },
+                  ].map(({ key, desc }) => (
+                    <div key={key} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                      <span className="text-sm text-slate-600 dark:text-slate-300">{desc}</span>
+                      <kbd className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded text-xs font-mono text-slate-700 dark:text-slate-300 min-w-[28px] text-center">{key}</kbd>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Canvas Section */}
+              <div>
+                <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Canvas</h4>
+                <div className="space-y-1">
+                  {[
+                    { key: 'G', desc: 'Toggle Grid' },
+                    { key: 'Ctrl+S', desc: 'Save' },
+                    { key: '`', desc: 'Performance Stats' },
+                  ].map(({ key, desc }) => (
+                    <div key={key} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                      <span className="text-sm text-slate-600 dark:text-slate-300">{desc}</span>
+                      <kbd className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded text-xs font-mono text-slate-700 dark:text-slate-300 min-w-[28px] text-center">{key}</kbd>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Edit Section */}
+              <div>
+                <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Edit</h4>
+                <div className="space-y-1">
+                  {[
+                    { key: 'Ctrl+Z', desc: 'Undo' },
+                    { key: 'Ctrl+Y', desc: 'Redo' },
+                    { key: 'Ctrl+C', desc: 'Copy' },
+                    { key: 'Ctrl+X', desc: 'Cut' },
+                    { key: 'Ctrl+V', desc: 'Paste' },
+                    { key: 'Ctrl+D', desc: 'Duplicate' },
+                    { key: 'Del', desc: 'Delete Selected' },
+                  ].map(({ key, desc }) => (
+                    <div key={key} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                      <span className="text-sm text-slate-600 dark:text-slate-300">{desc}</span>
+                      <kbd className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded text-xs font-mono text-slate-700 dark:text-slate-300 min-w-[28px] text-center">{key}</kbd>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+            <p className="text-xs text-slate-400 dark:text-slate-500 text-center">Press <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded text-xs font-mono">?</kbd> to toggle this panel</p>
+          </div>
+        </div>
       )}
     </div>
   );

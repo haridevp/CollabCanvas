@@ -10,12 +10,29 @@ const Room = require("../models/Room");
 const Participant = require("../models/Participant");
 // Import the CanvasVersion model for save-canvas snapshot creation
 const CanvasVersion = require('../models/CanvasVersion');
+// Import the Message model for persistent chats
+const Message = require("../models/Message");
+// Import notification utilities to create persistent notifications on moderation actions
+const { createNotification } = require('../controllers/notificationController');
+const { sendNotificationViaSocket } = require('./notificationSocket');
 
 // In-memory store for active object locks: { roomId: { objectId: { userId, socketId, username, color, timestamp } } }
 const roomLocks = new Map();
 // Define how long a lock stays active before being considered stale (30 seconds)
 const LOCK_TIMEOUT = 30000;
 
+// ─────────────────────────────────────────────────────────────────────────────
+// High-Performance In-Memory Room State (Excalidraw-style)
+// ─────────────────────────────────────────────────────────────────────────────
+// Structure: { roomId: [decompressedDrawingElements] }
+const activeRooms = new Map();
+
+// Import payload decompression utility
+const { decompressDrawingData } = require("../utils/payloadDecompression");
+
+// Keep track of which rooms have un-saved changes to optimize DB writes
+const pendingSaves = new Set();
+// Interval for flushing the memory state to the MongoDB database (5 seconds)
 // ─────────────────────────────────────────────────────────────────────────────
 // High-Performance In-Memory Room State (Excalidraw-style)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -99,15 +116,30 @@ const roomSocketHandler = (io, socket) => {
    */
   const getParticipantsList = async (roomId) => {
     try {
-      // Find all active connection records for the room that aren't currently banned
+      // Get the set of socket IDs currently in this room from the adapter
+      const socketsInRoom = io.sockets.adapter.rooms.get(roomId);
+      if (!socketsInRoom || socketsInRoom.size === 0) return [];
+
+      // Collect unique live user IDs from socket.data
+      const liveUserIds = new Set();
+      for (const sid of socketsInRoom) {
+        const s = io.sockets.sockets.get(sid);
+        if (s && s.data && s.data.userId) {
+          liveUserIds.add(s.data.userId);
+        }
+      }
+
+      if (liveUserIds.size === 0) return [];
+
+      // Query only the participants that are currently connected
       const participants = await Participant.find({
         room: roomId,
+        user: { $in: Array.from(liveUserIds) },
         isBanned: false,
       })
         // Populate foreign keys with specific display-oriented user fields
         .populate("user", "username email avatar");
 
-      // Map DB documents into a clean array format for the frontend
       return participants.map((p) => ({
         id: p._id,
         userId: p.user._id,
@@ -119,9 +151,7 @@ const roomSocketHandler = (io, socket) => {
         lastActive: p.lastSeen,
       }));
     } catch (error) {
-      // Log errors if retrieval or population fails
       console.error("Error getting participants list:", error);
-      // Return an empty array as a fallback
       return [];
     }
   };
@@ -617,6 +647,22 @@ const roomSocketHandler = (io, socket) => {
         // Notify everyone that the user has been kicked
         io.to(roomId).emit("participant-kicked", { userId: targetUserId });
 
+        // Create a persistent notification for the kicked user
+        const room = await Room.findById(roomId);
+        const notification = await createNotification(
+          targetUserId,
+          'kick',
+          'Removed from Room',
+          `You have been removed from the room "${room?.name || 'Unknown'}" by a moderator.`,
+          { relatedRoomId: roomId, relatedUserId: moderatorId }
+        );
+        if (notification) {
+          sendNotificationViaSocket(io, targetUserId, 'kick', notification.title, notification.message, {
+            relatedUserId: moderatorId,
+            relatedRoomId: roomId
+          });
+        }
+
         // Broadcast the updated participant list for the UI
         const participantsList = await getParticipantsList(roomId);
         io.to(roomId).emit("participants-updated", {
@@ -667,6 +713,22 @@ const roomSocketHandler = (io, socket) => {
         // Notify session participants of the ban
         io.to(roomId).emit("participant-banned", { userId: targetUserId });
 
+        // Create a persistent notification for the banned user
+        const room = await Room.findById(roomId);
+        const notification = await createNotification(
+          targetUserId,
+          'ban',
+          'Banned from Room',
+          `You have been banned from the room "${room?.name || 'Unknown'}" by a moderator.`,
+          { relatedRoomId: roomId, relatedUserId: moderatorId }
+        );
+        if (notification) {
+          sendNotificationViaSocket(io, targetUserId, 'ban', notification.title, notification.message, {
+            relatedUserId: moderatorId,
+            relatedRoomId: roomId
+          });
+        }
+
         // Update the participant roster display
         const participantsList = await getParticipantsList(roomId);
         io.to(roomId).emit("participants-updated", {
@@ -698,6 +760,129 @@ const roomSocketHandler = (io, socket) => {
       io.to(socket.data.roomId).emit("participants-updated", {
         participants: participantsList,
       });
+    }
+  });
+  /**
+   * Event: request-participants
+   * Allows a client to explicitly request the current live participant list.
+   */
+  socket.on("request-participants", async ({ roomId }) => {
+    if (!roomId) return;
+    try {
+      const participantsList = await getParticipantsList(roomId);
+      socket.emit("participants-updated", { participants: participantsList });
+    } catch (error) {
+      console.error("Failed to send participants:", error);
+    }
+  });
+
+  /**
+   * Event: load-messages
+   * Requests the latest chat messages for the room.
+   */
+  socket.on("load-messages", async ({ roomId }) => {
+    if (!roomId) return;
+    try {
+      const messages = await Message.find({ room: roomId })
+        .sort({ createdAt: 1 })
+        .limit(100)
+        .lean();
+
+      // Format for frontend
+      const formattedMessages = messages.map((m) => ({
+        id: m._id.toString(),
+        userId: m.user.toString(),
+        username: m.username,
+        text: m.text,
+        timestamp: m.createdAt,
+        isEdited: m.isEdited,
+        isDeleted: m.isDeleted,
+      }));
+
+      socket.emit("messages-loaded", formattedMessages);
+    } catch (error) {
+      console.error("Failed to load messages:", error);
+    }
+  });
+
+  /**
+   * Event: chat-message
+   * Saves a new chat message to DB and broadcasts it to everyone in the room.
+   */
+  socket.on("chat-message", async ({ roomId, userId, username, message }) => {
+    if (!roomId || !userId) return;
+    try {
+      const newMessage = new Message({
+        room: roomId,
+        user: userId,
+        username,
+        text: message,
+      });
+      await newMessage.save();
+
+      io.to(roomId).emit("chat-message", {
+        id: newMessage._id.toString(),
+        userId,
+        username,
+        text: message,
+        timestamp: newMessage.createdAt,
+        isEdited: false,
+        isDeleted: false,
+      });
+    } catch (error) {
+      console.error("Failed to save message:", error);
+    }
+  });
+
+  /**
+   * Event: edit-message
+   * Edits an existing message and broadcasts the update.
+   */
+  socket.on("edit-message", async ({ roomId, messageId, userId, newText }) => {
+    if (!roomId || !messageId || !userId) return;
+    try {
+      const message = await Message.findById(messageId);
+      if (!message || message.user.toString() !== userId) return; // Only owner can edit
+
+      message.text = newText;
+      message.isEdited = true;
+      await message.save();
+
+      io.to(roomId).emit("message-edited", {
+        id: messageId,
+        text: newText,
+        isEdited: true,
+      });
+    } catch (error) {
+      console.error("Failed to edit message:", error);
+    }
+  });
+
+  /**
+   * Event: delete-message
+   * Soft-deletes a message and broadcasts the update.
+   */
+  socket.on("delete-message", async ({ roomId, messageId, userId }) => {
+    if (!roomId || !messageId || !userId) return;
+    try {
+      const message = await Message.findById(messageId);
+      if (!message) return;
+
+      // Allow owner or room moderators to delete
+      // To keep it simple, checking if the current user is the author
+      if (message.user.toString() !== userId) return;
+
+      message.isDeleted = true;
+      message.text = "This message was deleted";
+      await message.save();
+
+      io.to(roomId).emit("message-deleted", {
+        id: messageId,
+        text: message.text,
+        isDeleted: true,
+      });
+    } catch (error) {
+      console.error("Failed to delete message:", error);
     }
   });
 };

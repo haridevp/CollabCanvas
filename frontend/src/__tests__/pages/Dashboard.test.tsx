@@ -58,10 +58,12 @@ vi.mock("../../services/roomService", () => ({
 describe("Dashboard Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
+    mockGetMyRooms.mockResolvedValue({ success: true, rooms: [] });
+    mockGetPublicRooms.mockResolvedValue({ success: true, rooms: [] });
   });
 
   it("renders dashboard header and welcome user", async () => {
-    mockGetMyRooms.mockResolvedValueOnce({ success: true, rooms: [] });
 
     render(<Dashboard />);
 
@@ -162,10 +164,9 @@ describe("Dashboard Component", () => {
     expect(screen.queryByText("Beta Room")).not.toBeInTheDocument();
   });
 
-  it("switches to Public Rooms tab and loads public rooms", async () => {
-    mockGetMyRooms.mockResolvedValueOnce({ success: true, rooms: [] });
+  it("switches to Rooms Gallery tab and loads public rooms", async () => {
 
-    mockGetPublicRooms.mockResolvedValueOnce({
+    mockGetPublicRooms.mockResolvedValue({
       success: true,
       rooms: [
         {
@@ -186,18 +187,17 @@ describe("Dashboard Component", () => {
 
     await waitFor(() => expect(mockGetMyRooms).toHaveBeenCalled());
 
-    const publicTab = screen.getByRole("button", { name: /Public Rooms/i });
+    const publicTab = screen.getByRole("button", { name: /Rooms Gallery/i });
     fireEvent.click(publicTab);
 
     await waitFor(() => {
       expect(mockGetPublicRooms).toHaveBeenCalled();
-      expect(screen.getByTestId("room-card")).toHaveTextContent("Public Room");
+      const cards = screen.getAllByTestId("room-card");
+      expect(cards[0]).toHaveTextContent("Public Room");
     });
   });
 
   it("opens Join Room modal when Join button clicked", async () => {
-    mockGetMyRooms.mockResolvedValueOnce({ success: true, rooms: [] });
-
     render(<Dashboard />);
 
     await waitFor(() => expect(mockGetMyRooms).toHaveBeenCalled());
@@ -209,8 +209,6 @@ describe("Dashboard Component", () => {
   });
 
   it("opens Create Room modal when New Room clicked", async () => {
-    mockGetMyRooms.mockResolvedValueOnce({ success: true, rooms: [] });
-
     render(<Dashboard />);
 
     await waitFor(() => expect(mockGetMyRooms).toHaveBeenCalled());
@@ -221,12 +219,13 @@ describe("Dashboard Component", () => {
     expect(screen.getByTestId("create-modal")).toBeInTheDocument();
   });
 
-  it("changes sort option triggers getPublicRooms call", async () => {
-    mockGetMyRooms.mockResolvedValueOnce({ success: true, rooms: [] });
-
+  it("changes sort option and sorts rooms on the frontend", async () => {
     mockGetPublicRooms.mockResolvedValue({
       success: true,
-      rooms: [],
+      rooms: [
+        { id: "1", name: "Zebra", participantCount: 5, createdAt: new Date().toISOString() },
+        { id: "2", name: "Apple", participantCount: 15, createdAt: new Date().toISOString() }
+      ],
     });
 
     render(<Dashboard />);
@@ -234,16 +233,25 @@ describe("Dashboard Component", () => {
     await waitFor(() => expect(mockGetMyRooms).toHaveBeenCalled());
 
     // Switch to public tab
-    fireEvent.click(screen.getByRole("button", { name: /Public Rooms/i }));
-
-    await waitFor(() => expect(mockGetPublicRooms).toHaveBeenCalled());
-
-    const sortSelect = screen.getByLabelText("Sort rooms by");
-
-    fireEvent.change(sortSelect, { target: { value: "popular" } });
+    fireEvent.click(screen.getByRole("button", { name: /Rooms Gallery/i }));
 
     await waitFor(() => {
-      expect(mockGetPublicRooms).toHaveBeenCalledWith({ sort: "popular" });
+      expect(mockGetPublicRooms).toHaveBeenCalled();
+      const cards = screen.getAllByTestId("room-card");
+      expect(cards[0]).toHaveTextContent("Zebra");
+      expect(cards[1]).toHaveTextContent("Apple");
+    });
+
+    // The default sort is 'newest'. Let's change to 'name' (A-Z)
+    const sortSelect = screen.getByLabelText("Sort rooms by");
+    fireEvent.change(sortSelect, { target: { value: "name" } });
+
+    // Since we mocked RoomCardComponent to just return the name, 
+    // we can check the order of rendered testids to verify frontend sorting
+    await waitFor(() => {
+      const cards = screen.getAllByTestId("room-card");
+      expect(cards[0]).toHaveTextContent("Apple");
+      expect(cards[1]).toHaveTextContent("Zebra");
     });
   });
 });

@@ -169,7 +169,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Error Display */}
             {error && (
-              <div 
+              <div
                 className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
                 role="alert"
                 aria-live="polite"
@@ -180,8 +180,8 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
 
             {/* Room Name Input */}
             <div className="space-y-2">
-              <label 
-                htmlFor="room-name" 
+              <label
+                htmlFor="room-name"
                 className="block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Room Name *
@@ -191,7 +191,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
                 type="text"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
-                placeholder="e.g., Architecture Project"
+               
                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 maxLength={50}
                 required
@@ -200,7 +200,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
                 aria-describedby="room-name-help"
               />
               <div className="flex justify-between">
-                <span 
+                <span
                   id="room-name-help"
                   className="text-xs text-slate-500 dark:text-slate-400"
                 >
@@ -214,8 +214,8 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
 
             {/* Description Input */}
             <div className="space-y-2">
-              <label 
-                htmlFor="room-description" 
+              <label
+                htmlFor="room-description"
                 className="block text-sm font-medium text-slate-700 dark:text-slate-300"
               >
                 Description (Optional)
@@ -224,7 +224,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
                 id="room-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe what this room is for..."
+               
                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 rows={3}
                 maxLength={200}
@@ -232,7 +232,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
                 aria-describedby="description-help"
               />
               <div className="flex justify-between">
-                <span 
+                <span
                   id="description-help"
                   className="text-xs text-slate-500 dark:text-slate-400"
                 >
@@ -254,11 +254,10 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsPublic(true)}
-                  className={`p-4 border-2 rounded-xl text-left transition-all ${
-                    isPublic
+                  className={`p-4 border-2 rounded-xl text-left transition-all ${isPublic
                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                       : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                  }`}
+                    }`}
                   disabled={isCreating}
                   aria-pressed={isPublic}
                   aria-label="Public room - Anyone can find and join"
@@ -278,11 +277,10 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsPublic(false)}
-                  className={`p-4 border-2 rounded-xl text-left transition-all ${
-                    !isPublic
+                  className={`p-4 border-2 rounded-xl text-left transition-all ${!isPublic
                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                       : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                  }`}
+                    }`}
                   disabled={isCreating}
                   aria-pressed={!isPublic}
                   aria-label="Private room - Password required to join"
@@ -303,24 +301,24 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
             {/* Password Input (Conditional - only for private rooms) */}
             {!isPublic && (
               <div className="space-y-2">
-                <label 
-                  htmlFor="room-password" 
+                <label
+                  htmlFor="room-password"
                   className="block text-sm font-medium text-slate-700 dark:text-slate-300"
                 >
                   Room Password *
                 </label>
                 <div className="relative">
-                  <Lock 
-                    className="absolute left-3 top-3 text-slate-400" 
-                    size={20} 
-                    aria-hidden="true" 
+                  <Lock
+                    className="absolute left-3 top-3 text-slate-400"
+                    size={20}
+                    aria-hidden="true"
                   />
                   <input
                     id="room-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter a secure password"
+                   
                     className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                     minLength={4}
                     required={!isPublic}
@@ -329,7 +327,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
                     aria-describedby="password-help"
                   />
                 </div>
-                <p 
+                <p
                   id="password-help"
                   className="text-xs text-slate-500 dark:text-slate-400"
                 >
@@ -344,7 +342,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
                 <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Maximum Participants
                 </span>
-                <span 
+                <span
                   className="text-sm font-medium text-blue-600 dark:text-blue-400"
                   aria-live="polite"
                 >
@@ -356,33 +354,33 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
                 <input
                   type="range"
                   min="2"
-                  max="50"
+                  max="100"
                   value={maxParticipants}
                   onChange={(e) => setMaxParticipants(parseInt(e.target.value))}
                   className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
                   disabled={isCreating}
                   aria-label="Maximum participants slider"
                   aria-valuemin={2}
-                  aria-valuemax={50}
+                  aria-valuemax={100}
                   aria-valuenow={maxParticipants}
                 />
               </div>
-              <div 
+              <div
                 className="flex justify-between text-xs text-slate-500 dark:text-slate-400"
                 role="presentation"
               >
                 <span>Small (2-10)</span>
-                <span>Medium (11-30)</span>
-                <span>Large (31-50)</span>
+                <span>Medium (11-50)</span>
+                <span>Large (51-100)</span>
               </div>
             </div>
 
             {/* Information Note */}
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
               <div className="flex items-start gap-2">
-                <Info 
-                  className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" 
-                  aria-hidden="true" 
+                <Info
+                  className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0"
+                  aria-hidden="true"
                 />
                 <p className="text-sm text-blue-700 dark:text-blue-300">
                   You will be the room owner and have full control over settings, participants, and permissions.
@@ -402,7 +400,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
               >
                 Create Room
               </Button>
-              
+
               {/* Cancel Button */}
               <Button
                 type="button"

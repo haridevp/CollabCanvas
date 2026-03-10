@@ -28,19 +28,20 @@ const sendWithResend = (options, apiKey) => {
   return new Promise((resolve, reject) => {
     const senderEmail = process.env.RESEND_FROM || 'onboarding@resend.dev';
     const targetUrl = options.verificationUrl || options.resetUrl;
-
-    const payload = JSON.stringify({
-      from: `Collaborative Canvas <${senderEmail}>`,
-      to: [options.email],
-      subject: options.subject,
-      html: `
+    const htmlBody = options.html || `
         <div style="font-family: sans-serif; text-align: center;">
           <h2>Action Required</h2>
           <p>Please click the button below:</p>
           <a href="${targetUrl}" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Confirm</a>
           <p>Or copy this link: ${targetUrl}</p>
         </div>
-      `,
+      `;
+
+    const payload = JSON.stringify({
+      from: `Collaborative Canvas <${senderEmail}>`,
+      to: [options.email],
+      subject: options.subject,
+      html: htmlBody,
     });
 
     console.log(`Sending email via Resend API from: ${senderEmail} to: ${options.email}`);
@@ -127,6 +128,14 @@ const sendWithSMTP = async (options) => {
   });
 
   const targetUrl = options.verificationUrl || options.resetUrl;
+  const htmlBody = options.html || `
+      <div style="font-family: sans-serif; text-align: center;">
+        <h2>Action Required</h2>
+        <p>Please click the button below:</p>
+        <a href="${targetUrl}" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Confirm</a>
+        <p>Or copy this link: ${targetUrl}</p>
+      </div>
+    `;
 
   // Build the email object with sender, recipient, subject, and HTML body
   const mailOptions = {
@@ -137,14 +146,7 @@ const sendWithSMTP = async (options) => {
     // Subject line
     subject: options.subject,
     // Use a basic HTML template for the message body
-    html: `
-      <div style="font-family: sans-serif; text-align: center;">
-        <h2>Action Required</h2>
-        <p>Please click the button below:</p>
-        <a href="${targetUrl}" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Confirm</a>
-        <p>Or copy this link: ${targetUrl}</p>
-      </div>
-    `,
+    html: htmlBody,
   };
 
   try {

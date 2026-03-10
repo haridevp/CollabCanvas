@@ -33,6 +33,16 @@ const mockParticipants = [
   },
 ];
 
+const mockSocket = {
+  emit: vi.fn(),
+  on: vi.fn((event, callback) => {
+    if (event === 'participants-updated') {
+      callback({ participants: mockParticipants });
+    }
+  }),
+  off: vi.fn(),
+};
+
 describe('ParticipantsPanel', () => {
   beforeEach(() => {
     vi.mocked(roomService.getParticipants).mockResolvedValue({
@@ -51,6 +61,7 @@ describe('ParticipantsPanel', () => {
         currentUserId="u1"
         currentUserRole="owner"
         isOpen={true}
+        socket={mockSocket}
         onClose={vi.fn()}
       />
     );
@@ -68,13 +79,14 @@ describe('ParticipantsPanel', () => {
         currentUserId="u1"
         currentUserRole="owner"
         isOpen={true}
+        socket={mockSocket}
         onClose={vi.fn()}
       />
     );
 
     await waitFor(() => screen.getByText(/Alice/i));
 
-    const searchInput = screen.getByPlaceholderText('Search participants...');
+    const searchInput = screen.getByRole('textbox', { name: /Search participants/i });
     fireEvent.change(searchInput, { target: { value: 'Bob' } });
 
     expect(screen.queryByText(/Alice/i)).not.toBeInTheDocument();
@@ -88,6 +100,7 @@ describe('ParticipantsPanel', () => {
         currentUserId="u1"
         currentUserRole="owner"
         isOpen={true}
+        socket={mockSocket}
         onClose={vi.fn()}
       />
     );
@@ -106,6 +119,7 @@ describe('ParticipantsPanel', () => {
         currentUserId="u1"
         currentUserRole="owner"
         isOpen={true}
+        socket={mockSocket}
         onClose={vi.fn()}
       />
     );
@@ -133,6 +147,7 @@ describe('ParticipantsPanel', () => {
         currentUserId="u1"
         currentUserRole="owner"
         isOpen={true}
+        socket={mockSocket}
         onClose={vi.fn()}
       />
     );
@@ -167,6 +182,7 @@ describe('ParticipantsPanel', () => {
         currentUserId="u1"
         currentUserRole="owner"
         isOpen={true}
+        socket={mockSocket}
         onClose={handleClose}
       />
     );

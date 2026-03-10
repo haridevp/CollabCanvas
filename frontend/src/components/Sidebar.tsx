@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { LayoutDashboard, User, LogOut, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, User, LogOut, Palette, Bell, Keyboard, Shield } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../services/AuthContext';
 import { Modal } from './ui/Modal';
@@ -73,6 +73,10 @@ export const Sidebar = () => {
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: User, label: 'Profile', path: '/profile' },
+    { icon: Palette, label: 'Appearance', path: '/appearance' },
+    { icon: Bell, label: 'Notification Settings', path: '/notification-settings' },
+    { icon: Keyboard, label: 'Keyboard Shortcuts', path: '/keyboard-shortcuts' },
+    { icon: Shield, label: 'Security', path: '/security' },
   ];
 
   return (

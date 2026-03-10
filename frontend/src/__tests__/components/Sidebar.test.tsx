@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -76,20 +75,20 @@ describe('Sidebar', () => {
     );
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.spyOn(window, 'alert').mockImplementation(() => { });
+    vi.clearAllMocks();
+    vi.spyOn(window, 'alert').mockImplementation(() => { });
     // default auth
     mockedUseAuth.mockReturnValue({
       user: baseUser,
-      updateUser: jest.fn(),
+      updateUser: vi.fn(),
     });
   });
 
   afterEach(() => {
-    (window.alert as jest.Mock).mockRestore();
+    (window.alert as any).mockRestore();
   });
 
-  it('renders brand + nav items', () => {
+  it('renders brand + nav items including new settings pages', () => {
     mockedApi.get.mockResolvedValueOnce({ data: { success: false } });
 
     renderSidebar();
@@ -97,6 +96,10 @@ describe('Sidebar', () => {
     expect(screen.getByText('CollabCanvas')).toBeInTheDocument();
     expect(screen.getByLabelText(/navigate to dashboard/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/navigate to profile/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/navigate to appearance/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/navigate to notification settings/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/navigate to keyboard shortcuts/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/navigate to security/i)).toBeInTheDocument();
     expect(screen.getByTestId('notification-center')).toBeInTheDocument();
   });
 
@@ -110,7 +113,7 @@ describe('Sidebar', () => {
   });
 
   it('fetches user profile on mount and updates UI when API returns success', async () => {
-    const updateUser = jest.fn();
+    const updateUser = vi.fn();
 
     mockedUseAuth.mockReturnValue({
       user: baseUser,
@@ -149,7 +152,7 @@ describe('Sidebar', () => {
   it('does NOT fetch profile if user.id is missing', async () => {
     mockedUseAuth.mockReturnValue({
       user: null,
-      updateUser: jest.fn(),
+      updateUser: vi.fn(),
     });
 
     renderSidebar();

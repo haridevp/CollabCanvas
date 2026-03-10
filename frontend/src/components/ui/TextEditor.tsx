@@ -366,7 +366,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
                     color: format.color,
                     minHeight: '60px'
                 }}
-                placeholder="Type your text here..."
+               
                 autoFocus
             />
 

@@ -83,27 +83,20 @@
  */
 .high-contrast {
   /* Text Colors */
-  --text-primary: #ffffff;       /* Pure white for primary text */
-  --text-secondary: #e5e7eb;     /* Light gray for secondary text */
+  --text-primary: #ffffff;
+  --text-secondary: #e5e7eb;
 
   /* Background Colors */
-  --bg-primary: #000000;         /* Pure black for primary backgrounds */
-  --bg-secondary: #111827;       /* Dark blue-gray for secondary backgrounds */
-  --bg-tertiary: #1f2937;        /* Medium blue-gray for tertiary backgrounds */
+  --bg-primary: #000000;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1f2937;
 
   /* Border Colors */
-  --border-color: #ffffff;       /* White borders for maximum visibility */
+  --border-color: #ffffff;
 
-  /* Accent Colors */
-  --accent-color: #fbbf24;       /* Bright yellow for interactive elements */
-  --accent-hover: #f59e0b;       /* Darker yellow for hover states */
-
-  /*
-   * Note: These CSS custom properties can be used in components:
-   * color: var(--text-primary);
-   * background-color: var(--bg-primary);
-   * border-color: var(--border-color);
-   */
+  /* Accent Colors — bright teal for consistency */
+  --accent-color: #2dd4bf;       /* teal-400 */
+  --accent-hover: #14b8a6;       /* teal-500 */
 }
 
 /* ==========================================================================
@@ -242,37 +235,38 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
+  /* Light mode — white + teal */
+  --background: oklch(1 0 0);                /* white */
+  --foreground: oklch(0.145 0 0);            /* near-black text */
+  --card: oklch(1 0 0);                      /* white cards */
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
+  --primary: oklch(0.511 0.096 186.391);     /* teal-700 */
+  --primary-foreground: oklch(0.985 0 0);    /* white */
+  --secondary: oklch(0.967 0.014 186.391);   /* teal-50 */
+  --secondary-foreground: oklch(0.398 0.07 186.391); /* teal-800 */
+  --muted: oklch(0.97 0.01 186.391);         /* very light teal */
+  --muted-foreground: oklch(0.556 0 0);      /* gray-500 */
+  --accent: oklch(0.967 0.014 186.391);      /* teal-50 */
+  --accent-foreground: oklch(0.398 0.07 186.391);  /* teal-800 */
+  --destructive: oklch(0.577 0.245 27.325);  /* red — unchanged */
+  --border: oklch(0.922 0.004 186.391);      /* light gray-teal */
+  --input: oklch(0.922 0.004 186.391);
+  --ring: oklch(0.648 0.116 186.391);        /* teal-400 */
+  --chart-1: oklch(0.600 0.118 186.391);     /* teal-600 */
+  --chart-2: oklch(0.511 0.096 186.391);     /* teal-700 */
+  --chart-3: oklch(0.398 0.070 186.391);     /* teal-800 */
+  --chart-4: oklch(0.648 0.116 186.391);     /* teal-400 */
+  --chart-5: oklch(0.828 0.100 186.391);     /* teal-200 */
+  --sidebar: oklch(0.985 0 0);               /* off-white */
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.511 0.096 186.391);     /* teal-700 */
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-accent: oklch(0.967 0.014 186.391);      /* teal-50 */
+  --sidebar-accent-foreground: oklch(0.398 0.07 186.391);
   --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-ring: oklch(0.648 0.116 186.391);        /* teal-400 */
 }
 
 /* 
@@ -280,35 +274,199 @@
  */
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  /* Dark mode — black + teal */
+  --background: oklch(0.145 0 0);            /* near-black */
+  --foreground: oklch(0.985 0 0);            /* white text */
+  --card: oklch(0.205 0 0);                  /* dark card */
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  --primary: oklch(0.648 0.116 186.391);     /* teal-400 */
+  --primary-foreground: oklch(0.145 0 0);    /* black */
+  --secondary: oklch(0.269 0.02 186.391);    /* dark teal tint */
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: oklch(0.269 0.02 186.391);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --accent: oklch(0.269 0.02 186.391);       /* dark teal tint */
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive: oklch(0.704 0.191 22.216);  /* red — unchanged */
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  --ring: oklch(0.600 0.118 186.391);        /* teal-500 */
+  --chart-1: oklch(0.648 0.116 186.391);     /* teal-400 */
+  --chart-2: oklch(0.600 0.118 186.391);     /* teal-500 */
+  --chart-3: oklch(0.828 0.100 186.391);     /* teal-200 */
+  --chart-4: oklch(0.511 0.096 186.391);     /* teal-700 */
+  --chart-5: oklch(0.398 0.070 186.391);     /* teal-800 */
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary: oklch(0.648 0.116 186.391);     /* teal-400 */
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: oklch(0.269 0.02 186.391);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.600 0.118 186.391);        /* teal-500 */
+}
+
+/* ==========================================================================
+   4. White & Teal / Black & Teal – Tailwind Class Overrides
+   ========================================================================== */
+
+/*
+ * These overrides remap hardcoded Tailwind utility classes used in page
+ * components (blue-*, black accents) to the teal palette, so no .tsx
+ * files need to be modified.
+ */
+
+/* --- Blue → Teal remapping ------------------------------------------------ */
+
+/* Background blues */
+.bg-blue-600 {
+  background-color: #0d9488 !important; /* teal-600 */
+}
+.bg-blue-50 {
+  background-color: #f0fdfa !important; /* teal-50 */
+}
+.bg-blue-100 {
+  background-color: #ccfbf1 !important; /* teal-100 */
+}
+.dark .bg-blue-900\/30 {
+  background-color: rgb(19 78 74 / 0.3) !important; /* teal-900/30 */
+}
+.dark .bg-blue-900\/20 {
+  background-color: rgb(19 78 74 / 0.2) !important; /* teal-900/20 */
+}
+.dark .bg-blue-800 {
+  background-color: #115e59 !important; /* teal-800 */
+}
+
+/* Text blues */
+.text-blue-600 {
+  color: #0d9488 !important; /* teal-600 */
+}
+.text-blue-700 {
+  color: #0f766e !important; /* teal-700 */
+}
+.dark .text-blue-400 {
+  color: #2dd4bf !important; /* teal-400 */
+}
+.dark .text-blue-300 {
+  color: #5eead4 !important; /* teal-300 */
+}
+
+/* Border blues */
+.border-blue-600 {
+  border-color: #0d9488 !important; /* teal-600 */
+}
+.border-blue-100 {
+  border-color: #ccfbf1 !important; /* teal-100 */
+}
+.border-blue-200 {
+  border-color: #99f6e4 !important; /* teal-200 */
+}
+.dark .border-blue-800 {
+  border-color: #115e59 !important; /* teal-800 */
+}
+
+/* Hover blue states */
+.hover\:bg-blue-700:hover {
+  background-color: #0f766e !important; /* teal-700 */
+}
+.dark .hover\:bg-blue-700:hover {
+  background-color: #0d9488 !important; /* teal-600 */
+}
+.hover\:bg-blue-200:hover {
+  background-color: #99f6e4 !important; /* teal-200 */
+}
+.dark .hover\:bg-blue-700:hover {
+  background-color: #0f766e !important; /* teal-700 */
+}
+
+/* Focus ring blues */
+.focus\:ring-blue-500:focus {
+  --tw-ring-color: #14b8a6 !important; /* teal-500 */
+}
+.focus\:ring-2.focus\:ring-blue-500:focus {
+  --tw-ring-color: #14b8a6 !important; /* teal-500 */
+}
+
+/* Spinner / loading accent */
+.border-blue-600.border-t-transparent {
+  border-color: #0d9488 !important;
+  border-top-color: transparent !important;
+}
+
+/* --- Auth page overrides (black accents → teal) --------------------------- */
+
+/*
+ * Auth pages (Login, Register, Forgot/Reset Password, Email Verification,
+ * Registration Success) use black as the primary accent. Remap to teal.
+ */
+
+/* Primary CTA buttons: bg-black → teal-700 */
+.bg-black {
+  background-color: #0f766e !important; /* teal-700 */
+}
+.hover\:bg-slate-800:hover {
+  background-color: #115e59 !important; /* teal-800 */
+}
+
+/* Title underlines / borders: border-black → teal-600 */
+.border-black {
+  border-color: #0d9488 !important; /* teal-600 */
+}
+.border-t-2.border-black {
+  border-color: #0d9488 !important;
+}
+.border-b-2.border-black {
+  border-color: #0d9488 !important;
+}
+
+/* Heading text: text-black → teal-800 for neat contrast on white */
+.text-black {
+  color: #115e59 !important; /* teal-800 */
+}
+
+/* Bullet dots on auth pages */
+.bg-black.rounded-full {
+  background-color: #0d9488 !important; /* teal-600 */
+}
+
+/* Focus rings on form inputs: focus:ring-black → teal-500 */
+.focus\:ring-black:focus {
+  --tw-ring-color: #14b8a6 !important; /* teal-500 */
+}
+.focus\:border-black:focus {
+  border-color: #14b8a6 !important; /* teal-500 */
+}
+
+/* Checkbox accent */
+.accent-black {
+  accent-color: #0d9488 !important; /* teal-600 */
+}
+
+/* Link hover: hover:text-purple-700 → teal-800 */
+.hover\:text-purple-700:hover {
+  color: #115e59 !important; /* teal-800 */
+}
+
+/* Icon color in auth header: text-black on auth icons */
+.text-black.Clock,
+.text-black svg {
+  color: #0d9488 !important;
+}
+
+/* --- High-contrast overrides (updated for teal accents) ------------------- */
+
+.high-contrast .bg-blue-600 {
+  background-color: #2dd4bf !important; /* teal-400 */
+  color: #000000 !important;
+}
+
+.high-contrast .hover\:bg-blue-700:hover {
+  background-color: #14b8a6 !important; /* teal-500 */
+}
+
+.high-contrast .text-blue-600 {
+  color: #2dd4bf !important; /* teal-400 */
 }

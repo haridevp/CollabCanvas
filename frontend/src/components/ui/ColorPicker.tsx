@@ -517,7 +517,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
                   }
                 }}
                 className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono"
-                placeholder="#000000"
+               
                 maxLength={7}
                 aria-label="Enter hex color code"
               />

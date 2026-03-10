@@ -267,6 +267,7 @@ describe("RoomPage", () => {
     mockedGetRoom.mockResolvedValueOnce({
       success: true,
       room: {
+        id: "room-users",
         name: "Users Room",
         description: "",
         isPublic: true,

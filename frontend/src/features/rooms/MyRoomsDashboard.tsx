@@ -81,7 +81,7 @@ const MyRoomsDashboard: React.FC<MyRoomsDashboardProps> = ({
   const [filteredRooms, setFilteredRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   // UI states
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -301,33 +301,30 @@ const MyRoomsDashboard: React.FC<MyRoomsDashboardProps> = ({
               <div className="flex gap-2">
                 <button
                   onClick={() => setFilterType('all')}
-                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                    filterType === 'all'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${filterType === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
                   aria-label="Show all rooms"
                 >
                   All Rooms
                 </button>
                 <button
                   onClick={() => setFilterType('owner')}
-                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${
-                    filterType === 'owner'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${filterType === 'owner'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
                   aria-label="Show rooms I own"
                 >
                   <Star size={14} /> My Rooms
                 </button>
                 <button
                   onClick={() => setFilterType('member')}
-                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${
-                    filterType === 'member'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${filterType === 'member'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
                   aria-label="Show rooms I've joined"
                 >
                   <Users size={14} /> Joined Rooms
@@ -355,7 +352,7 @@ const MyRoomsDashboard: React.FC<MyRoomsDashboardProps> = ({
               <Search className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" size={20} aria-hidden="true" />
               <input
                 type="text"
-                placeholder="Search your rooms by name or description..."
+               
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
@@ -430,11 +427,12 @@ const MyRoomsDashboard: React.FC<MyRoomsDashboardProps> = ({
                           maxParticipants={room.maxParticipants}
                           createdAt={room.createdAt}
                           updatedAt={room.updatedAt}
+                          drawingData={room.drawingData}
                           showJoinButton={false}
                           showOwnerInfo={filterType === 'all' || filterType === 'member'}
                           onClick={() => onRoomSelect(room.id)}
                         />
-                        
+
                         {/* Room Status Badge */}
                         <div className={`absolute top-3 left-3 px-2 py-1 text-xs rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm ${status.color}`}>
                           {status.label}

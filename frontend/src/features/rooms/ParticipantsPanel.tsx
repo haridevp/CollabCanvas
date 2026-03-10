@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { JSX } from 'react';
-import { 
-  Users, Crown, Shield, User, MoreVertical, Mic, MicOff, 
+import {
+  Users, Crown, Shield, User, MoreVertical, Mic, MicOff,
   Video, VideoOff, MessageSquare, Ban, UserX, UserCheck,
   Search, Filter, Loader2, LogOut, UserMinus
 } from 'lucide-react';
@@ -130,13 +130,15 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
   const [confirmAction, setConfirmAction] = useState<ConfirmActionState | null>(null);
 
   /**
-   * Load participants when panel opens or room changes
+   * Load participants when panel opens or room changes.
+   * Instead of querying the REST API (which returns ALL historical members),
+   * we ask the server via socket to re-broadcast the live participant list.
    */
   useEffect(() => {
-    if (isOpen && roomId) {
-      loadParticipants();
+    if (isOpen && roomId && socket) {
+      socket.emit('request-participants', { roomId });
     }
-  }, [isOpen, roomId]);
+  }, [isOpen, roomId, socket]);
 
   /**
    * Listen for real-time participant updates via Socket.IO
@@ -144,10 +146,6 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
   useEffect(() => {
     if (!socket) return;
 
-    /**
-     * Handles real-time participant updates from the server
-     * @param {any} data - Socket data containing updated participants
-     */
     const handleParticipantsUpdated = (data: any) => {
       if (data.participants) {
         setParticipants(data.participants);
@@ -162,28 +160,6 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
   }, [socket]);
 
   /**
-   * Loads participants from the room service
-   * 
-   * @async
-   * @function loadParticipants
-   * @returns {Promise<void>}
-   */
-  const loadParticipants = async (): Promise<void> => {
-    setIsLoading(true);
-    try {
-      const result = await roomService.getParticipants(roomId);
-      if (result.success && result.participants) {
-        setParticipants(result.participants);
-      }
-    } catch (error) {
-      console.error('Failed to load participants:', error);
-      // TODO: Add error notification to user
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
    * Handles participant management actions
    * 
    * @async
@@ -193,7 +169,7 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
    * @returns {Promise<void>}
    */
   const handleParticipantAction = async (
-    action: ParticipantAction, 
+    action: ParticipantAction,
     participant: Participant
   ): Promise<void> => {
     // Prevent self-modification
@@ -259,7 +235,7 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
       if (result.success) {
         // Remove participant from local state
         if (confirmAction.action === 'kick' || confirmAction.action === 'ban') {
-          setParticipants(prev => 
+          setParticipants(prev =>
             prev.filter(p => p.userId !== confirmAction!.participant.userId)
           );
         }
@@ -288,11 +264,11 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
    */
   const getRoleIcon = (role: string): JSX.Element => {
     switch (role) {
-      case 'owner': 
+      case 'owner':
         return <Crown className="w-4 h-4 text-yellow-500" aria-label="Room Owner" />;
-      case 'moderator': 
+      case 'moderator':
         return <Shield className="w-4 h-4 text-blue-500" aria-label="Moderator" />;
-      default: 
+      default:
         return <User className="w-4 h-4 text-slate-400" aria-label="Participant" />;
     }
   };
@@ -340,12 +316,12 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
    */
   const getFilteredAndGroupedParticipants = useCallback((): GroupedParticipants => {
     const filtered = participants.filter(participant => {
-      const matchesSearch = 
+      const matchesSearch =
         participant.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         participant.email.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
       const matchesRole = filterRole === 'all' || participant.role === filterRole;
-      
+
       return matchesSearch && matchesRole;
     });
 
@@ -392,7 +368,6 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
             <Search className="absolute left-3 top-3 text-slate-400" size={18} aria-hidden="true" />
             <input
               type="text"
-              placeholder="Search participants..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
@@ -403,11 +378,10 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
           <div className="flex gap-2">
             <button
               onClick={() => setFilterRole('all')}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                filterRole === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${filterRole === 'all'
+                ? 'bg-blue-600 text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
               aria-label="Show all participants"
               aria-pressed={filterRole === 'all'}
             >
@@ -415,11 +389,10 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
             </button>
             <button
               onClick={() => setFilterRole('owner')}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${
-                filterRole === 'owner'
-                  ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${filterRole === 'owner'
+                ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
               aria-label="Show room owners"
               aria-pressed={filterRole === 'owner'}
             >
@@ -427,11 +400,10 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
             </button>
             <button
               onClick={() => setFilterRole('participant')}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                filterRole === 'participant'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }`}
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${filterRole === 'participant'
+                ? 'bg-blue-600 text-white'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
               aria-label="Show regular participants"
               aria-pressed={filterRole === 'participant'}
             >
@@ -707,33 +679,32 @@ interface ParticipantItemProps {
  * @param {ParticipantItemProps} props - Component props
  * @returns {JSX.Element} Rendered participant item
  */
-const ParticipantItem: React.FC<ParticipantItemProps> = ({ 
-  participant, 
-  currentUserId, 
-  currentUserRole, 
-  onActionClick, 
-  showActionMenu, 
+const ParticipantItem: React.FC<ParticipantItemProps> = ({
+  participant,
+  currentUserId,
+  currentUserRole,
+  onActionClick,
+  showActionMenu,
   onCloseMenu,
   getRoleIcon,
   formatTimeAgo
 }): JSX.Element => {
   const isCurrentUser = participant.userId === currentUserId;
-  const canManage = 
-    !isCurrentUser && 
-    (currentUserRole === 'owner' || 
-     (currentUserRole === 'moderator' && participant.role === 'participant'));
+  const canManage =
+    !isCurrentUser &&
+    (currentUserRole === 'owner' ||
+      (currentUserRole === 'moderator' && participant.role === 'participant'));
 
   return (
-    <div 
-      className={`flex items-center justify-between p-3 rounded-lg ${
-        isCurrentUser ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-800'
-      }`}
+    <div
+      className={`flex items-center justify-between p-3 rounded-lg ${isCurrentUser ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-800'
+        }`}
       role="listitem"
       aria-label={`Participant: ${participant.username}, Role: ${participant.role}`}
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <div className="relative">
-          <div 
+          <div
             className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold"
             aria-hidden="true"
           >
@@ -742,14 +713,14 @@ const ParticipantItem: React.FC<ParticipantItemProps> = ({
           {participant.isAudioEnabled !== undefined && (
             <div className="absolute -bottom-1 -right-1">
               {participant.isAudioEnabled ? (
-                <div 
+                <div
                   className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center"
                   aria-label="Audio enabled"
                 >
                   <Mic className="w-3 h-3 text-white" aria-hidden="true" />
                 </div>
               ) : (
-                <div 
+                <div
                   className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center"
                   aria-label="Audio disabled"
                 >
@@ -762,18 +733,20 @@ const ParticipantItem: React.FC<ParticipantItemProps> = ({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className={`font-medium truncate ${
-              isCurrentUser 
-                ? 'text-blue-700 dark:text-blue-300' 
-                : 'text-slate-900 dark:text-white'
-            }`}>
+            <span className={`font-medium truncate ${isCurrentUser
+              ? 'text-blue-700 dark:text-blue-300'
+              : 'text-slate-900 dark:text-white'
+              }`}>
               {participant.username}
               {isCurrentUser && ' (You)'}
             </span>
             {getRoleIcon(participant.role)}
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <span>Active {formatTimeAgo(participant.lastActive)}</span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
+              Online
+            </span>
             {participant.isTyping && (
               <span className="flex items-center gap-1 text-blue-500" aria-label="Typing...">
                 <MessageSquare size={10} aria-hidden="true" />

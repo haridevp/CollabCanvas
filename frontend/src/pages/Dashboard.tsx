@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
-import { 
-  Plus, Search, Filter, Lock, Globe, Users, 
+import {
+  Plus, Search, Filter, Lock, Globe, Users,
   Grid, List, Bookmark, History, TrendingUp, Hash, User
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
@@ -44,21 +44,36 @@ import roomService from '../services/roomService';
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
-  
+
   // Room data states
   const [myRooms, setMyRooms] = useState<Room[]>([]);
   const [publicRooms, setPublicRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // UI states
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeTab, setActiveTab] = useState<'my-rooms' | 'public' | 'recent' | 'bookmarked'>('my-rooms');
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'name'>('newest');
+
+  // Bookmarks state (persisted to localStorage)
+  const [bookmarkedRoomIds, setBookmarkedRoomIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('bookmarkedRooms');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  // Save bookmarks to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('bookmarkedRooms', JSON.stringify(Array.from(bookmarkedRoomIds)));
+  }, [bookmarkedRoomIds]);
 
   /**
    * Load rooms when component mounts or dependencies change
@@ -72,7 +87,7 @@ const Dashboard = () => {
    */
   useEffect(() => {
     loadRooms();
-  }, [activeTab, sortBy]);
+  }, [activeTab]);
 
   /**
    * Loads rooms from the API based on current filter settings
@@ -91,17 +106,16 @@ const Dashboard = () => {
   const loadRooms = async () => {
     setIsLoading(true);
     try {
-      // Fetch both in parallel on initial mount or when needed
-      const [myRoomsResult, publicRoomsResult] = await Promise.all([
-        roomService.getMyRooms(),
-        roomService.getPublicRooms({ sort: sortBy })
-      ]);
-
-      if (myRoomsResult.success && myRoomsResult.rooms) {
-        setMyRooms(myRoomsResult.rooms);
-      }
-      if (publicRoomsResult.success && publicRoomsResult.rooms) {
-        setPublicRooms(publicRoomsResult.rooms);
+      if (activeTab === 'my-rooms') {
+        const result = await roomService.getMyRooms();
+        if (result.success && result.rooms) {
+          setMyRooms(result.rooms);
+        }
+      } else if (activeTab === 'public') {
+        const result = await roomService.getPublicRooms({ sort: sortBy });
+        if (result.success && result.rooms) {
+          setPublicRooms(result.rooms);
+        }
       }
     } catch (error) {
       console.error('Failed to load rooms:', error);
@@ -123,15 +137,70 @@ const Dashboard = () => {
   };
 
   /**
-   * Filters rooms based on current search query
-   * 
-   * @constant {Room[]} filteredRooms
-   * Filters rooms by name or description containing search query
+   * Toggles bookmark status for a specific room
    */
-  const filteredRooms = (activeTab === 'my-rooms' ? myRooms : publicRooms).filter(room =>
-    room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    room.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleBookmarkToggle = (roomId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the room
+    setBookmarkedRoomIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(roomId)) {
+        newSet.delete(roomId);
+      } else {
+        newSet.add(roomId);
+      }
+      return newSet;
+    });
+  };
+
+  /**
+   * Derives the base list of rooms depending on the active tab
+   */
+  const getDerivedRooms = () => {
+    switch (activeTab) {
+      case 'my-rooms':
+        // My Rooms simply returns the rooms the user is part of
+        return myRooms;
+      case 'public':
+        // Rooms Gallery returns all public rooms
+        return publicRooms;
+      case 'recent':
+        // Recent filters myRooms for rooms updated in the last 7 days (or just sorted by newest)
+        // We'll return myRooms and rely on the sorting, optionally filtering out very old ones
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        return myRooms.filter(r => new Date(r.updatedAt) > oneWeekAgo);
+      case 'bookmarked':
+        // Bookmarked filters myRooms for bookmarked ones
+        return myRooms.filter(r => bookmarkedRoomIds.has(r.id));
+      default:
+        return myRooms;
+    }
+  };
+
+  /**
+   * Applies search filtering and sorting rules
+   */
+  const getProcessedRooms = () => {
+    let result = getDerivedRooms().filter(room =>
+      room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (room.description || "").toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    result.sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      } else if (sortBy === 'popular') {
+        return b.participantCount - a.participantCount;
+      } else if (sortBy === 'name') {
+        return a.name.localeCompare(b.name);
+      }
+      return 0;
+    });
+
+    return result;
+  };
+
+  const filteredRooms = getProcessedRooms();
 
   /**
    * Dashboard navigation tabs configuration
@@ -144,16 +213,16 @@ const Dashboard = () => {
    */
   const tabs = [
     { id: 'my-rooms', label: 'My Rooms', icon: Grid, count: myRooms.length },
-    { id: 'public', label: 'Public Rooms', icon: Globe, count: publicRooms.length },
+    { id: 'public', label: 'Rooms Gallery', icon: Globe, count: publicRooms.length },
     { id: 'recent', label: 'Recent', icon: History },
-    { id: 'bookmarked', label: 'Bookmarked', icon: Bookmark },
+    { id: 'bookmarked', label: 'Bookmarked', icon: Bookmark, count: bookmarkedRoomIds.size },
   ];
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Sidebar navigation */}
       <Sidebar />
-      
+
       {/* Main content area */}
       <main className="flex-1 p-6 lg:p-8">
         {/* Dashboard header */}
@@ -167,11 +236,11 @@ const Dashboard = () => {
                 Welcome back, <span className="font-semibold text-blue-600 dark:text-blue-400">{user?.fullName || user?.username || 'User'}</span>
               </p>
             </div>
-            
+
             {/* Action buttons */}
             <div className="flex flex-wrap gap-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="gap-2"
                 onClick={() => setShowJoinModal(true)}
                 aria-label="Join existing room"
@@ -179,7 +248,7 @@ const Dashboard = () => {
                 <Hash size={18} />
                 <span className="hidden sm:inline">Join Room</span>
               </Button>
-              <Button 
+              <Button
                 className="gap-2"
                 onClick={() => setShowCreateModal(true)}
                 aria-label="Create new room"
@@ -203,7 +272,7 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <div>
@@ -217,11 +286,11 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Public Rooms</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Rooms Gallery</p>
                   <p className="text-2xl font-bold text-slate-900 dark:text-white">{publicRooms.length}</p>
                 </div>
                 <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
@@ -242,22 +311,20 @@ const Dashboard = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
                   aria-label={`Switch to ${tab.label} tab`}
                   aria-pressed={activeTab === tab.id}
                 >
                   <Icon size={18} />
                   <span className="font-medium">{tab.label}</span>
                   {tab.count !== undefined && (
-                    <span className={`px-1.5 py-0.5 text-xs rounded-full ${
-                      activeTab === tab.id
-                        ? 'bg-white/20'
-                        : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                    }`}>
+                    <span className={`px-1.5 py-0.5 text-xs rounded-full ${activeTab === tab.id
+                      ? 'bg-white/20'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                      }`}>
                       {tab.count}
                     </span>
                   )}
@@ -270,16 +337,16 @@ const Dashboard = () => {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" size={20} />
-              <input 
-                type="text" 
-                placeholder={`Search ${activeTab === 'my-rooms' ? 'your' : 'public'} rooms...`} 
+              <input
+                type="text"
+                placeholder={`Search ${activeTab === 'my-rooms' ? 'your' : 'public'} rooms...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" 
+                className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label="Search rooms"
               />
             </div>
-            
+
             <div className="flex gap-3">
               {/* Sort dropdown */}
               <div className="relative">
@@ -343,8 +410,11 @@ const Dashboard = () => {
                     maxParticipants={room.maxParticipants}
                     createdAt={room.createdAt}
                     updatedAt={room.updatedAt}
-                    showJoinButton={activeTab !== 'my-rooms'}
+                    drawingData={room.drawingData}
+                    showJoinButton={activeTab === 'public'}
                     showOwnerInfo={activeTab === 'public'}
+                    isBookmarked={bookmarkedRoomIds.has(room.id)}
+                    onBookmarkToggle={activeTab !== 'public' ? handleBookmarkToggle : undefined}
                     onClick={() => navigate(`/room/${room.id}`)}
                   />
                 ))}
@@ -352,7 +422,7 @@ const Dashboard = () => {
             ) : (
               <div className="space-y-3">
                 {filteredRooms.map((room) => (
-                  <div 
+                  <div
                     key={room.id}
                     className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
                     onClick={() => navigate(`/room/${room.id}`)}
@@ -383,13 +453,27 @@ const Dashboard = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm text-slate-500 dark:text-slate-400">
+                      <div className="text-right flex flex-col items-end">
+                        <div className="text-sm text-slate-500 dark:text-slate-400 mb-2">
                           Updated {new Date(room.updatedAt).toLocaleDateString()}
                         </div>
-                        <Button variant="outline" className="mt-2">
-                          {activeTab === 'my-rooms' ? 'Open' : 'Join'}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {activeTab !== 'public' && (
+                            <button
+                              className={`p-2 rounded-lg transition-colors border ${bookmarkedRoomIds.has(room.id)
+                                  ? 'bg-yellow-50 border-yellow-200 text-yellow-600 dark:bg-yellow-900/20 dark:border-yellow-900/50'
+                                  : 'border-slate-200 text-slate-400 hover:text-yellow-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700'
+                                }`}
+                              onClick={(e) => handleBookmarkToggle(room.id, e)}
+                              title={bookmarkedRoomIds.has(room.id) ? "Remove bookmark" : "Add bookmark"}
+                            >
+                              <Bookmark size={18} fill={bookmarkedRoomIds.has(room.id) ? "currentColor" : "none"} />
+                            </button>
+                          )}
+                          <Button variant="outline">
+                            {activeTab === 'public' ? 'Join' : 'Open'}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -406,11 +490,11 @@ const Dashboard = () => {
                 )}
               </div>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                {searchQuery ? 'No rooms found' : 
+                {searchQuery ? 'No rooms found' :
                   activeTab === 'my-rooms' ? 'No rooms yet' : 'No public rooms available'}
               </h3>
               <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
-                {searchQuery 
+                {searchQuery
                   ? 'Try adjusting your search terms'
                   : activeTab === 'my-rooms'
                     ? 'Create your first room to start collaborating'

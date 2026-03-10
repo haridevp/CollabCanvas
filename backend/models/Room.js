@@ -51,7 +51,7 @@ const roomSchema = new mongoose.Schema({
   },
   // Hashed password string for private room authentication
   password: {
-    type: String, 
+    type: String,
   },
   // Reference to the User who created and manages the room
   owner: {
@@ -69,9 +69,8 @@ const roomSchema = new mongoose.Schema({
   // Maximum number of users allowed in the room at any one time
   maxParticipants: {
     type: Number,
-    default: 50,
+    default: 10,
     min: 2,
-    max: 50,
   },
   // Soft-delete flag; false indicates the room is closed or deleted
   isActive: {
@@ -80,7 +79,7 @@ const roomSchema = new mongoose.Schema({
   },
   // JSON array storing the persistent state of all drawing elements on the canvas
   drawingData: {
-    type: Array, 
+    type: Array,
     default: [],
   },
   // Auto-populated timestamp of room creation
