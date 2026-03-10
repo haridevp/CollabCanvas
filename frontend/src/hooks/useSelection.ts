@@ -13,7 +13,7 @@ import { isPointInElement } from '../utils/geometry';
 export function useSelection(
     elements: DrawingElement[],
     setElements: (elements: DrawingElement[] | ((prev: DrawingElement[]) => DrawingElement[])) => void,
-    _zoomLevel: number,
+    zoomLevel: number,
     _panOffset: { x: number; y: number }
 ) {
     const [selection, setSelection] = useState<SelectionState>({
@@ -44,9 +44,47 @@ export function useSelection(
     }, [elements]);
 
     /**
+     * Check if point is over a resize handle of any selected element
+     */
+    const getHandleAtPoint = useCallback((point: Point): { element: DrawingElement; handle: string } | null => {
+        // Only check selected elements
+        const selectedElements = elements.filter(el => selection.selectedIds.includes(el.id));
+        const handleHitSize = 12 / zoomLevel; // Slightly larger hit area than visual size
+
+        for (const el of selectedElements) {
+            if (el.x !== undefined && el.y !== undefined && el.width !== undefined && el.height !== undefined) {
+                const handles = [
+                    { name: 'top-left', x: el.x, y: el.y },
+                    { name: 'top-right', x: el.x + el.width, y: el.y },
+                    { name: 'bottom-left', x: el.x, y: el.y + el.height },
+                    { name: 'bottom-right', x: el.x + el.width, y: el.y + el.height },
+                ];
+
+                for (const handle of handles) {
+                    if (
+                        Math.abs(point.x - handle.x) <= handleHitSize &&
+                        Math.abs(point.y - handle.y) <= handleHitSize
+                    ) {
+                        return { element: el, handle: handle.name };
+                    }
+                }
+            }
+        }
+        return null;
+    }, [elements, selection.selectedIds, zoomLevel]);
+
+    /**
      * Handle selection on mouse down
      */
     const handleSelectionStart = useCallback((e: React.MouseEvent, point: Point) => {
+        // 1. Check if clicking on a resize handle first
+        const handleHit = getHandleAtPoint(point);
+        if (handleHit && selection.selectedIds.length === 1 && handleHit.element.id === selection.selectedIds[0]) {
+            // Let the caller handle startResize manually or we can call it here if we expose a ref. 
+            // Better to return the hit and let CollaborativeCanvas call startResize
+            return handleHit; // Return early so canvas knows it was a handle
+        }
+
         const element = findElementAtPoint(point);
 
         if (e.shiftKey) {
@@ -80,7 +118,8 @@ export function useSelection(
                 setSelection({ selectedIds: [], isMultiSelect: false });
             }
         }
-    }, [findElementAtPoint]);
+        return null;
+    }, [findElementAtPoint, getHandleAtPoint, selection.selectedIds]);
 
     /**
      * Handle drag box selection
@@ -262,6 +301,19 @@ export function useSelection(
                             } else {
                                 newWidth = newHeight * aspectRatio;
                             }
+                        }
+                    } else if (el.type === 'text') {
+                        // For text, adjust font size proportional to the height change
+                        const textEl = el as any; // Cast to access format
+                        if (textEl.format && transform.initialProps!.height > 0) {
+                            const ratio = newHeight / transform.initialProps!.height;
+                            textEl.format = {
+                                ...textEl.format,
+                                fontSize: Math.max(8, textEl.format.fontSize * ratio)
+                            };
+                            // Maintain aspect ratio for text bounding box as well
+                            const aspectRatio = transform.initialProps!.width / transform.initialProps!.height;
+                            newWidth = newHeight * aspectRatio;
                         }
                     }
 

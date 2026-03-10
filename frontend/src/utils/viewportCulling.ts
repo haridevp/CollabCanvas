@@ -26,10 +26,18 @@ export function isElementInViewport(
     let elementLeft: number, elementTop: number, elementRight: number, elementBottom: number;
 
     switch (element.type) {
+        case 'text':
+            if (element.x === undefined || element.y === undefined) return false;
+            elementLeft = element.x;
+            elementTop = element.y;
+            // Provide a generous fallback bounding box for text that hasn't been measured
+            elementRight = element.x + (element.width || 800);
+            elementBottom = element.y + (element.height || 800);
+            break;
+
         case 'rectangle':
         case 'circle':
         case 'image':
-        case 'text':
             if (element.x === undefined || element.y === undefined ||
                 element.width === undefined || element.height === undefined) {
                 return false;

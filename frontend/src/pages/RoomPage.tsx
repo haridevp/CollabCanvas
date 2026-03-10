@@ -191,7 +191,7 @@ const RoomPage = () => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white dark:bg-slate-900">
+    <div className="flex h-screen overflow-x-auto overflow-y-hidden min-w-[1100px] bg-white dark:bg-slate-900">
       {/* Main workspace area */}
       <div className="flex-1 flex flex-col">
 

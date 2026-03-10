@@ -282,6 +282,9 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const [showPerfStats, setShowPerfStats] = useState<boolean>(false);
   const [visibleElementCount, setVisibleElementCount] = useState<number>(0);
 
+  // Image cache
+  const imageCacheRef = useRef<Record<string, HTMLImageElement>>({});
+
   // Text Input
   const [isEditingText, setIsEditingText] = useState<boolean>(false);
   const [textPosition, setTextPosition] = useState<Point | null>(null);
@@ -1104,16 +1107,34 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
         case "image": {
           const imageEl = el as ImageElement;
-          const img = new Image();
-          img.src = imageEl.src;
-          if (img.complete) {
-            ctx.drawImage(
-              img,
-              imageEl.x!,
-              imageEl.y!,
-              imageEl.width,
-              imageEl.height
-            );
+
+          if (imageCacheRef.current[imageEl.id]) {
+            const img = imageCacheRef.current[imageEl.id];
+            if (img.complete) {
+              ctx.drawImage(
+                img,
+                imageEl.x!,
+                imageEl.y!,
+                imageEl.width,
+                imageEl.height
+              );
+            }
+          } else {
+            const img = new Image();
+            img.src = imageEl.src;
+            imageCacheRef.current[imageEl.id] = img;
+            img.onload = () => {
+              redrawCanvas();
+            };
+            if (img.complete) {
+              ctx.drawImage(
+                img,
+                imageEl.x!,
+                imageEl.y!,
+                imageEl.width,
+                imageEl.height
+              );
+            }
           }
           break;
         }
@@ -1136,6 +1157,52 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
     if (currentElement) {
       drawSingleElement(currentElement, 1);
+    }
+
+    // Draw selection bounds and handles
+    if (selection.selectedIds.length > 0) {
+      ctx.save();
+      selection.selectedIds.forEach((id) => {
+        const el = elements.find(e => e.id === id);
+        if (el && el.x !== undefined && el.y !== undefined && el.width !== undefined && el.height !== undefined) {
+          // Draw bounding box
+          ctx.strokeStyle = '#3b82f6'; // Blue-500
+          ctx.lineWidth = 2 / zoomLevel;
+          ctx.setLineDash([5 / zoomLevel, 5 / zoomLevel]);
+          ctx.strokeRect(el.x, el.y, el.width, el.height);
+
+          // Draw resize handles
+          const handleSize = 8 / zoomLevel;
+          ctx.fillStyle = '#ffffff';
+          ctx.setLineDash([]);
+
+          const drawHandle = (hx: number, hy: number) => {
+            ctx.fillRect(hx - handleSize / 2, hy - handleSize / 2, handleSize, handleSize);
+            ctx.strokeRect(hx - handleSize / 2, hy - handleSize / 2, handleSize, handleSize);
+          };
+
+          drawHandle(el.x, el.y); // top-left
+          drawHandle(el.x + el.width, el.y); // top-right
+          drawHandle(el.x, el.y + el.height); // bottom-left
+          drawHandle(el.x + el.width, el.y + el.height); // bottom-right
+        } else if (el && (el.type === 'line' || el.type === 'arrow' || el.type === 'pencil')) {
+          if (el.points && el.points.length > 0) {
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            el.points.forEach(p => {
+              minX = Math.min(minX, p.x);
+              minY = Math.min(minY, p.y);
+              maxX = Math.max(maxX, p.x);
+              maxY = Math.max(maxY, p.y);
+            });
+            const padding = (el.strokeWidth || 1) * 2;
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2 / zoomLevel;
+            ctx.setLineDash([5 / zoomLevel, 5 / zoomLevel]);
+            ctx.strokeRect(minX - padding, minY - padding, (maxX - minX) + padding * 2, (maxY - minY) + padding * 2);
+          }
+        }
+      });
+      ctx.restore();
     }
 
     ctx.restore();
@@ -1283,7 +1350,25 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       color: format.color,
       strokeWidth: 0, // Text doesn't use stroke width
       opacity: 1,
+      layerId: layerState.activeLayerId || 'layer-1',
     };
+
+    // Calculate actual dimensions to make it selectable
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.font = `${format.fontStyle} ${format.fontWeight} ${format.fontSize}px ${format.fontFamily}`;
+      const lines = text.split('\n');
+      let maxWidth = 0;
+
+      lines.forEach(line => {
+        const metrics = ctx.measureText(line);
+        maxWidth = Math.max(maxWidth, metrics.width);
+      });
+
+      textElement.width = maxWidth;
+      textElement.height = lines.length * format.fontSize * 1.2;
+    }
 
     // Add to history and emit to server
     commitElements([...elements, textElement]);
@@ -1334,6 +1419,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       color: '#000000', // Not used for images but required by DrawingElement
       strokeWidth: 0,
       opacity: 1,
+      layerId: layerState.activeLayerId || 'layer-1',
     };
 
     // Add to history and emit to server
@@ -1378,7 +1464,12 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     // SELECT TOOL
     // ----------------------------------
     if (tool === "select") {
-      handleSelectionStart(e, point);
+      const handleHit = handleSelectionStart(e, point);
+
+      if (handleHit && 'handle' in handleHit) {
+        startResize(handleHit.element, handleHit.handle, point);
+        return;
+      }
 
       const element = findElementAtPoint(point);
 
@@ -1400,9 +1491,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     }
 
     // ----------------------------------
-    // TEXT TOOL
+    // TEXT TOOL (Legacy / Keyboard shortcut fallback)
     // ----------------------------------
     if (tool === "text") {
+      setTool('select');
       setTextPosition(point);
       setIsEditingText(true);
       setEditingTextElement(null);
@@ -1410,9 +1502,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     }
 
     // ----------------------------------
-    // IMAGE TOOL
+    // IMAGE TOOL (Legacy / Keyboard shortcut fallback)
     // ----------------------------------
     if (tool === "image") {
+      setTool('select');
       setImagePosition(point);
       setIsUploadingImage(true);
       return;
@@ -1761,7 +1854,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           if (elementsToDelete.length > 0) {
             const idsToDelete = elementsToDelete.map(el => el.id);
             commitElements(elements.filter(el => !idsToDelete.includes(el.id)));
-            
+
             if (socketRef.current && resolvedRoomId) {
               idsToDelete.forEach(id => {
                 socketRef.current?.emit("delete-element", {
@@ -1772,7 +1865,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
               });
             }
           }
-          
+
           // Reset and return early so the gesture line isn't saved
           setCurrentElement(null);
           brushEngineRef.current?.clear();
@@ -2253,27 +2346,55 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             <Eraser size={20} />
           </button>
           <button
-            onClick={() => setTool('text')}
-            className={`p-2 rounded-lg transition-colors ${tool === 'text'
+            onClick={() => {
+              setTool('select');
+
+              // Calculate center of the screen
+              const bounds = containerRef.current?.getBoundingClientRect();
+              console.log('Text Tool Clicked. Container Bounds:', bounds);
+              if (!bounds) return;
+
+              const centerX = bounds.width / 2;
+              const centerY = bounds.height / 2;
+
+              // Convert to canvas coordinates taking zoom and pan into account
+              const canvasX = (centerX - panOffset.x) / zoomLevel;
+              const canvasY = (centerY - panOffset.y) / zoomLevel;
+              console.log('Calculated Canvas Pos:', canvasX, canvasY);
+
+              setTextPosition({ x: canvasX, y: canvasY });
+              setIsEditingText(true);
+              setEditingTextElement(null);
+            }}
+            className={`p-2 rounded-lg transition-colors ${isEditingText || tool === 'text'
               ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
               }`}
             aria-label="Text tool"
             title="Text Tool (T)"
-            aria-pressed={tool === 'text'}
+            aria-pressed={isEditingText || tool === 'text'}
           >
             <Type size={20} />
           </button>
           <button
             onClick={() => {
-              if (tool === 'image') {
-                // If already in image mode, trigger upload
-                setIsUploadingImage(true);
-              } else {
-                setTool('image');
-              }
+              setTool('select');
+
+              // Calculate center of the screen
+              const bounds = containerRef.current?.getBoundingClientRect();
+              if (!bounds) return;
+
+              const centerX = bounds.width / 2;
+              const centerY = bounds.height / 2;
+
+              // Convert to canvas coordinates taking zoom and pan into account
+              const canvasX = (centerX - panOffset.x) / zoomLevel;
+              const canvasY = (centerY - panOffset.y) / zoomLevel;
+
+              setImagePosition({ x: canvasX, y: canvasY });
+              setIsUploadingImage(true);
             }}
-            className={`p-2 rounded-lg transition-colors ${tool === 'image'
+            className={`p-2 rounded-lg transition-colors ${isUploadingImage || tool === 'image'
               ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
               }`}
