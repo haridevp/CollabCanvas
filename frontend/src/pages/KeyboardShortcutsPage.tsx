@@ -9,6 +9,7 @@ import { updateProfile } from '../utils/authService';
  * Interface for keyboard shortcut configuration
  */
 interface KeyboardShortcuts {
+  [key: string]: string;
   undo: string;
   redo: string;
   brush: string;
@@ -45,7 +46,7 @@ const getShortcutDescription = (action: string): string => {
  * Extracted from the Keyboard Shortcuts tab of ProfilePage.
  */
 const KeyboardShortcutsPage: React.FC = () => {
-  const { user, updateUser } = useAuth();
+  const { updateUser } = useAuth();
 
   const [keyboardShortcuts, setKeyboardShortcuts] = useState<KeyboardShortcuts>({
     undo: 'Ctrl+Z',

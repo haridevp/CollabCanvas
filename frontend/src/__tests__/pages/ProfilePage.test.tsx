@@ -1,5 +1,4 @@
 // src/__tests__/pages/ProfilePage.test.tsx
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import ProfilePage from '../../pages/ProfilePage';
@@ -88,6 +87,8 @@ const mockUpdateUser = vi.fn();
 const mockLogout = vi.fn();
 
 const baseUser = {
+  id: 'user-123',
+  username: 'testuser',
   email: 'test@example.com',
   fullName: 'Test User',
   bio: 'Hello bio',

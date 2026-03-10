@@ -15,7 +15,7 @@ export const ThemeManager = () => {
     const location = useLocation();
 
     // The authorized routes where we apply user themes
-    const themedRoutes = ['/dashboard', '/profile'];
+    const themedRoutes = ['/dashboard', '/profile', '/appearance', '/notification-settings', '/keyboard-shortcuts', '/security'];
 
     useEffect(() => {
         // Evaluate if the current route starts with any of the allowed paths

@@ -155,6 +155,7 @@ export const updateProfile = async (profileData: {
   displayName?: string;
   bio?: string;
   avatar?: string | null;
+  theme?: string;
   notificationSettings?: {
     email?: boolean;
     push?: boolean;
@@ -165,6 +166,7 @@ export const updateProfile = async (profileData: {
     desktopNotifications?: boolean;
     notificationFrequency?: 'realtime' | 'daily' | 'weekly';
   };
+  keyboardShortcuts?: Record<string, string>;
 }): Promise<AuthResponse> => {
   try {
     const response = await api.put('/auth/update-profile', profileData);
