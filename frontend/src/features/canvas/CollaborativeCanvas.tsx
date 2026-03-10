@@ -1299,7 +1299,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     // Reset text editing state
     setIsEditingText(false);
     setTextPosition(null);
-  }, [elements, setElements, textPosition, resetSaveTimer, resolvedRoomId]);
+  }, [elements, commitElements, textPosition, resetSaveTimer, resolvedRoomId]);
 
   /**
  * Handle image upload and placement on canvas
@@ -1351,7 +1351,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     setIsUploadingImage(false);
     setImagePosition(null);
     setTool('select'); // Switch to select tool after placing image
-  }, [elements, setElements, imagePosition, resetSaveTimer]);
+  }, [elements, commitElements, imagePosition, resetSaveTimer]);
 
   /**
    * Start drawing operation at the specified mouse position
@@ -1782,7 +1782,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     tool,
     isDrawing,
     currentElement,
-    setElements,
+    commitElements,
     user,
     dragBox,
     handleSelectionEnd,
@@ -2055,7 +2055,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           case 'x':
             e.preventDefault();
             cutToClipboard();
-            // cutToClipboard calls setElements (replaceElements), so we should commit
+            // cutToClipboard calls commitElements (replaceElements), so we should commit
             commitElements([...elements]);
             break;
           case 'v':
