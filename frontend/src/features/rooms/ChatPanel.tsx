@@ -46,7 +46,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     useEffect(() => {
         // Scroll to bottom when messages update
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (typeof messagesEndRef.current?.scrollIntoView === 'function') {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
     }, [messages, isOpen]);
 
     const handleSendMessage = (e?: React.FormEvent) => {
