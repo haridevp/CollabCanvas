@@ -471,6 +471,22 @@ const roomSocketHandler = (io, socket) => {
   });
 
   /**
+   * Event: canvas-sync
+   * Receives the full drawing state from a client (e.g. after undo/redo)
+   * and broadcasts it to all other users in the room.
+   */
+  socket.on("canvas-sync", ({ roomId, elements }) => {
+    if (!roomId || !Array.isArray(elements)) return;
+
+    // Update the authoritative in-memory state
+    activeRooms.set(roomId, elements);
+    pendingSaves.add(roomId);
+
+    // Broadcast the full state to all other clients
+    socket.to(roomId).emit("canvas-sync", { elements });
+  });
+
+  /**
    * Event: clear-canvas
    * Resets the entire drawing state for the room.
    */

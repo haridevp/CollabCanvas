@@ -627,6 +627,13 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       replaceElements([]);
     });
 
+    // Handle full canvas sync from another user (e.g. after undo/redo)
+    socket.on('canvas-sync', ({ elements: syncedElements }) => {
+      if (Array.isArray(syncedElements)) {
+        replaceElements(syncedElements);
+      }
+    });
+
     // Track remote user cursors with tool info
     socket.on('cursor-update', ({ userId, x, y, username, tool, color }) => {
       setRemoteCursors(prev => ({
@@ -681,16 +688,21 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     };
   }, [roomId, user, replaceElements, onSocketReady]);
 
+  // Ref to flag when undo/redo was triggered, so we can broadcast the new state
+  const pendingSyncRef = useRef(false);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Undo: Ctrl+Z
       if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
+        pendingSyncRef.current = true;
         undo();
       }
       // Redo: Ctrl+Y or Ctrl+Shift+Z
       if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
         e.preventDefault();
+        pendingSyncRef.current = true;
         redo();
       }
       // Save: Ctrl+S
@@ -703,6 +715,17 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo]);
+
+  // Broadcast full canvas state after undo/redo completes
+  useEffect(() => {
+    if (pendingSyncRef.current && socketRef.current && resolvedRoomId) {
+      pendingSyncRef.current = false;
+      socketRef.current.emit('canvas-sync', {
+        roomId: resolvedRoomId,
+        elements,
+      });
+    }
+  }, [elements, resolvedRoomId]);
 
   /**
    * Initialize brush engine with current configuration
@@ -2066,10 +2089,12 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       // Undo/Redo
       if (e.ctrlKey && key === 'z' && !e.shiftKey) {
         e.preventDefault();
+        pendingSyncRef.current = true;
         undo();
       }
       if ((e.ctrlKey && key === 'y') || (e.ctrlKey && e.shiftKey && key === 'z')) {
         e.preventDefault();
+        pendingSyncRef.current = true;
         redo();
       }
     };
