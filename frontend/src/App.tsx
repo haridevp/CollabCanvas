@@ -53,7 +53,7 @@ function App() {
             <Route path="/keyboard-shortcuts" element={<KeyboardShortcutsPage />} />
             <Route path="/security" element={<SecurityPage />} />
             <Route path="/room/:id" element={<RoomPage />} />
-            
+
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </Router>
