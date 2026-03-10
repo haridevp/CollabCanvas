@@ -106,17 +106,16 @@ const Dashboard = () => {
   const loadRooms = async () => {
     setIsLoading(true);
     try {
-      // Fetch both in parallel on initial mount or when needed
-      const [myRoomsResult, publicRoomsResult] = await Promise.all([
-        roomService.getMyRooms(),
-        roomService.getPublicRooms() // We handle sorting locally now
-      ]);
-
-      if (myRoomsResult.success && myRoomsResult.rooms) {
-        setMyRooms(myRoomsResult.rooms);
-      }
-      if (publicRoomsResult.success && publicRoomsResult.rooms) {
-        setPublicRooms(publicRoomsResult.rooms);
+      if (activeTab === 'my-rooms') {
+        const result = await roomService.getMyRooms();
+        if (result.success && result.rooms) {
+          setMyRooms(result.rooms);
+        }
+      } else if (activeTab === 'public') {
+        const result = await roomService.getPublicRooms({ sort: sortBy });
+        if (result.success && result.rooms) {
+          setPublicRooms(result.rooms);
+        }
       }
     } catch (error) {
       console.error('Failed to load rooms:', error);
@@ -158,28 +157,23 @@ const Dashboard = () => {
    */
   const getDerivedRooms = () => {
     switch (activeTab) {
-      case 'my-rooms': {
+      case 'my-rooms':
         // My Rooms simply returns the rooms the user is part of
         return myRooms;
-      }
-      case 'public': {
+      case 'public':
         // Rooms Gallery returns all public rooms
         return publicRooms;
-      }
-      case 'recent': {
+      case 'recent':
         // Recent filters myRooms for rooms updated in the last 7 days (or just sorted by newest)
         // We'll return myRooms and rely on the sorting, optionally filtering out very old ones
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
         return myRooms.filter(r => new Date(r.updatedAt) > oneWeekAgo);
-      }
-      case 'bookmarked': {
+      case 'bookmarked':
         // Bookmarked filters myRooms for bookmarked ones
         return myRooms.filter(r => bookmarkedRoomIds.has(r.id));
-      }
-      default: {
+      default:
         return myRooms;
-      }
     }
   };
 
@@ -187,7 +181,7 @@ const Dashboard = () => {
    * Applies search filtering and sorting rules
    */
   const getProcessedRooms = () => {
-    const result = getDerivedRooms().filter(room =>
+    let result = getDerivedRooms().filter(room =>
       room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (room.description || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -345,6 +339,7 @@ const Dashboard = () => {
               <Search className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" size={20} />
               <input
                 type="text"
+                placeholder={`Search ${activeTab === 'my-rooms' ? 'your' : 'public'} rooms...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
@@ -466,8 +461,8 @@ const Dashboard = () => {
                           {activeTab !== 'public' && (
                             <button
                               className={`p-2 rounded-lg transition-colors border ${bookmarkedRoomIds.has(room.id)
-                                ? 'bg-yellow-50 border-yellow-200 text-yellow-600 dark:bg-yellow-900/20 dark:border-yellow-900/50'
-                                : 'border-slate-200 text-slate-400 hover:text-yellow-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700'
+                                  ? 'bg-yellow-50 border-yellow-200 text-yellow-600 dark:bg-yellow-900/20 dark:border-yellow-900/50'
+                                  : 'border-slate-200 text-slate-400 hover:text-yellow-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700'
                                 }`}
                               onClick={(e) => handleBookmarkToggle(room.id, e)}
                               title={bookmarkedRoomIds.has(room.id) ? "Remove bookmark" : "Add bookmark"}

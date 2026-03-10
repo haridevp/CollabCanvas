@@ -33,6 +33,18 @@ const { decompressDrawingData } = require("../utils/payloadDecompression");
 // Keep track of which rooms have un-saved changes to optimize DB writes
 const pendingSaves = new Set();
 // Interval for flushing the memory state to the MongoDB database (5 seconds)
+// ─────────────────────────────────────────────────────────────────────────────
+// High-Performance In-Memory Room State (Excalidraw-style)
+// ─────────────────────────────────────────────────────────────────────────────
+// Structure: { roomId: [decompressedDrawingElements] }
+const activeRooms = new Map();
+
+// Import payload decompression utility
+const { decompressDrawingData } = require("../utils/payloadDecompression");
+
+// Keep track of which rooms have un-saved changes to optimize DB writes
+const pendingSaves = new Set();
+// Interval for flushing the memory state to the MongoDB database (5 seconds)
 const FLUSH_INTERVAL = 5000;
 
 // Per-element last-modified timestamps for server-side conflict resolution (LWW)
@@ -124,7 +136,9 @@ const roomSocketHandler = (io, socket) => {
         room: roomId,
         user: { $in: Array.from(liveUserIds) },
         isBanned: false,
-      }).populate("user", "username email avatar");
+      })
+        // Populate foreign keys with specific display-oriented user fields
+        .populate("user", "username email avatar");
 
       return participants.map((p) => ({
         id: p._id,
