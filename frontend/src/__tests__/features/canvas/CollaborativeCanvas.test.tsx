@@ -161,7 +161,7 @@ vi.mock('lucide-react', () => ({
   X: () => <div />, Lock: () => <div />, MinusCircle: () => <div />, PlusCircle: () => <div />, Zap: () => <div />,
   ZapOff: () => <div />, Download: () => <div />, RotateCcw: () => <div />, RotateCw: () => <div />, Copy: () => <div />,
   Scissors: () => <div />, ArrowUp: () => <div />, ArrowDown: () => <div />, Trash: () => <div />, Clipboard: () => <div />,
-  Keyboard: () => <div />, Palette: () => <div />, Brush: () => <div />, Highlighter: () => <div />, SprayCan: () => <div />
+  Keyboard: () => <div />, Palette: () => <div />, Brush: () => <div />, Highlighter: () => <div />, SprayCan: () => <div />, Hand: () => <div />, Ruler: () => <div />
 }));
 
 // Mock sub-components with CORRECT paths

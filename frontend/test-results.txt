@@ -1,0 +1,226 @@
+﻿
+> frontend@0.0.0 test
+> vitest run --run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/ganap/OneDrive/Attachments/Desktop/SE/CollabCanvas/frontend[39m
+
+ [31mΓ¥»[39m src/__tests__/utils/angleMeasurement.test.ts [2m([22m[2m15 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 13[2mms[22m[39m
+       [32mΓ£ô[39m returns 90 degrees for a right angle[32m 2[2mms[22m[39m
+       [32mΓ£ô[39m returns 180 degrees for a straight line angle[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m returns 0 for same direction[32m 0[2mms[22m[39m
+[31m       [31m├ù[31m returns 270 for three-quarter turn[39m[32m 6[2mms[22m[39m
+       [32mΓ£ô[39m returns the smaller angle (Γëñ 180)[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m returns 180 for opposite directions[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m formats with default precision[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m formats with custom precision[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m formats zero[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m returns a valid SVG path string[32m 1[2mms[22m[39m
+       [32mΓ£ô[39m uses correct start point[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m returns midpoint of the arc[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m returns 0 for horizontal right[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m returns 90 for straight down[32m 0[2mms[22m[39m
+       [32mΓ£ô[39m returns 180 for horizontal left[32m 0[2mms[22m[39m
+ [31mΓ¥»[39m src/__tests__/components/ui/InviteModal.test.tsx [2m([22m[2m0 test[22m[2m)[22m
+ [31mΓ¥»[39m src/__tests__/pages/RoomPage.test.tsx [2m([22m[2m0 test[22m[2m)[22m
+ [31mΓ¥»[39m src/__tests__/pages/LoginPage.test.tsx [2m([22m[2m0 test[22m[2m)[22m
+ [32mΓ£ô[39m src/__tests__/components/ui/ImageCropper.test.tsx [2m([22m[2m14 tests[22m[2m)[22m[33m 1149[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/ColorPicker.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 1181[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/features/rooms/RoomJoinModal.test.tsx [2m([22m[2m10 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m[33m 882[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/DeletionSurveyModal.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 1166[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/usernameService.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 2150[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m should reject usernames shorter than 3 chars [33m 313[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m should reject usernames longer than 20 chars [33m 302[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m should reject invalid characters [33m 306[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m should detect taken username and return suggestions [33m 304[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m should allow new username [33m 302[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m should treat username case-insensitively [33m 313[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m should trim spaces before checking [33m 304[2mms[22m[39m
+[90mstdout[2m | src/__tests__/features/canvas/CollaborativeCanvas.test.tsx[2m > [22m[2mCollaborativeCanvas[2m > [22m[2mrenders without crashing
+[22m[39mTest: renders without crashing START
+Rendering CollaborativeCanvas, roomId: test-room
+Rendering CollaborativeCanvas, roomId: test-room
+
+[90mstdout[2m | src/__tests__/features/canvas/CollaborativeCanvas.test.tsx[2m > [22m[2mCollaborativeCanvas[2m > [22m[2mshows canvas correctly
+[22m[39mTest: shows canvas correctly START
+Rendering CollaborativeCanvas, roomId: test-room
+Rendering CollaborativeCanvas, roomId: test-room
+
+ [31mΓ¥»[39m src/__tests__/features/canvas/CollaborativeCanvas.test.tsx [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 90[2mms[22m[39m
+[31m     [31m├ù[31m renders without crashing[39m[32m 81[2mms[22m[39m
+[31m     [31m├ù[31m shows canvas correctly[39m[32m 6[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/pages/Dashboard.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 1983[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m filters rooms by search query [33m 585[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m changes sort option and sorts rooms on the frontend [33m 387[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/features/rooms/PublicRoomsGallery.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 2758[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders gallery and rooms when isOpen is true [33m 473[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m calls onClose when close button is clicked [33m 362[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m load more button calls handleLoadMore [33m 828[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/pages/ResetPasswordPage.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 1814[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders reset form UI [33m 373[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/pages/RegisterPage.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[33m 2626[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders all main inputs and submit button [33m 388[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m clicking Terms of Service opens modal [33m 339[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m failed registration: shows alert with backend message [33m 330[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/features/rooms/RoomCreationModal.test.tsx [2m([22m[2m9 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m[33m 1378[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m validates room name length [33m 493[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/features/rooms/RoomSettingsPanel.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1434[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders correctly when open [33m 403[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m copies room ID and link to clipboard [33m 355[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/Sidebar.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 1172[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/pages/EmailVerificationPage.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 958[2mms[22m[39m
+[90mstdout[2m | src/__tests__/components/ui/ThemeSelector.test.tsx[2m > [22m[2mThemeSelector[2m > [22m[2mrenders all theme options
+[22m[39m≡ƒÄ¿ Applying theme: system
+≡ƒô¥ Current HTML classes before: []
+Γ£à System theme applied: light
+≡ƒô¥ HTML classes after: [ [32m'light'[39m ]
+≡ƒôè Theme verification:
+   - Has .light: [33mtrue[39m
+   - Has .dark: [33mfalse[39m
+   - Has .high-contrast: [33mfalse[39m
+
+[90mstdout[2m | src/__tests__/components/ui/ThemeSelector.test.tsx[2m > [22m[2mThemeSelector[2m > [22m[2mdisplays the current theme passed via props
+[22m[39m≡ƒÄ¿ Applying theme: dark
+≡ƒô¥ Current HTML classes before: []
+Γ£à Theme applied: dark
+≡ƒô¥ HTML classes after: [ [32m'dark'[39m ]
+≡ƒôè Theme verification:
+   - Has .light: [33mfalse[39m
+   - Has .dark: [33mtrue[39m
+   - Has .high-contrast: [33mfalse[39m
+
+[90mstdout[2m | src/__tests__/components/ui/ThemeSelector.test.tsx[2m > [22m[2mThemeSelector[2m > [22m[2mcalls onThemeChange when a theme button is clicked
+[22m[39m≡ƒÄ¿ Applying theme: light
+≡ƒô¥ Current HTML classes before: []
+Γ£à Theme applied: light
+≡ƒô¥ HTML classes after: [ [32m'light'[39m ]
+≡ƒôè Theme verification:
+   - Has .light: [33mtrue[39m
+   - Has .dark: [33mfalse[39m
+   - Has .high-contrast: [33mfalse[39m
+
+[90mstdout[2m | src/__tests__/components/ui/ThemeSelector.test.tsx[2m > [22m[2mThemeSelector[2m > [22m[2mapplies theme to DOM when prop changes (integration)
+[22m[39m≡ƒÄ¿ Applying theme: light
+≡ƒô¥ Current HTML classes before: []
+Γ£à Theme applied: light
+≡ƒô¥ HTML classes after: [ [32m'light'[39m ]
+≡ƒôè Theme verification:
+   - Has .light: [33mtrue[39m
+   - Has .dark: [33mfalse[39m
+   - Has .high-contrast: [33mfalse[39m
+≡ƒÄ¿ Applying theme: dark
+≡ƒô¥ Current HTML classes before: [ [32m'light'[39m ]
+Γ£à Theme applied: dark
+≡ƒô¥ HTML classes after: [ [32m'dark'[39m ]
+≡ƒôè Theme verification:
+   - Has .light: [33mfalse[39m
+   - Has .dark: [33mtrue[39m
+   - Has .high-contrast: [33mfalse[39m
+
+ [32mΓ£ô[39m src/__tests__/components/ui/RoomCardComponent.test.tsx [2m([22m[2m14 tests[22m[2m)[22m[33m 1022[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders room name and description [33m 391[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/features/rooms/ParticipantsPanel.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 898[2mms[22m[39m
+[90mstdout[2m | src/__tests__/components/ui/ThemeSelector.test.tsx[2m > [22m[2mThemeSelector[2m > [22m[2mreset to default calls onThemeChange with system
+[22m[39m≡ƒÄ¿ Applying theme: dark
+≡ƒô¥ Current HTML classes before: []
+Γ£à Theme applied: dark
+≡ƒô¥ HTML classes after: [ [32m'dark'[39m ]
+≡ƒôè Theme verification:
+   - Has .light: [33mfalse[39m
+   - Has .dark: [33mtrue[39m
+   - Has .high-contrast: [33mfalse[39m
+
+[90mstdout[2m | src/__tests__/components/ui/ThemeSelector.test.tsx[2m > [22m[2mThemeSelector[2m > [22m[2mhigh-contrast applies correct classes when selected
+[22m[39m≡ƒÄ¿ Applying theme: light
+≡ƒô¥ Current HTML classes before: []
+Γ£à Theme applied: light
+≡ƒô¥ HTML classes after: [ [32m'light'[39m ]
+≡ƒôè Theme verification:
+   - Has .light: [33mtrue[39m
+   - Has .dark: [33mfalse[39m
+   - Has .high-contrast: [33mfalse[39m
+≡ƒÄ¿ Applying theme: high-contrast
+≡ƒô¥ Current HTML classes before: [ [32m'light'[39m ]
+Γ£à High contrast theme applied (with dark base)
+≡ƒô¥ HTML classes after: [ [32m'high-contrast'[39m, [32m'dark'[39m ]
+≡ƒôè Theme verification:
+   - Has .light: [33mfalse[39m
+   - Has .dark: [33mtrue[39m
+   - Has .high-contrast: [33mtrue[39m
+
+ [32mΓ£ô[39m src/__tests__/components/ui/ThemeSelector.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 841[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders all theme options [33m 396[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/pages/ProfilePage.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 1066[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders base layout with personal info (no tab navigation) [33m 372[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/features/rooms/MyRoomsDashboard.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 1188[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m clicking a room triggers onRoomSelect with correct id [33m 513[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/BrushSettings.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 1146[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/AuthContext.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 734[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/FileUpload.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 716[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders upload area initially [33m 302[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/pages/ForgotPasswordPage.test.tsx [2m([22m[2m11 tests[22m[2m)[22m[33m 6559[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders initial UI correctly [33m 350[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m shows error if email is empty [33m 339[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m shows error if email format is invalid [33m 648[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m calls forgotPassword(email) when email is valid [33m 701[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m shows success UI when API returns success=true [33m 698[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m shows API error message when API returns success=false [33m 602[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m shows default error message when API throws (no response message) [33m 655[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m shows backend error message when API throws with response.data.message [33m 580[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m disables input + button while loading [33m 496[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m Try Different Email button returns to form [33m 773[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m clears the email input after success (security) [33m 703[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/PasswordStrengthMeter.test.tsx [2m([22m[2m11 tests[22m[2m)[22m[33m 503[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/pages/RegistrationSuccess.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 550[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders the main heading [33m 315[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/Modal.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 602[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/Button.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 490[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/UsernameChecker.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[33m 738[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/components/ui/CharacterCounter.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 483[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/utils/authService.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/hooks/useUndoRedo.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 101[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/hooks/useSelection.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 71[2mms[22m[39m
+[90mstdout[2m | src/__tests__/features/canvas/MinimalCanvas.test.tsx[2m > [22m[2mMinimalCanvas[2m > [22m[2mrenders
+[22m[39mStarting minimal render test
+Rendering CollaborativeCanvas, roomId: test
+Rendering CollaborativeCanvas, roomId: test
+
+ [32mΓ£ô[39m src/__tests__/features/canvas/MinimalCanvas.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 93[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/utils/errorHandler.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/roomService.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/services/passwordResetService.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+[90mstdout[2m | src/__tests__/services/accountDeletionService.test.ts[2m > [22m[2maccountDeletionService[2m > [22m[2mclearUserData should remove auth/user data but preserve theme
+[22m[39mUser session and local data cleared.
+
+[90mstdout[2m | src/__tests__/services/accountDeletionService.test.ts[2m > [22m[2maccountDeletionService[2m > [22m[2mclearUserData should not set theme if it was not present
+[22m[39mUser session and local data cleared.
+
+[90mstdout[2m | src/__tests__/services/accountDeletionService.test.ts[2m > [22m[2maccountDeletionService[2m > [22m[2mrequestAccountDeletion should call api.delete and clearUserData if success=true
+[22m[39mUser session and local data cleared.
+
+ [32mΓ£ô[39m src/__tests__/services/accountDeletionService.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/utils/notificationService.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/utils/emailValidation.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/utils/debounce.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/setup.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+[90mstdout[2m | src/__tests__/utils/logoutHandler.test.ts[2m > [22m[2mperformLogout()[2m > [22m[2mshould clear tokens and redirect if confirmed
+[22m[39mAuth tokens cleared successfully
+
+[90mstdout[2m | src/__tests__/utils/logoutHandler.test.ts[2m > [22m[2mperformLogout()[2m > [22m[2mshould not redirect if redirectTo is empty string
+[22m[39mAuth tokens cleared successfully
+
+[90mstdout[2m | src/__tests__/utils/logoutHandler.test.ts[2m > [22m[2mperformLogout()[2m > [22m[2mshould skip confirmation if showConfirmation is false
+[22m[39mAuth tokens cleared successfully
+
+ [32mΓ£ô[39m src/__tests__/utils/logoutHandler.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/utils/dimensionLines.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/utils/geometry.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/utils/alignmentGuides.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/utils/navigation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32mΓ£ô[39m src/__tests__/utils/svgExport.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m5 failed[39m[22m[2m | [22m[1m[32m46 passed[39m[22m[90m (51)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m464 passed[39m[22m[2m | [22m[33m4 skipped[39m[90m (471)[39m
+[2m   Start at [22m 23:58:16
+[2m   Duration [22m 18.38s[2m (transform 13.79s, setup 22.06s, import 34.31s, tests 38.91s, environment 127.21s)[22m
+

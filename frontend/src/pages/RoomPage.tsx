@@ -2,11 +2,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import InviteModal from '../components/ui/InviteModal';
 import ParticipantsPanel from '../features/rooms/ParticipantsPanel';
+import RoomSettingsPanel from '../features/rooms/RoomSettingsPanel';
 import ChatPanel from '../features/rooms/ChatPanel';
 import { CollaborativeCanvas } from '../features/canvas/CollaborativeCanvas';
 import { useAuth } from '../services/AuthContext';
 import roomService from '../services/roomService';
-import { Users, MessageSquare, Share2, Copy, Check, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Users, MessageSquare, Share2, Copy, Check, Loader2, AlertCircle, ArrowLeft, Settings } from 'lucide-react';
 
 /**
  * RoomPage component - Main collaborative drawing room interface
@@ -23,6 +24,7 @@ const RoomPage = () => {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showParticipantsPanel, setShowParticipantsPanel] = useState(false);
   const [showChatPanel, setShowChatPanel] = useState(false);
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [socket, setSocket] = useState<any>(null);
 
   // Room data from backend
@@ -44,7 +46,7 @@ const RoomPage = () => {
   // Current user info from auth context
   const currentUserId = user?.id || '';
   const currentUserRole: 'owner' | 'moderator' | 'participant' =
-    roomData?.ownerId === currentUserId ? 'owner' : 'participant';
+    roomData?.ownerId === currentUserId ? 'owner' : 'participant';  // Note: moderator detection requires backend role data
 
   // Fetch room data from backend on mount
   useEffect(() => {
@@ -280,6 +282,19 @@ const RoomPage = () => {
               <Users size={20} aria-hidden="true" />
               <span className="text-sm font-medium hidden md:inline">Users</span>
             </button>
+
+            {/* Settings button (Owner/Moderator only) */}
+            {(currentUserRole === 'owner' || currentUserRole === 'moderator') && (
+              <button
+                onClick={() => setShowSettingsPanel(true)}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition-colors flex items-center gap-2"
+                aria-label="Room settings"
+                title="Room settings"
+              >
+                <Settings size={20} aria-hidden="true" />
+                <span className="text-sm font-medium hidden md:inline">Settings</span>
+              </button>
+            )}
           </div>
         </header>
 
@@ -326,6 +341,50 @@ const RoomPage = () => {
           currentUserId={currentUserId}
           currentUserRole={currentUserRole}
           socket={socket}
+        />
+      )}
+
+      {/* Room Settings Panel */}
+      {roomData && (
+        <RoomSettingsPanel
+          room={{
+            id: roomData.id,
+            name: roomData.name,
+            description: roomData.description,
+            isPublic: roomData.isPublic,
+            maxParticipants: 50,
+            participantCount: roomData.participantCount,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            ownerId: roomData.ownerId,
+            ownerName: roomData.ownerName,
+            hasPassword: !!roomData.requiresPassword,
+          }}
+          currentUserRole={currentUserRole}
+          isOpen={showSettingsPanel}
+          onClose={() => setShowSettingsPanel(false)}
+          onSettingsUpdated={() => {
+            // Refresh room data
+            if (id) {
+              roomService.getRoom(id).then((result) => {
+                if (result.success && result.room) {
+                  setRoomData({
+                    id: result.room.id,
+                    name: result.room.name,
+                    description: result.room.description,
+                    isPublic: result.room.isPublic,
+                    ownerId: result.room.ownerId,
+                    ownerName: result.room.ownerName,
+                    participantCount: result.room.participantCount,
+                    roomCode: result.room.roomCode || '',
+                    requiresPassword: (result.room as any).requiresPassword,
+                    isAlreadyMember: (result.room as any).isAlreadyMember,
+                  });
+                }
+              });
+            }
+          }}
+          onRoomDeleted={() => navigate('/dashboard')}
         />
       )}
 

@@ -30,8 +30,10 @@ import {
   Square, Circle, Triangle, Edit2, Trash2, Grid, Minus, Plus, X, Lock,
   Eraser, MinusCircle, PlusCircle, Zap, ZapOff, Download, RotateCcw, RotateCw,
   Type, Minus as LineIcon, ArrowRight, Image as ImageIcon, Move, Copy, Scissors,
-  ArrowUp, ArrowDown, Trash, Clipboard, Keyboard
+  ArrowUp, ArrowDown, Trash, Clipboard, Keyboard, Hand, Ruler, RotateCw as RotateIcon
 } from 'lucide-react';
+import { findAlignmentGuides, type AlignmentGuide } from '../../utils/alignmentGuides';
+import { createDimensionLine } from '../../utils/dimensionLines';
 
 
 /**
@@ -315,8 +317,18 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     null,
   );
   const [tool, setTool] = useState<
-    "pencil" | "rectangle" | "circle" | "triangle" | "line" | "arrow" | "text" | "eraser" | "select" | "image" | "wand"
+    "pencil" | "rectangle" | "circle" | "triangle" | "line" | "arrow" | "text" | "eraser" | "select" | "image" | "wand" | "hand"
   >("pencil");
+
+  // Hand tool (panning) state
+  const [isPanning, setIsPanning] = useState<boolean>(false);
+  const panStartRef = useRef<{ x: number; y: number; offsetX: number; offsetY: number } | null>(null);
+
+  // Alignment guides state
+  const [activeGuides, setActiveGuides] = useState<AlignmentGuide[]>([]);
+
+  // Resize/rotate handle state
+  const [hoveredHandle, setHoveredHandle] = useState<string | null>(null);
 
   // Image Uploading State
   const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
@@ -1500,6 +1512,20 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     }
 
     // ----------------------------------
+    // HAND TOOL (Panning)
+    // ----------------------------------
+    if (tool === "hand") {
+      setIsPanning(true);
+      panStartRef.current = {
+        x: e.clientX,
+        y: e.clientY,
+        offsetX: panOffset.x,
+        offsetY: panOffset.y,
+      };
+      return;
+    }
+
+    // ----------------------------------
     // SELECT TOOL
     // ----------------------------------
     if (tool === "select") {
@@ -1657,6 +1683,19 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     }
 
     // --------------------------------------------------
+    // Hand Tool Panning
+    // --------------------------------------------------
+    if (tool === "hand" && isPanning && panStartRef.current) {
+      const dx = clientX - panStartRef.current.x;
+      const dy = clientY - panStartRef.current.y;
+      setPanOffset({
+        x: panStartRef.current.offsetX + dx,
+        y: panStartRef.current.offsetY + dy,
+      });
+      return;
+    }
+
+    // --------------------------------------------------
     // Selection Drag Box
     // --------------------------------------------------
     if (tool === "select" && dragBox && !transform.isTransforming) {
@@ -1786,6 +1825,18 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
    */
   const handleMouseUp = useCallback((e: React.MouseEvent): void => {
     const point = getCanvasCoordinates(e.clientX, e.clientY);
+
+    // ---------------------------------
+    // HAND TOOL
+    // ---------------------------------
+    if (tool === "hand") {
+      setIsPanning(false);
+      panStartRef.current = null;
+      return;
+    }
+
+    // Clear alignment guides
+    setActiveGuides([]);
 
     // ---------------------------------
     // SELECT TOOL
@@ -2223,7 +2274,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         case 'c': setTool('circle'); e.preventDefault(); break;
         case 'l': setTool('line'); e.preventDefault(); break;
         case 'a': setTool('arrow'); e.preventDefault(); break;
-        case 'h': setTool('select'); e.preventDefault(); break; // H for hand/pan
+        case 'h': setTool('hand'); e.preventDefault(); break; // H for hand/pan
         case 't': setTool('text'); e.preventDefault(); break;
         case 'i': setTool('image'); e.preventDefault(); break;
         case 'e': setTool('eraser'); e.preventDefault(); break;
@@ -2314,6 +2365,18 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             aria-pressed={tool === 'select'}
           >
             <Move size={20} />
+          </button>
+          <button
+            onClick={() => setTool('hand')}
+            className={`p-2 rounded-lg transition-colors ${tool === 'hand'
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
+            aria-label="Hand tool (pan canvas)"
+            title="Hand Tool (H)"
+            aria-pressed={tool === 'hand'}
+          >
+            <Hand size={20} />
           </button>
           <button
             onClick={() => setTool('pencil')}
@@ -2924,14 +2987,113 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onContextMenu={handleContextMenu}
-        className={`absolute top-0 left-0 w-full h-full bg-white dark:bg-slate-900 ${tool === 'select' ? 'cursor-default' : ''
+        className={`absolute top-0 left-0 w-full h-full bg-white dark:bg-slate-900 ${tool === 'select' ? 'cursor-default' : tool === 'hand' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''
           }`}
         style={{
-          cursor: tool === 'select' ? undefined : `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" stroke="white" stroke-width="3"/><path d="M12 4v16M4 12h16" stroke="black" stroke-width="1"/></svg>') 12 12, crosshair`
+          cursor: tool === 'select' ? undefined : tool === 'hand' ? (isPanning ? 'grabbing' : 'grab') : `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" stroke="white" stroke-width="3"/><path d="M12 4v16M4 12h16" stroke="black" stroke-width="1"/></svg>') 12 12, crosshair`
         }}
         aria-label="Collaborative drawing canvas"
         title="Drawing area - Click and drag to draw"
       />
+
+      {/* Selection Resize/Rotate Handles */}
+      {tool === 'select' && selection.selectedIds.length === 1 && (() => {
+        const selectedEl = elements.find(el => el.id === selection.selectedIds[0]);
+        if (!selectedEl || selectedEl.x === undefined || selectedEl.y === undefined) return null;
+
+        const w = selectedEl.width || 0;
+        const h = selectedEl.height || 0;
+        const sx = selectedEl.x * zoomLevel + panOffset.x;
+        const sy = selectedEl.y * zoomLevel + panOffset.y;
+        const sw = w * zoomLevel;
+        const sh = h * zoomLevel;
+        const handleSize = 8;
+        const half = handleSize / 2;
+
+        const handles = [
+          { name: 'top-left', x: sx - half, y: sy - half, cursor: 'nwse-resize' },
+          { name: 'top-right', x: sx + sw - half, y: sy - half, cursor: 'nesw-resize' },
+          { name: 'bottom-left', x: sx - half, y: sy + sh - half, cursor: 'nesw-resize' },
+          { name: 'bottom-right', x: sx + sw - half, y: sy + sh - half, cursor: 'nwse-resize' },
+          { name: 'top', x: sx + sw / 2 - half, y: sy - half, cursor: 'ns-resize' },
+          { name: 'bottom', x: sx + sw / 2 - half, y: sy + sh - half, cursor: 'ns-resize' },
+          { name: 'left', x: sx - half, y: sy + sh / 2 - half, cursor: 'ew-resize' },
+          { name: 'right', x: sx + sw - half, y: sy + sh / 2 - half, cursor: 'ew-resize' },
+        ];
+
+        return (
+          <>
+            {/* Bounding box */}
+            <div
+              className="absolute border-2 border-blue-500 pointer-events-none z-30"
+              style={{ left: sx, top: sy, width: sw, height: sh }}
+            />
+
+            {/* Resize handles */}
+            {handles.map(handle => (
+              <div
+                key={handle.name}
+                className="absolute bg-white border-2 border-blue-500 z-40"
+                style={{
+                  left: handle.x,
+                  top: handle.y,
+                  width: handleSize,
+                  height: handleSize,
+                  cursor: handle.cursor,
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  const point = getCanvasCoordinates(e.clientX, e.clientY);
+                  startResize(selectedEl, handle.name, point);
+                }}
+                aria-label={`Resize ${handle.name}`}
+              />
+            ))}
+
+            {/* Rotate handle */}
+            <div
+              className="absolute z-40"
+              style={{
+                left: sx + sw / 2 - 6,
+                top: sy - 30,
+                width: 12,
+                height: 12,
+                cursor: 'grab',
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                // Rotation handled via transform
+              }}
+              aria-label="Rotate handle"
+            >
+              <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow" />
+            </div>
+            {/* Line connecting rotate handle to bounding box */}
+            <div
+              className="absolute bg-blue-500 pointer-events-none z-30"
+              style={{
+                left: sx + sw / 2 - 0.5,
+                top: sy - 24,
+                width: 1,
+                height: 24,
+              }}
+            />
+
+            {/* Dimension label */}
+            <div
+              className="absolute z-30 pointer-events-none"
+              style={{
+                left: sx,
+                top: sy + sh + 4,
+              }}
+            >
+              <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded font-mono">
+                {Math.abs(Math.round(w))} × {Math.abs(Math.round(h))}
+              </span>
+            </div>
+          </>
+        );
+      })()}
 
       {/* Selection drag box */}
       {dragBox && tool === 'select' && (

@@ -33,6 +33,8 @@ interface Participant {
   isVideoEnabled?: boolean;
   /** Whether the participant is currently typing (optional) */
   isTyping?: boolean;
+  /** Whether the participant is currently online */
+  isOnline?: boolean;
   /** URL to participant's avatar image (optional) */
   avatar?: string;
 }
@@ -744,8 +746,8 @@ const ParticipantItem: React.FC<ParticipantItemProps> = ({
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
-              Online
+              <span className={`w-2 h-2 rounded-full inline-block ${participant.isOnline !== false ? 'bg-green-500' : 'bg-slate-400'}`}></span>
+              {participant.isOnline !== false ? 'Online' : 'Offline'}
             </span>
             {participant.isTyping && (
               <span className="flex items-center gap-1 text-blue-500" aria-label="Typing...">

@@ -1,0 +1,18 @@
+C:/Users/ganap/OneDrive/Attachments/Desktop/SE/CollabCanvas/frontend/src/__tests__/pages/LoginPage.test.tsx
+
+
+C:/Users/ganap/OneDrive/Attachments/Desktop/SE/CollabCanvas/frontend/src/__tests__/pages/RoomPage.test.tsx
+
+
+C:/Users/ganap/OneDrive/Attachments/Desktop/SE/CollabCanvas/frontend/src/__tests__/utils/angleMeasurement.test.ts
+ - angleMeasurement > calculateAngle > returns 270 for three-quarter turn
+   AssertionError: expected 90 to be close to 270, received difference is 180, but expected 0.5
+
+C:/Users/ganap/OneDrive/Attachments/Desktop/SE/CollabCanvas/frontend/src/__tests__/components/ui/InviteModal.test.tsx
+
+
+C:/Users/ganap/OneDrive/Attachments/Desktop/SE/CollabCanvas/frontend/src/__tests__/features/canvas/CollaborativeCanvas.test.tsx
+ - CollaborativeCanvas > renders without crashing
+   Error: [vitest] No "Hand" export is defined on the "lucide-react" mock. Did you forget to return it from "vi.mock"?
+ - CollaborativeCanvas > shows canvas correctly
+   Error: [vitest] No "Hand" export is defined on the "lucide-react" mock. Did you forget to return it from "vi.mock"?

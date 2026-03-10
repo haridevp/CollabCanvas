@@ -57,6 +57,37 @@ export const isPointInElement = (point: Point, element: DrawingElement): boolean
             }
             break;
 
+        case 'triangle':
+            if (element.x !== undefined && element.y !== undefined &&
+                element.width !== undefined && element.height !== undefined) {
+                // Normalize for negative width/height
+                const tx = element.width >= 0 ? element.x : element.x + element.width;
+                const ty = element.height >= 0 ? element.y : element.y + element.height;
+                const tw = Math.abs(element.width);
+                const th = Math.abs(element.height);
+                // Triangle vertices: top-center, bottom-left, bottom-right
+                const v0 = { x: tx + tw / 2, y: ty };
+                const v1 = { x: tx, y: ty + th };
+                const v2 = { x: tx + tw, y: ty + th };
+                // Point-in-triangle test using sign method
+                const sign = (p: Point, a: Point, b: Point) =>
+                    (p.x - b.x) * (a.y - b.y) - (a.x - b.x) * (p.y - b.y);
+                const d1 = sign(point, v0, v1);
+                const d2 = sign(point, v1, v2);
+                const d3 = sign(point, v2, v0);
+                const hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+                const hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+                if (!(hasNeg && hasPos)) return true;
+                // Also check edge proximity for stroke hit testing
+                const edgeDist = Math.min(
+                    distanceToLineSegment(point, v0, v1),
+                    distanceToLineSegment(point, v1, v2),
+                    distanceToLineSegment(point, v2, v0)
+                );
+                return edgeDist < tolerance;
+            }
+            break;
+
         case 'line':
         case 'arrow':
             if (element.points && element.points.length === 2) {
