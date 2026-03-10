@@ -339,6 +339,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number; y: number; username: string; tool?: string; color?: string }>>({});
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
+  const [isSmartToolsEnabled, setIsSmartToolsEnabled] = useState<boolean>(false);
 
   // Keyboard shortcuts reference panel
   const [showShortcutsPanel, setShowShortcutsPanel] = useState<boolean>(false);
@@ -1733,9 +1734,9 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
     if (shouldSave) {
       // ---------------------------------
-      // GESTURE RECOGNITION
+      // GESTURE RECOGNITION (Only if enabled)
       // ---------------------------------
-      if (currentElement.type === 'pencil' && currentElement.points && currentElement.points.length > 10) {
+      if (isSmartToolsEnabled && currentElement.type === 'pencil' && currentElement.points && currentElement.points.length > 10) {
         const gesture = recognizeGesture(currentElement.points);
         if (gesture === 'delete') {
           // Find elements under the gesture bounding box and delete them
@@ -1786,12 +1787,12 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       }
 
       // ---------------------------------
-      // AI SHAPE RECOGNITION (Auto-snap)
+      // AI SHAPE RECOGNITION (Auto-snap) (Only if enabled)
       // ---------------------------------
       let finalElementToSave = currentElement;
 
       // Only attempt to recognize and snap hand-drawn pencil shapes
-      if (currentElement.type === 'pencil' && currentElement.points && currentElement.points.length > 5) {
+      if (isSmartToolsEnabled && currentElement.type === 'pencil' && currentElement.points && currentElement.points.length > 5) {
         const snappedShape = recognizeShape(currentElement.points, currentElement);
         if (snappedShape) {
           finalElementToSave = snappedShape as DrawingElement;
@@ -2482,6 +2483,20 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           title="Export Drawing"
         >
           <Download size={20} />
+        </button>
+
+        {/* Smart Tools (AI) toggle */}
+        <button
+          onClick={() => setIsSmartToolsEnabled(!isSmartToolsEnabled)}
+          className={`p-2 rounded-lg transition-colors ${isSmartToolsEnabled
+            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'
+            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+          aria-label="Toggle AI shape and gesture recognition"
+          title="Smart Tools (Shape Recognition & Gestures)"
+          aria-pressed={isSmartToolsEnabled}
+        >
+          <Zap size={20} />
         </button>
 
         {/* Keyboard shortcuts reference button */}
