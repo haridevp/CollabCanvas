@@ -129,3 +129,60 @@ export const recognizeShape = (
   // Fallback: Return null if no shape was confidently recognized
   return null;
 };
+
+/**
+ * Recognizes common gestures from a set of points.
+ * Returns 'delete' for Z-shape/zig-zag, 'check' for checkmark, or null.
+ */
+export const recognizeGesture = (points: Point[]): 'delete' | 'check' | null => {
+  if (points.length < 15) return null;
+
+  // Calculate bounding box for the stroke
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  points.forEach(p => {
+    minX = Math.min(minX, p.x);
+    minY = Math.min(minY, p.y);
+    maxX = Math.max(maxX, p.x);
+    maxY = Math.max(maxY, p.y);
+  });
+  const width = maxX - minX;
+  const height = maxY - minY;
+  if (width < 20 && height < 20) return null; // Too small to be a gesture
+
+  // Direction changes (X-axis)
+  let xDirectionChanges = 0;
+  let lastDir = 0; // -1 for left, 1 for right
+  for (let i = 5; i < points.length; i++) {
+    const dx = points[i].x - points[i-5].x;
+    if (Math.abs(dx) > 5) {
+      const dir = dx > 0 ? 1 : -1;
+      if (lastDir !== 0 && dir !== lastDir) {
+        xDirectionChanges++;
+      }
+      lastDir = dir;
+    }
+  }
+
+  // ============== DELETE GESTURE (Z or Zig-zag) ==============
+  // A 'Z' has exactly 2 horizontal direction changes. A zig-zag has more.
+  if (xDirectionChanges >= 2 && width > height * 0.5) {
+    return 'delete';
+  }
+
+  // ============== CHECKMARK GESTURE ==============
+  // A checkmark usually goes down-right, then up-right with a longer stroke.
+  const startPt = points[0];
+  const midIndex = Math.floor(points.length / 3);
+  const midPt = points[midIndex];
+  const endPt = points[points.length - 1];
+
+  const downStroke = midPt.y - startPt.y;
+  const upStroke = endPt.y - midPt.y;
+  const crossX = endPt.x - startPt.x;
+
+  if (downStroke > 10 && upStroke < -15 && crossX > 10) {
+    return 'check';
+  }
+
+  return null;
+};
