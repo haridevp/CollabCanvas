@@ -17,7 +17,7 @@ import { LayerPanel } from '../../components/ui/LayerPanel';
 import { useObjectLocks } from '../../hooks/useObjectLocks';
 import { getToolIcon, getToolLabel, getToolColor } from '../../utils/toolIcons';
 import { performMagicWandSelection } from '../../utils/magicWand';
-import { recognizeShape } from '../../utils/shapeRecognition';
+import { recognizeShape, recognizeGesture } from '../../utils/shapeRecognition';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { NetworkStatus } from '../../components/ui/NetworkStatus';
 import { useAutoSave } from '../../hooks/useAutoSave';
@@ -1732,6 +1732,59 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     }
 
     if (shouldSave) {
+      // ---------------------------------
+      // GESTURE RECOGNITION
+      // ---------------------------------
+      if (currentElement.type === 'pencil' && currentElement.points && currentElement.points.length > 10) {
+        const gesture = recognizeGesture(currentElement.points);
+        if (gesture === 'delete') {
+          // Find elements under the gesture bounding box and delete them
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          currentElement.points.forEach(p => {
+            minX = Math.min(minX, p.x);
+            minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x);
+            maxY = Math.max(maxY, p.y);
+          });
+
+          const elementsToDelete = elements.filter(el => {
+            if (el.x !== undefined && el.y !== undefined) {
+              return el.x >= minX && el.x <= maxX && el.y >= minY && el.y <= maxY;
+            }
+            if (el.points) {
+              return el.points.some(p => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY);
+            }
+            return false;
+          });
+
+          if (elementsToDelete.length > 0) {
+            const idsToDelete = elementsToDelete.map(el => el.id);
+            commitElements(elements.filter(el => !idsToDelete.includes(el.id)));
+            
+            if (socketRef.current && resolvedRoomId) {
+              idsToDelete.forEach(id => {
+                socketRef.current?.emit("delete-element", {
+                  roomId: resolvedRoomId,
+                  elementId: id,
+                  userId: user?.id || user?._id
+                });
+              });
+            }
+          }
+          
+          // Reset and return early so the gesture line isn't saved
+          setCurrentElement(null);
+          brushEngineRef.current?.clear();
+          return;
+        } else if (gesture === 'check') {
+          // Maybe just clear selection or something as "finalizing"
+          clearSelection();
+          setCurrentElement(null);
+          brushEngineRef.current?.clear();
+          return;
+        }
+      }
+
       // ---------------------------------
       // AI SHAPE RECOGNITION (Auto-snap)
       // ---------------------------------

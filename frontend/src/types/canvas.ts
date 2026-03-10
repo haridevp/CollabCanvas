@@ -148,7 +148,7 @@ export interface DrawingElement {
    * 
    * @type {'pencil' | 'rectangle' | 'circle' | 'text' | 'line' | 'arrow' | 'eraser'}
    */
-  type: 'pencil' | 'rectangle' | 'circle' | 'text' | 'line' | 'arrow' | 'eraser' | 'image';
+  type: 'pencil' | 'rectangle' | 'circle' | 'text' | 'line' | 'arrow' | 'eraser' | 'image' | 'wand';
 
   /** 
    * Array of points for freehand pencil drawings
