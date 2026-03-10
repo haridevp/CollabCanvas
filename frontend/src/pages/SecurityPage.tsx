@@ -8,7 +8,7 @@ import {
 import { Button } from '../components/ui/Button';
 import DeletionSurveyModal from '../components/DeletionSurveyModal';
 import { requestAccountDeletion } from '../services/accountDeletionService';
-import { toggle2FA } from '../utils/authService';
+import { setup2FA, enable2FA, disable2FA } from '../utils/authService';
 
 /**
  * SecurityPage - Account security and danger zone
@@ -27,18 +27,63 @@ const SecurityPage: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState<string>('');
   const [isToggling2FA, setIsToggling2FA] = useState<boolean>(false);
+  const [show2FASetup, setShow2FASetup] = useState<boolean>(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [totpCode, setTotpCode] = useState<string>('');
+  const [setupError, setSetupError] = useState<string>('');
 
-  const handleToggle2FA = async (): Promise<void> => {
+  const handleInitiate2FA = async (): Promise<void> => {
     setIsToggling2FA(true);
+    setSetupError('');
     try {
-      const result = await toggle2FA();
-      if (result.success) {
-        updateUser({ twoFactorEnabled: result.twoFactorEnabled });
+      const result = await setup2FA();
+      if (result.success && result.qrCodeUrl) {
+        setQrCodeUrl(result.qrCodeUrl);
+        setShow2FASetup(true);
       } else {
-        alert(result.message || 'Failed to toggle 2FA.');
+        alert(result.message || 'Failed to initiate 2FA setup.');
       }
     } catch (error) {
-      alert('An error occurred while toggling 2FA.');
+      alert('An error occurred while initiating 2FA.');
+    } finally {
+      setIsToggling2FA(false);
+    }
+  };
+
+  const handleEnable2FA = async (): Promise<void> => {
+    if (!totpCode) { setSetupError('Please enter the code'); return; }
+    setIsToggling2FA(true);
+    setSetupError('');
+    try {
+      const result = await enable2FA(totpCode);
+      if (result.success) {
+        updateUser({ twoFactorEnabled: true });
+        setShow2FASetup(false);
+        setTotpCode('');
+        alert('2FA enabled successfully!');
+      } else {
+        setSetupError(result.message || 'Verification failed.');
+      }
+    } catch (error) {
+      setSetupError('An error occurred during verification.');
+    } finally {
+      setIsToggling2FA(false);
+    }
+  };
+
+  const handleDisable2FA = async (): Promise<void> => {
+    if (!window.confirm('Are you sure you want to disable 2FA? This will make your account less secure.')) return;
+    setIsToggling2FA(true);
+    try {
+      const result = await disable2FA();
+      if (result.success) {
+        updateUser({ twoFactorEnabled: false });
+        alert('2FA disabled successfully.');
+      } else {
+        alert(result.message || 'Failed to disable 2FA.');
+      }
+    } catch (error) {
+      alert('An error occurred while disabling 2FA.');
     } finally {
       setIsToggling2FA(false);
     }
@@ -110,11 +155,55 @@ const SecurityPage: React.FC = () => {
                 </span>
               </div>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                Add an extra layer of security to your account.
+                Add an extra layer of security to your account using an authenticator app.
               </p>
-              <Button variant="outline" className="gap-2" onClick={handleToggle2FA} isLoading={isToggling2FA}>
-                <Shield size={16} /> {user?.twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
-              </Button>
+              {user?.twoFactorEnabled ? (
+                <Button variant="outline" className="gap-2 text-red-600 border-red-200 hover:bg-red-50" onClick={handleDisable2FA} isLoading={isToggling2FA}>
+                  <Shield size={16} /> Disable 2FA
+                </Button>
+              ) : (
+                <Button className="gap-2" onClick={handleInitiate2FA} isLoading={isToggling2FA}>
+                  <Shield size={16} /> Setup 2FA
+                </Button>
+              )}
+
+              {show2FASetup && (
+                <div className="mt-6 p-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-900/50">
+                  <h5 className="font-bold text-slate-800 dark:text-white mb-4">Setup Your Authenticator App</h5>
+                  <div className="flex flex-col md:flex-row gap-8 items-center">
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                      <img src={qrCodeUrl} alt="2FA QR Code" className="w-48 h-48" />
+                    </div>
+                    <div className="flex-1 space-y-4 text-sm text-slate-600 dark:text-slate-400">
+                      <p>1. Scan this QR code with your authenticator app (like Google Authenticator or Authy).</p>
+                      <p>2. Once scanned, the app will show a 6-digit code.</p>
+                      <p>3. Enter the code below to verify and enable 2FA.</p>
+                      
+                      <div className="pt-2">
+                        <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Verification Code</label>
+                        <div className="flex gap-3">
+                          <input
+                            type="text"
+                            value={totpCode}
+                            onChange={(e) => setTotpCode(e.target.value)}
+                            placeholder="000000"
+                            className="w-full px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono tracking-widest"
+                            maxLength={6}
+                          />
+                          <Button onClick={handleEnable2FA} isLoading={isToggling2FA}>Verify</Button>
+                        </div>
+                        {setupError && <p className="text-red-500 text-xs mt-1">{setupError}</p>}
+                      </div>
+                      <button 
+                        onClick={() => setShow2FASetup(false)}
+                        className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-xs underline"
+                      >
+                        Cancel Setup
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Active Sessions */}

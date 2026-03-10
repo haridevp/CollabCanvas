@@ -23,6 +23,8 @@ const { asyncHandler } = require("../middleware/errorHandler");
 
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const speakeasy = require("speakeasy");
+const QRCode = require("qrcode");
 
 /**
  * @route   POST /api/auth/google-login
@@ -68,41 +70,12 @@ router.post("/google-login", async (req, res) => {
     }
 
     if (user.twoFactorEnabled) {
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      user.twoFactorCode = code;
-      user.twoFactorExpires = new Date(Date.now() + 10 * 60000);
-      await user.save();
-
-      console.log(`\n\n[DEV] Google OAuth 2FA Code for ${user.email} is: ${code}\n\n`);
-
-      try {
-        await sendEmail({
-          email: user.email,
-          subject: "Your Login Verification Code",
-          html: `
-            <div style="font-family: sans-serif; text-align: center;">
-              <h2>Login Verification</h2>
-              <p>Your Two-Factor Authentication code is:</p>
-              <h1 style="font-size: 32px; letter-spacing: 5px; color: #2563eb;">${code}</h1>
-              <p>This code will expire in 10 minutes.</p>
-            </div>
-          `
-        });
-        return res.json({
-          success: true,
-          requires2FA: true,
-          userId: user._id,
-          message: "Verification code sent to your email."
-        });
-      } catch (emailError) {
-        console.error("2FA Email Error:", emailError.message);
-        return res.json({
-          success: true,
-          requires2FA: true,
-          userId: user._id,
-          message: "Verification code generated (Check your email)."
-        });
-      }
+      return res.json({
+        success: true,
+        requires2FA: true,
+        userId: user._id,
+        message: "Please enter your 2FA code from your authenticator app."
+      });
     }
 
     const ua = req.headers['user-agent'] || '';
@@ -385,45 +358,14 @@ router.post("/login", async (req, res) => {
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
 
-    // If 2FA is enabled, generate a code, send it, and return early
+    // If 2FA is enabled, return early
     if (user.twoFactorEnabled) {
-      // Generate a secure 6-digit verification code
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      user.twoFactorCode = code;
-      // Valid for 10 minutes
-      user.twoFactorExpires = new Date(Date.now() + 10 * 60000);
-      await user.save();
-
-      console.log(`\n\n[DEV] 2FA Code for ${user.email} is: ${code}\n\n`);
-
-      try {
-        await sendEmail({
-          email: user.email,
-          subject: "Your Login Verification Code",
-          html: `
-            <div style="font-family: sans-serif; text-align: center;">
-              <h2>Login Verification</h2>
-              <p>Your Two-Factor Authentication code is:</p>
-              <h1 style="font-size: 32px; letter-spacing: 5px; color: #2563eb;">${code}</h1>
-              <p>This code will expire in 10 minutes.</p>
-            </div>
-          `
-        });
-        return res.json({
-          success: true,
-          requires2FA: true,
-          userId: user._id,
-          message: "Verification code sent to your email."
-        });
-      } catch (emailError) {
-        console.error("2FA Email Error:", emailError.message);
-        return res.json({
-          success: true,
-          requires2FA: true,
-          userId: user._id,
-          message: "Verification code generated (Check server console if email failed)."
-        });
-      }
+      return res.json({
+        success: true,
+        requires2FA: true,
+        userId: user._id,
+        message: "Please enter your 2FA code from your authenticator app."
+      });
     }
 
     // Derive a human-readable device type from the User-Agent header
@@ -481,16 +423,18 @@ router.post("/verify-2fa", async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-    if (!user.twoFactorEnabled || !user.twoFactorCode) {
+    if (!user.twoFactorEnabled || !user.twoFactorSecret) {
       return res.status(400).json({ success: false, message: "2FA is not currently active for this login attempt" });
     }
 
-    if (user.twoFactorCode !== code) {
-      return res.status(400).json({ success: false, message: "Invalid verification code" });
-    }
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: code
+    });
 
-    if (new Date() > user.twoFactorExpires) {
-      return res.status(400).json({ success: false, message: "Verification code has expired" });
+    if (!verified) {
+      return res.status(400).json({ success: false, message: "Invalid verification code" });
     }
 
     // Code is valid - clear it
@@ -531,25 +475,89 @@ router.post("/verify-2fa", async (req, res) => {
 });
 
 /**
- * @route   PUT /api/auth/toggle-2fa
- * @desc    Toggle 2FA for the authenticated user
+ * @route   POST /api/auth/setup-2fa
+ * @desc    Generate TOTP secret and QR code for setup
  * @access  Private
  */
-router.put("/toggle-2fa", authh, async (req, res) => {
+router.post("/setup-2fa", authh, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-    user.twoFactorEnabled = !user.twoFactorEnabled;
-    // Clear any existing codes
-    user.twoFactorCode = undefined;
-    user.twoFactorExpires = undefined;
+    const secret = speakeasy.generateSecret({
+      name: `CollabCanvas (${user.email})`
+    });
+
+    // Temporarily store the secret, but don't enable 2FA until it's verified
+    user.twoFactorSecret = secret.base32;
     await user.save();
 
-    res.json({ success: true, twoFactorEnabled: user.twoFactorEnabled });
+    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url);
+
+    res.json({
+      success: true,
+      qrCodeUrl,
+      secret: secret.base32
+    });
   } catch (err) {
-    console.error("2FA Toggle Error:", err);
-    res.status(500).json({ success: false, message: "Failed to toggle 2FA" });
+    console.error("2FA Setup Error:", err);
+    res.status(500).json({ success: false, message: "Failed to setup 2FA" });
+  }
+});
+
+/**
+ * @route   POST /api/auth/enable-2fa
+ * @desc    Verify TOTP code and enable 2FA
+ * @access  Private
+ */
+router.post("/enable-2fa", authh, async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ success: false, message: "Code is required" });
+
+    const user = await User.findById(req.user.id);
+    if (!user || !user.twoFactorSecret) {
+      return res.status(400).json({ success: false, message: "2FA setup not initiated" });
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: code
+    });
+
+    if (!verified) {
+      return res.status(400).json({ success: false, message: "Invalid verification code" });
+    }
+
+    user.twoFactorEnabled = true;
+    await user.save();
+
+    res.json({ success: true, message: "2FA enabled successfully" });
+  } catch (err) {
+    console.error("2FA Enable Error:", err);
+    res.status(500).json({ success: false, message: "Failed to enable 2FA" });
+  }
+});
+
+/**
+ * @route   POST /api/auth/disable-2fa
+ * @desc    Disable 2FA
+ * @access  Private
+ */
+router.post("/disable-2fa", authh, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    user.twoFactorEnabled = false;
+    user.twoFactorSecret = undefined;
+    await user.save();
+
+    res.json({ success: true, message: "2FA disabled successfully" });
+  } catch (err) {
+    console.error("2FA Disable Error:", err);
+    res.status(500).json({ success: false, message: "Failed to disable 2FA" });
   }
 });
 

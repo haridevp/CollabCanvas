@@ -128,17 +128,49 @@ export const verify2FA = async (userId: string, code: string): Promise<AuthRespo
 };
 
 /**
- * Toggles 2FA for the currently authenticated user
+ * Initiates TOTP 2FA setup
  */
-export const toggle2FA = async (): Promise<{ success: boolean; twoFactorEnabled?: boolean; message?: string }> => {
+export const setup2FA = async (): Promise<{ success: boolean; qrCodeUrl?: string; secret?: string; message?: string }> => {
   try {
-    const response = await api.put('/auth/toggle-2fa');
+    const response = await api.post('/auth/setup-2fa');
     return response.data;
   } catch (error: unknown) {
     const err = error as { response?: { data?: { message?: string, success?: boolean } } };
     return {
       success: err.response?.data?.success ?? false,
-      message: err.response?.data?.message || 'Failed to toggle 2FA. Please try again.'
+      message: err.response?.data?.message || 'Failed to initiate 2FA setup.'
+    };
+  }
+};
+
+/**
+ * Enablse TOTP 2FA with a verification code
+ */
+export const enable2FA = async (code: string): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const response = await api.post('/auth/enable-2fa', { code });
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { message?: string, success?: boolean } } };
+    return {
+      success: err.response?.data?.success ?? false,
+      message: err.response?.data?.message || 'Failed to enable 2FA.'
+    };
+  }
+};
+
+/**
+ * Disables 2FA for the currently authenticated user
+ */
+export const disable2FA = async (): Promise<{ success: boolean; message?: string }> => {
+  try {
+    const response = await api.post('/auth/disable-2fa');
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { message?: string, success?: boolean } } };
+    return {
+      success: err.response?.data?.success ?? false,
+      message: err.response?.data?.message || 'Failed to disable 2FA.'
     };
   }
 };

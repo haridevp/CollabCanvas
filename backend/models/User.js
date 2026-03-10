@@ -84,6 +84,7 @@ const UserSchema = new mongoose.Schema({
 
   // Two-Factor Authentication settings
   twoFactorEnabled: { type: Boolean, default: false },
+  twoFactorSecret: { type: String },
   twoFactorCode: { type: String },
   twoFactorExpires: { type: Date },
 
