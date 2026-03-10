@@ -5,8 +5,7 @@ const distanceBetween = (p1: Point, p2: Point) => Math.sqrt(Math.pow(p2.x - p1.x
 
 /**
  * Re-evaluate a set of raw pencil points to see if they roughly form a
- * standard geometric shape (Line, Rectangle, Circle). If so, returns a
- * new Element representing that perfect shape.
+ * standard geometric shape (Line, Rectangle, Circle, Triangle).
  */
 export const recognizeShape = (
   points: Point[],
@@ -30,6 +29,8 @@ export const recognizeShape = (
   const width = maxX - minX;
   const height = maxY - minY;
   const boundingDiag = Math.sqrt(width * width + height * height);
+  const centerX = minX + width / 2;
+  const centerY = minY + height / 2;
   
   // Total path length
   let pathLength = 0;
@@ -38,8 +39,7 @@ export const recognizeShape = (
   }
 
   // 1. LINE DETECTION
-  // A line is straight if path length is very close to start-to-end distance
-  const lineTolerance = 1.12; 
+  const lineTolerance = 1.15; 
   if (pathLength < distStartEnd * lineTolerance && distStartEnd > 20) {
     return {
       ...originalElement,
@@ -48,41 +48,79 @@ export const recognizeShape = (
     } as any;
   }
 
-  // 2. CLOSED SHAPE DETECTION (Circle, Rectangle)
-  const isClosed = distStartEnd < Math.max(25, boundingDiag * 0.25);
-
-  if (isClosed && points.length > 12) {
-    const centerX = minX + width / 2;
-    const centerY = minY + height / 2;
-    const radius = (width + height) / 4;
-
+  // 2. CLOSED SHAPE DETECTION
+  const isClosed = distStartEnd < Math.max(30, boundingDiag * 0.3);
+  
+  if (isClosed && points.length > 10) {
     // --- Circle/Ellipse Check ---
-    // Check how much each point deviates from the average radius
+    const radius = (width + height) / 4;
     let totalDeviance = 0;
     points.forEach(p => {
       const d = distanceBetween(p, { x: centerX, y: centerY });
       totalDeviance += Math.abs(d - radius);
     });
     const avgDeviance = totalDeviance / points.length;
+
+    // FIX: Add "rectangularity" check. 
+    // A circle's area (πr²) vs bounding box area (4r²) should be ~0.785
+    // A rectangle's area vs bounding box area is ~1.0
+    // We use path length as a proxy for perimeter.
+    const circlePerimeter = 2 * Math.PI * radius;
+    const rectPerimeter = 2 * (width + height);
     
-    // Low deviance means it's likely a circle or ellipse
-    if (avgDeviance < radius * 0.22) {
+    // If it's much closer to a circle's perimeter and has low deviance
+    if (avgDeviance < radius * 0.2 && Math.abs(pathLength - circlePerimeter) < Math.abs(pathLength - rectPerimeter)) {
       return {
         ...originalElement,
         type: 'circle',
-        x: minX + width / 2,
-        y: minY + height / 2,
-        width: width / 2, // In our types, circle uses x,y as center and width/height as radii? 
-        height: height / 2, // Actually, current implementation in CollaborativeCanvas uses width/height as vector for radius
+        x: centerX,
+        y: centerY,
+        width: width / 2,
+        height: height / 2,
         points: undefined
       } as any;
     }
 
-    // --- Rectangle Check ---
-    // If it's not a circle, check if it fits a rectangle
-    // Points should be concentrated near the corners or edges
-    const perimeter = 2 * (width + height);
-    if (pathLength < perimeter * 1.3 && pathLength > perimeter * 0.7) {
+    // --- Triangle Check ---
+    // Look for 3 sharp corners
+    const corners: number[] = [0];
+    for (let i = 2; i < points.length - 2; i++) {
+        const p1 = points[i-2];
+        const p2 = points[i];
+        const p3 = points[i+2];
+        
+        const v1 = { x: p1.x - p2.x, y: p1.y - p2.y };
+        const v2 = { x: p3.x - p2.x, y: p3.y - p2.y };
+        
+        const dot = v1.x * v2.x + v1.y * v2.y;
+        const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+        const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+        const angle = Math.acos(dot / (mag1 * mag2));
+        
+        // If angle is sharp (< 100 degrees)
+        if (angle < 1.8) { // ~103 degrees
+            // Check if this is far enough from the last corner
+            if (i - corners[corners.length - 1] > points.length / 10) {
+                corners.push(i);
+            }
+        }
+    }
+    
+    // A triangle should have roughly 3 corners (plus start/end)
+    if (corners.length >= 3 && corners.length <= 4) {
+        return {
+            ...originalElement,
+            type: 'triangle',
+            x: minX,
+            y: minY,
+            width: width,
+            height: height,
+            points: undefined
+        } as any;
+    }
+
+    // --- Rectangle Check (Fallback) ---
+    if (pathLength < rectPerimeter * 1.3) {
       return {
         ...originalElement,
         type: 'rectangle',
@@ -94,10 +132,6 @@ export const recognizeShape = (
       } as any;
     }
   }
-
-  // 3. TRIANGLE DETECTION (Optional but nice)
-  // If it has 3 distinct corners and is closed... 
-  // (Omitted for brevity unless requested, focusing on improving existing)
 
   return null;
 };
@@ -149,9 +183,7 @@ export const recognizeGesture = (points: Point[]): 'delete' | 'check' | null => 
   }
 
   // ============== DELETE GESTURE (Scribble) ==============
-  // High density of points and many direction changes in a small-ish area
-  // If we have many direction changes relative to the distance covered
-  const isScribble = (xDirectionChanges + yDirectionChanges) >= 5 && pathLength > (width + height) * 2;
+  const isScribble = (xDirectionChanges + yDirectionChanges) >= 5 && pathLength > (width + height) * 1.5;
   
   if (isScribble) {
     return 'delete';
@@ -161,7 +193,6 @@ export const recognizeGesture = (points: Point[]): 'delete' | 'check' | null => 
   const startPt = points[0];
   const endPt = points[points.length - 1];
   
-  // Find the lowest point (the vertex of the checkmark)
   let lowestPt = points[0];
   let lowestIdx = 0;
   points.forEach((p, i) => {
@@ -171,14 +202,10 @@ export const recognizeGesture = (points: Point[]): 'delete' | 'check' | null => 
     }
   });
 
-  // Checkmark: down-right then up-right
-  const firstHalf = points.slice(0, lowestIdx);
-  const secondHalf = points.slice(lowestIdx);
-
   if (lowestIdx > 2 && lowestIdx < points.length - 3) {
     const isDownRight = lowestPt.x > startPt.x && lowestPt.y > startPt.y;
     const isUpRight = endPt.x > lowestPt.x && endPt.y < lowestPt.y;
-    const secondStrokeLonger = distanceBetween(lowestPt, endPt) > distanceBetween(startPt, lowestPt);
+    const secondStrokeLonger = distanceBetween(lowestPt, endPt) > distanceBetween(startPt, lowestPt) * 0.5;
 
     if (isDownRight && isUpRight && secondStrokeLonger) {
       return 'check';

@@ -27,7 +27,7 @@ import { compressDrawingData, decompressDrawingData, shouldCompress } from '../.
 import { getVisibleElements, getViewportStats } from '../../utils/viewportCulling';
 import { isPointInElement } from '../../utils/geometry';
 import {
-  Square, Circle, Edit2, Trash2, Grid, Minus, Plus, X, Lock,
+  Square, Circle, Triangle, Edit2, Trash2, Grid, Minus, Plus, X, Lock,
   Eraser, MinusCircle, PlusCircle, Zap, ZapOff, Download, RotateCcw, RotateCw,
   Type, Minus as LineIcon, ArrowRight, Image as ImageIcon, Move, Copy, Scissors,
   ArrowUp, ArrowDown, Trash, Clipboard, Keyboard
@@ -263,6 +263,7 @@ interface CollaborativeCanvasProps {
  * @returns {JSX.Element} Interactive collaborative canvas
  */
 export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanvasProps) => {
+  console.log('Rendering CollaborativeCanvas, roomId:', roomId);
   const { user } = useAuth();
 
   // Canvas references
@@ -311,7 +312,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     null,
   );
   const [tool, setTool] = useState<
-    "pencil" | "rectangle" | "circle" | "line" | "arrow" | "text" | "eraser" | "select" | "image" | "wand"
+    "pencil" | "rectangle" | "circle" | "triangle" | "line" | "arrow" | "text" | "eraser" | "select" | "image" | "wand"
   >("pencil");
 
   // Image Uploading State
@@ -875,6 +876,25 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           }
           break;
 
+        case "triangle":
+          if (
+            el.x !== undefined &&
+            el.y !== undefined &&
+            el.width !== undefined &&
+            el.height !== undefined
+          ) {
+            const x = el.x;
+            const y = el.y;
+            const w = el.width;
+            const h = el.height;
+            ctx.moveTo(x + w / 2, y);
+            ctx.lineTo(x, y + h);
+            ctx.lineTo(x + w, y + h);
+            ctx.closePath();
+            ctx.stroke();
+          }
+          break;
+
         case "line":
         case "arrow":
           if (el.points && el.points.length === 2) {
@@ -1062,6 +1082,25 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           ) {
             const radius = Math.sqrt(el.width ** 2 + el.height ** 2);
             ctx.arc(el.x, el.y, Math.abs(radius), 0, 2 * Math.PI);
+            ctx.stroke();
+          }
+          break;
+
+        case "triangle":
+          if (
+            el.x !== undefined &&
+            el.y !== undefined &&
+            el.width !== undefined &&
+            el.height !== undefined
+          ) {
+            const x = el.x;
+            const y = el.y;
+            const w = el.width;
+            const h = el.height;
+            ctx.moveTo(x + w / 2, y);
+            ctx.lineTo(x, y + h);
+            ctx.lineTo(x + w, y + h);
+            ctx.closePath();
             ctx.stroke();
           }
           break;
@@ -1726,6 +1765,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
       case "rectangle":
       case "circle":
+      case "triangle":
         shouldSave =
           Math.abs(currentElement.width ?? 0) > 5 &&
           Math.abs(currentElement.height ?? 0) > 5;
@@ -2213,10 +2253,22 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
               }`}
             aria-label="Circle tool"
-            title="Circle Tool"
+            title="Circle Tool (C)"
             aria-pressed={tool === 'circle'}
           >
             <Circle size={20} />
+          </button>
+          <button
+            onClick={() => setTool('triangle')}
+            className={`p-2 rounded-lg transition-colors ${tool === 'triangle'
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}
+            aria-label="Triangle tool"
+            title="Triangle Tool"
+            aria-pressed={tool === 'triangle'}
+          >
+            <Triangle size={20} />
           </button>
           <button
             onClick={() => setTool('line')}
