@@ -133,7 +133,7 @@ const ResetPasswordPage: React.FC = () => {
               <input
                 id="current-password"
                 type="password"
-                placeholder="••••••••"
+               
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"
@@ -151,7 +151,7 @@ const ResetPasswordPage: React.FC = () => {
             <input
               id="new-password"
               type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
+             
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full pl-10 pr-12 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"
@@ -178,7 +178,7 @@ const ResetPasswordPage: React.FC = () => {
             <input
               id="confirm-password"
               type="password"
-              placeholder="••••••••"
+             
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm"

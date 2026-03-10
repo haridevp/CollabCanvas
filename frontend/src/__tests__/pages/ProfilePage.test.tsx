@@ -154,7 +154,7 @@ describe('ProfilePage', () => {
   test('display name validation: too short shows error', () => {
     render(<ProfilePage />);
 
-    const displayNameInput = screen.getByPlaceholderText(/Enter your display name/i);
+    const displayNameInput = screen.getByRole('textbox', { name: /Display Name/i });
 
     fireEvent.change(displayNameInput, { target: { value: 'ab' } });
 
@@ -164,7 +164,7 @@ describe('ProfilePage', () => {
   test('display name validation: invalid characters shows error', () => {
     render(<ProfilePage />);
 
-    const displayNameInput = screen.getByPlaceholderText(/Enter your display name/i);
+    const displayNameInput = screen.getByRole('textbox', { name: /Display Name/i });
 
     fireEvent.change(displayNameInput, { target: { value: 'Bad@Name' } });
 
@@ -174,7 +174,7 @@ describe('ProfilePage', () => {
   test('bio updates and CharacterCounter updates', () => {
     render(<ProfilePage />);
 
-    const bioTextarea = screen.getByPlaceholderText(/Share your creative journey/i);
+    const bioTextarea = screen.getByRole('textbox', { name: /Bio/i });
 
     fireEvent.change(bioTextarea, { target: { value: 'New bio text' } });
 
@@ -208,7 +208,7 @@ describe('ProfilePage', () => {
   test('save changes: invalid display name prevents updateProfile call', async () => {
     render(<ProfilePage />);
 
-    const displayNameInput = screen.getByPlaceholderText(/Enter your display name/i);
+    const displayNameInput = screen.getByRole('textbox', { name: /Display Name/i });
     fireEvent.change(displayNameInput, { target: { value: 'a' } });
 
     fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
@@ -225,7 +225,7 @@ describe('ProfilePage', () => {
 
     render(<ProfilePage />);
 
-    const displayNameInput = screen.getByPlaceholderText(/Enter your display name/i);
+    const displayNameInput = screen.getByRole('textbox', { name: /Display Name/i });
     fireEvent.change(displayNameInput, { target: { value: 'New Name' } });
 
     fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));

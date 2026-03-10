@@ -158,10 +158,11 @@ const ProfilePage: React.FC = () => {
             {/* Personal Info Form */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <label htmlFor="displayName" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   Display Name
                 </label>
                 <input
+                  id="displayName"
                   type="text"
                   value={displayName}
                   onChange={(e) => {
@@ -170,7 +171,7 @@ const ProfilePage: React.FC = () => {
                   }}
                   className={`w-full px-4 py-2 border rounded-lg outline-none bg-white dark:bg-slate-700 text-slate-900 dark:text-white ${displayNameError ? 'border-red-500' : 'border-slate-200 dark:border-slate-600'
                     }`}
-                  placeholder="Enter your display name"
+                 
                 />
                 {displayNameError && (
                   <p className="text-red-600 dark:text-red-400 text-xs">{displayNameError}</p>
@@ -188,16 +189,17 @@ const ProfilePage: React.FC = () => {
                 />
               </div>
               <div className="md:col-span-2 space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <label htmlFor="bio" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   Bio
                 </label>
                 <textarea
+                  id="bio"
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   rows={3}
                   maxLength={500}
                   className="w-full px-4 py-2 border border-slate-200 dark:border-slate-600 rounded-lg resize-none bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
-                  placeholder="Share your creative journey..."
+                 
                 />
                 <CharacterCounter currentLength={bio.length} maxLength={500} />
               </div>

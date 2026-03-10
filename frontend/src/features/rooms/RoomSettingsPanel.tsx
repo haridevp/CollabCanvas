@@ -399,7 +399,7 @@ const RoomSettingsPanel: React.FC<RoomSettingsPanelProps> = ({
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  placeholder="Leave empty to keep current password"
+                 
                   className="w-full pl-4 pr-12 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 />
                 <button

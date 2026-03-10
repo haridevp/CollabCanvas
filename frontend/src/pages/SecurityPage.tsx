@@ -8,6 +8,7 @@ import {
 import { Button } from '../components/ui/Button';
 import DeletionSurveyModal from '../components/DeletionSurveyModal';
 import { requestAccountDeletion } from '../services/accountDeletionService';
+import { toggle2FA } from '../utils/authService';
 
 /**
  * SecurityPage - Account security and danger zone
@@ -16,7 +17,7 @@ import { requestAccountDeletion } from '../services/accountDeletionService';
  * and account deletion. Extracted from the Security tab of ProfilePage.
  */
 const SecurityPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
 
   const [showPasswordConfirm, setShowPasswordConfirm] = useState<boolean>(false);
@@ -25,6 +26,23 @@ const SecurityPage: React.FC = () => {
   const [deletionReason, setDeletionReason] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState<string>('');
+  const [isToggling2FA, setIsToggling2FA] = useState<boolean>(false);
+
+  const handleToggle2FA = async (): Promise<void> => {
+    setIsToggling2FA(true);
+    try {
+      const result = await toggle2FA();
+      if (result.success) {
+        updateUser({ twoFactorEnabled: result.twoFactorEnabled });
+      } else {
+        alert(result.message || 'Failed to toggle 2FA.');
+      }
+    } catch (error) {
+      alert('An error occurred while toggling 2FA.');
+    } finally {
+      setIsToggling2FA(false);
+    }
+  };
 
   const handleDeleteAccount = async (): Promise<void> => {
     if (!password) { alert('Please enter your password'); return; }
@@ -87,15 +105,15 @@ const SecurityPage: React.FC = () => {
                   <Shield className="text-slate-600 dark:text-slate-400" size={20} />
                   <h4 className="font-semibold text-slate-800 dark:text-white">Two-Factor Authentication</h4>
                 </div>
-                <span className="px-3 py-1 text-xs bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded-full">
-                  Not Enabled
+                <span className={`px-3 py-1 text-xs rounded-full ${user?.twoFactorEnabled ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}`}>
+                  {user?.twoFactorEnabled ? 'Enabled' : 'Not Enabled'}
                 </span>
               </div>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
                 Add an extra layer of security to your account.
               </p>
-              <Button variant="outline" className="gap-2">
-                <Shield size={16} /> Enable 2FA
+              <Button variant="outline" className="gap-2" onClick={handleToggle2FA} isLoading={isToggling2FA}>
+                <Shield size={16} /> {user?.twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
               </Button>
             </div>
 
@@ -151,7 +169,7 @@ const SecurityPage: React.FC = () => {
                           type="password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder="Current password"
+                         
                           className="w-full px-4 py-2 border border-red-300 dark:border-red-700 rounded-lg bg-white dark:bg-slate-700 text-red-800 dark:text-red-300"
                         />
                       </div>
@@ -182,7 +200,7 @@ const SecurityPage: React.FC = () => {
                           type="text"
                           value={deleteConfirmationText}
                           onChange={(e) => setDeleteConfirmationText(e.target.value)}
-                          placeholder="Type DELETE here"
+                         
                           className="w-full px-4 py-2 border border-red-300 dark:border-red-700 rounded-lg bg-white dark:bg-slate-700 text-red-800 dark:text-red-300 uppercase"
                         />
                       </div>

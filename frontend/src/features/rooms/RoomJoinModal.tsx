@@ -288,7 +288,7 @@ const RoomJoinModal: React.FC<RoomJoinModalProps> = ({ isOpen, onClose }) => {
                   type="text"
                   value={roomCode}
                   onChange={(e) => setRoomCode(formatRoomCode(e.target.value))}
-                  placeholder="e.g., ABC-123-XYZ"
+                 
                   className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-center font-mono text-lg tracking-wider uppercase"
                   maxLength={20}
                   disabled={isValidating}
@@ -393,7 +393,7 @@ const RoomJoinModal: React.FC<RoomJoinModalProps> = ({ isOpen, onClose }) => {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter the room password"
+                     
                       className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                       disabled={isJoining}
                       aria-required="true"

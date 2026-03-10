@@ -340,7 +340,6 @@ const Dashboard = () => {
               <Search className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" size={20} />
               <input
                 type="text"
-                placeholder={`Search ${activeTab === 'my-rooms' ? 'your' : 'public'} rooms...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"

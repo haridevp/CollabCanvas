@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Lock, AlertCircle, Eye, EyeOff, Globe, Clock, MapPin } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Eye, EyeOff, Globe, Clock, MapPin, Shield } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../services/AuthContext';
 import {
   loginWithEmailPassword,
+  verify2FA,
   getDeviceType
 } from '../utils/authService';
 import TitleAnimation from '../components/ui/TitleAnimation';
@@ -53,6 +54,9 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [requires2FA, setRequires2FA] = useState<boolean>(false);
+  const [twoFactorCode, setTwoFactorCode] = useState<string>('');
+  const [tempUserId, setTempUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<LoginError | null>(null);
   const [rememberMe, setRememberMe] = useState<boolean>(false);
@@ -145,6 +149,17 @@ const LoginPage: React.FC = () => {
       // Call the backend authentication service
       const result = await loginWithEmailPassword({ email, password }, activityData);
 
+      if (result.success && result.requires2FA) {
+        setRequires2FA(true);
+        setTempUserId(result.userId || null);
+        setError({
+          title: 'Verification Needed',
+          message: result.message || 'Please enter the code sent to your email.',
+          type: 'success'
+        });
+        return;
+      }
+
       if (result.success && result.token && result.user) {
         // Record login activity in localStorage
         const newActivity: LoginActivity = {
@@ -219,6 +234,67 @@ const LoginPage: React.FC = () => {
           type: 'error'
         });
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handle2FASubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    if (!twoFactorCode.trim() || !tempUserId) {
+      setError({
+        title: 'Input Error',
+        message: 'Please enter the 6-digit verification code.',
+        type: 'error'
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const result = await verify2FA(tempUserId, twoFactorCode);
+
+      if (result.success && result.token && result.user) {
+        const activityData = {
+          deviceType: getDeviceType(),
+          ipAddress: 'Auto-detected by server'
+        };
+        const newActivity: LoginActivity = {
+          timestamp: new Date().toISOString(),
+          ipAddress: activityData.ipAddress,
+          deviceType: activityData.deviceType
+        };
+        const existing = JSON.parse(localStorage.getItem('login_activities') || '[]');
+        const updated = [newActivity, ...existing].slice(0, 3);
+        localStorage.setItem('login_activities', JSON.stringify(updated));
+        
+        login(result.token, result.user);
+
+        if (rememberMe) {
+          localStorage.setItem('remembered_email', email);
+        } else {
+          localStorage.removeItem('remembered_email');
+        }
+
+        const from = location.state?.from?.pathname || '/dashboard';
+        navigate(from, { replace: true });
+      } else {
+        setError({
+          title: 'Verification Failed',
+          message: result.message || 'Invalid verification code.',
+          type: 'error'
+        });
+      }
+    } catch (err: any) {
+      console.error('2FA error:', err);
+      setError({
+        title: 'Verification Failed',
+        message: 'An unexpected error occurred during verification. Please try again.',
+        type: 'error'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -320,8 +396,50 @@ const LoginPage: React.FC = () => {
               </div>
             )}
 
-            {/* Login Form */}
-            <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+            {/* Conditional Form Rendering */}
+            {requires2FA ? (
+              <form className="space-y-4" onSubmit={handle2FASubmit} noValidate>
+                <div>
+                  <label htmlFor="code" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1">
+                    Verification Code
+                  </label>
+                  <div className="relative">
+                    <Shield
+                      className="absolute left-3 top-3 text-slate-400"
+                      size={18}
+                      aria-hidden="true"
+                    />
+                    <input
+                      id="code"
+                      type="text"
+                      value={twoFactorCode}
+                      onChange={(e) => setTwoFactorCode(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-black focus:ring-1 focus:ring-black focus:border-black outline-none transition-all text-sm tracking-widest font-mono"
+                      required
+                      maxLength={6}
+                      disabled={isLoading}
+                      autoComplete="one-time-code"
+                    />
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full py-3 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-md active:scale-[0.98] mt-2 border-none"
+                  isLoading={isLoading}
+                  aria-label={isLoading ? "Verifying..." : "Verify Code"}
+                >
+                  Verify Code
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => { setRequires2FA(false); setTwoFactorCode(''); setError(null); }}
+                  className="w-full mt-4 py-2 text-sm text-slate-600 hover:text-black transition-colors font-medium"
+                >
+                  Back to Login
+                </button>
+              </form>
+            ) : (
+              <form className="space-y-4" onSubmit={handleSubmit} noValidate>
               {/* Email Input */}
               <div>
                 <label htmlFor="email" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 px-1">
@@ -429,6 +547,7 @@ const LoginPage: React.FC = () => {
                 Sign In
               </Button>
             </form>
+            )}
 
             {/* Registration Link */}
             <p className="text-center mt-8 text-slate-600 text-sm">

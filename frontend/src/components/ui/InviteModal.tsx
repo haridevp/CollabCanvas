@@ -616,7 +616,7 @@ const InviteModal: React.FC<InviteModalProps> = ({
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Enter email addresses (comma separated)"
+                   
                     className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                     aria-label="Email addresses to invite"
                   />
@@ -713,7 +713,7 @@ const InviteModal: React.FC<InviteModalProps> = ({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by username or name..."
+                   
                     className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                     aria-label="Search users"
                   />

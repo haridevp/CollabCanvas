@@ -81,6 +81,12 @@ const UserSchema = new mongoose.Schema({
       timestamp: { type: Date, default: Date.now }
     }
   ],
+
+  // Two-Factor Authentication settings
+  twoFactorEnabled: { type: Boolean, default: false },
+  twoFactorCode: { type: String },
+  twoFactorExpires: { type: Date },
+
   // Timestamp of when the user account was first registered
   createdAt: { type: Date, default: Date.now }
 });

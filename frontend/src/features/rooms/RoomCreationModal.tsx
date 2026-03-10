@@ -191,7 +191,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
                 type="text"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
-                placeholder="e.g., Architecture Project"
+               
                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 maxLength={50}
                 required
@@ -224,7 +224,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
                 id="room-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe what this room is for..."
+               
                 className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 rows={3}
                 maxLength={200}
@@ -318,7 +318,7 @@ const RoomCreationModal: React.FC<RoomCreationModalProps> = ({
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter a secure password"
+                   
                     className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                     minLength={4}
                     required={!isPublic}

@@ -152,7 +152,7 @@ const KeyboardShortcutsPage: React.FC = () => {
                       value={shortcut}
                       onChange={(e) => handleShortcutChange(action, e.target.value)}
                       className="px-3 py-1 border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white text-center font-mono w-32"
-                      placeholder="Shortcut"
+                     
                     />
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">

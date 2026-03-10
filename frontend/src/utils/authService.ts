@@ -7,6 +7,8 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   token?: string;
+  requires2FA?: boolean;
+  userId?: string;
   user?: {
     id: string;
     username: string;
@@ -15,6 +17,7 @@ export interface AuthResponse {
     displayName?: string;
     avatar?: string | null;
     bio?: string;
+    twoFactorEnabled?: boolean;
   };
 }
 
@@ -106,6 +109,38 @@ export const registerUser = async (userData: unknown): Promise<AuthResponse> => 
 export const loginWithEmailPassword = async (credentials: unknown, activityData: unknown): Promise<AuthResponse> => {
   const response = await api.post('/auth/login', { ...credentials as object, activityData });
   return response.data;
+};
+
+/**
+ * Verifies a 2FA code and completes login
+ */
+export const verify2FA = async (userId: string, code: string): Promise<AuthResponse> => {
+  try {
+    const response = await api.post('/auth/verify-2fa', { userId, code });
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { message?: string, success?: boolean } } };
+    return {
+      success: err.response?.data?.success ?? false,
+      message: err.response?.data?.message || 'Verification failed. Please try again.'
+    };
+  }
+};
+
+/**
+ * Toggles 2FA for the currently authenticated user
+ */
+export const toggle2FA = async (): Promise<{ success: boolean; twoFactorEnabled?: boolean; message?: string }> => {
+  try {
+    const response = await api.put('/auth/toggle-2fa');
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { message?: string, success?: boolean } } };
+    return {
+      success: err.response?.data?.success ?? false,
+      message: err.response?.data?.message || 'Failed to toggle 2FA. Please try again.'
+    };
+  }
 };
 
 /**

@@ -368,7 +368,6 @@ const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
             <Search className="absolute left-3 top-3 text-slate-400" size={18} aria-hidden="true" />
             <input
               type="text"
-              placeholder="Search participants..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"

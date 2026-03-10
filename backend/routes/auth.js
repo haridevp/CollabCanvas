@@ -337,6 +337,33 @@ router.post("/login", async (req, res) => {
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
 
+    // If 2FA is enabled, generate a code, send it, and return early
+    if (user.twoFactorEnabled) {
+      // Generate a secure 6-digit verification code
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      user.twoFactorCode = code;
+      // Valid for 10 minutes
+      user.twoFactorExpires = new Date(Date.now() + 10 * 60000);
+      await user.save();
+
+      try {
+        await sendEmail(
+          user.email,
+          "Your Login Verification Code",
+          `Your Two-Factor Authentication code is: ${code}\n\nThis code will expire in 10 minutes.`
+        );
+        return res.json({
+          success: true,
+          requires2FA: true,
+          userId: user._id,
+          message: "Verification code sent to your email."
+        });
+      } catch (emailError) {
+        console.error("2FA Email Error:", emailError);
+        return res.status(500).json({ success: false, message: "Could not send 2FA email. Please try again later." });
+      }
+    }
+
     // Derive a human-readable device type from the User-Agent header
     const ua = req.headers['user-agent'] || '';
     let deviceType = 'Desktop';
@@ -370,11 +397,97 @@ router.post("/login", async (req, res) => {
         fullName: user.displayName,
         avatar: user.avatar, 
         bio: user.bio, 
+        twoFactorEnabled: user.twoFactorEnabled,
       },
     });
   } catch (err) {
     // Log failures and return error status
     res.status(500).json({ success: false, message: "Login failed" });
+  }
+});
+
+/**
+ * @route   POST /api/auth/verify-2fa
+ * @desc    Verify the 2FA code and issue JWT
+ * @access  Public
+ */
+router.post("/verify-2fa", async (req, res) => {
+  try {
+    const { userId, code } = req.body;
+    if (!userId || !code) return res.status(400).json({ success: false, message: "Missing User ID or verification code" });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    if (!user.twoFactorEnabled || !user.twoFactorCode) {
+      return res.status(400).json({ success: false, message: "2FA is not currently active for this login attempt" });
+    }
+
+    if (user.twoFactorCode !== code) {
+      return res.status(400).json({ success: false, message: "Invalid verification code" });
+    }
+
+    if (new Date() > user.twoFactorExpires) {
+      return res.status(400).json({ success: false, message: "Verification code has expired" });
+    }
+
+    // Code is valid - clear it
+    user.twoFactorCode = undefined;
+    user.twoFactorExpires = undefined;
+
+    // Track successful login activity
+    const ua = req.headers['user-agent'] || '';
+    let deviceType = 'Desktop';
+    if (/mobile|android|iphone|ipad|tablet/i.test(ua)) {
+      deviceType = /tablet|ipad/i.test(ua) ? 'Tablet' : 'Mobile';
+    }
+
+    user.loginActivities.push({ status: "success", deviceType, timestamp: new Date() });
+    if (user.loginActivities.length > 50) user.loginActivities = user.loginActivities.slice(-50);
+    
+    await user.save();
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        fullName: user.displayName,
+        avatar: user.avatar,
+        bio: user.bio,
+        twoFactorEnabled: user.twoFactorEnabled,
+      },
+    });
+  } catch (err) {
+    console.error("2FA Verification Error:", err);
+    res.status(500).json({ success: false, message: "Verification failed" });
+  }
+});
+
+/**
+ * @route   PUT /api/auth/toggle-2fa
+ * @desc    Toggle 2FA for the authenticated user
+ * @access  Private
+ */
+router.put("/toggle-2fa", authh, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    user.twoFactorEnabled = !user.twoFactorEnabled;
+    // Clear any existing codes
+    user.twoFactorCode = undefined;
+    user.twoFactorExpires = undefined;
+    await user.save();
+
+    res.json({ success: true, twoFactorEnabled: user.twoFactorEnabled });
+  } catch (err) {
+    console.error("2FA Toggle Error:", err);
+    res.status(500).json({ success: false, message: "Failed to toggle 2FA" });
   }
 });
 
