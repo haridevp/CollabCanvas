@@ -10,10 +10,14 @@ import ImageUploader from '../../components/ui/ImageUploader';
 import { useSelection } from '../../hooks/useSelection';
 import { useClipboard } from '../../hooks/useClipboard';
 import { ContextMenu } from '../../components/ui/ContextMenu';
+import ExportModal from '../../components/ui/ExportModal';
+import { elementsToSVG } from '../../utils/svgExport';
 import { useLayers } from '../../hooks/useLayers';
 import { LayerPanel } from '../../components/ui/LayerPanel';
 import { useObjectLocks } from '../../hooks/useObjectLocks';
 import { getToolIcon, getToolLabel, getToolColor } from '../../utils/toolIcons';
+import { performMagicWandSelection } from '../../utils/magicWand';
+import { recognizeShape } from '../../utils/shapeRecognition';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { NetworkStatus } from '../../components/ui/NetworkStatus';
 import { useAutoSave } from '../../hooks/useAutoSave';
@@ -307,7 +311,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     null,
   );
   const [tool, setTool] = useState<
-    "pencil" | "rectangle" | "circle" | "line" | "arrow" | "text" | "eraser" | "select" | "image"
+    "pencil" | "rectangle" | "circle" | "line" | "arrow" | "text" | "eraser" | "select" | "image" | "wand"
   >("pencil");
 
   // Image Uploading State
@@ -334,6 +338,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number; y: number; username: string; tool?: string; color?: string }>>({});
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [showExportModal, setShowExportModal] = useState<boolean>(false);
 
   // Keyboard shortcuts reference panel
   const [showShortcutsPanel, setShowShortcutsPanel] = useState<boolean>(false);
@@ -1724,10 +1729,23 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     }
 
     if (shouldSave) {
+      // ---------------------------------
+      // AI SHAPE RECOGNITION (Auto-snap)
+      // ---------------------------------
+      let finalElementToSave = currentElement;
+
+      // Only attempt to recognize and snap hand-drawn pencil shapes
+      if (currentElement.type === 'pencil' && currentElement.points && currentElement.points.length > 5) {
+        const snappedShape = recognizeShape(currentElement.points, currentElement);
+        if (snappedShape) {
+          finalElementToSave = snappedShape as DrawingElement;
+        }
+      }
+
       const elementWithLayer = {
-        ...currentElement,
+        ...finalElementToSave,
         layerId:
-          currentElement.layerId ??
+          finalElementToSave.layerId ??
           layerState.activeLayerId!,
       };
 
@@ -1777,52 +1795,157 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   ]);
 
   /**
-   * Export canvas as image
-   * 
-   * @function handleExport
-   * @param {string} format - Image format (png, jpeg)
+   * Helper function to calculate the bounding box of a set of elements
    */
-  const handleExport = async (format: 'png' | 'jpeg'): Promise<void> => {
+  const calculateBoundingBox = useCallback((elementsToMeasure: DrawingElement[]) => {
+    if (elementsToMeasure.length === 0) return { x: 0, y: 0, width: 0, height: 0 };
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    elementsToMeasure.forEach((el) => {
+      const padding = (el.strokeWidth || 3) / 2 + 10;
+
+      if (el.points && el.points.length > 0) {
+        el.points.forEach((p) => {
+          minX = Math.min(minX, p.x - padding);
+          minY = Math.min(minY, p.y - padding);
+          maxX = Math.max(maxX, p.x + padding);
+          maxY = Math.max(maxY, p.y + padding);
+        });
+      } else if (el.x !== undefined && el.y !== undefined) {
+        // Shapes with x,y and width,height
+        const w = el.width || 0;
+        const h = el.height || 0;
+        const x1 = el.x;
+        const y1 = el.y;
+        const x2 = el.x + w;
+        const y2 = el.y + h;
+
+        minX = Math.min(minX, Math.min(x1, x2) - padding);
+        minY = Math.min(minY, Math.min(y1, y2) - padding);
+        maxX = Math.max(maxX, Math.max(x1, x2) + padding);
+        maxY = Math.max(maxY, Math.max(y1, y2) + padding);
+      }
+    });
+
+    // Ensure we don't have infinite values
+    if (minX === Infinity) return { x: 0, y: 0, width: 0, height: 0 };
+
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
+    };
+  }, []);
+
+  /**
+   * Draw grid to a specific context without zoom/pan dependencies
+   */
+  const drawGridToContext = (ctx: CanvasRenderingContext2D, width: number, height: number, offsetX: number = 0, offsetY: number = 0) => {
+    const gridSize = 20;
+    ctx.strokeStyle = 'rgba(229, 231, 235, 0.5)';
+    ctx.lineWidth = 1;
+
+    // Draw vertical grid lines
+    for (let x = - (offsetX % gridSize); x <= width; x += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    }
+
+    // Draw horizontal grid lines
+    for (let y = - (offsetY % gridSize); y <= height; y += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+  };
+
+  /**
+   * Export canvas in various formats with options
+   */
+  const handleExport = async (
+    format: 'png' | 'svg',
+    options: { selectionOnly: boolean; includeGrid: boolean; quality: number }
+  ): Promise<void> => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     setIsExporting(true);
 
     try {
-      // Create a temporary canvas for export
-      const exportCanvas = document.createElement('canvas');
-      const ctx = exportCanvas.getContext('2d');
+      const elementsToExport = options.selectionOnly && selection.selectedIds.length > 0
+        ? elements.filter(el => selection.selectedIds.includes(el.id))
+        : elements;
 
-      if (!ctx) return;
+      if (elementsToExport.length === 0 && !options.includeGrid) {
+        setIsExporting(false);
+        return;
+      }
 
-      // Set export canvas size
-      exportCanvas.width = canvas.width;
-      exportCanvas.height = canvas.height;
+      const bbox = options.selectionOnly
+        ? calculateBoundingBox(elementsToExport)
+        : { x: 0, y: 0, width: canvasSize.width, height: canvasSize.height };
 
-      // Draw white background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+      if (format === 'svg') {
+        const svgString = elementsToSVG(
+          elementsToExport,
+          bbox.width,
+          bbox.height,
+          options.includeGrid,
+          options.selectionOnly ? [bbox.x, bbox.y, bbox.width, bbox.height] : undefined
+        );
 
-      // Apply the same transformations and draw all elements
-      ctx.save();
-      const dpr = window.devicePixelRatio || 1;
-      ctx.scale(dpr, dpr);
-      ctx.translate(panOffset.x, panOffset.y);
-      ctx.scale(zoomLevel, zoomLevel);
+        const blob = new Blob([svgString], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `canvas-export-${Date.now()}.svg`;
+        link.click();
+        URL.revokeObjectURL(url);
+      } else {
+        // PNG Export
+        const exportCanvas = document.createElement('canvas');
+        const ctx = exportCanvas.getContext('2d');
+        if (!ctx) return;
 
-      // Redraw all elements
-      redrawCanvasForExport(ctx, elements);
+        const scale = options.quality || 1;
+        exportCanvas.width = bbox.width * scale;
+        exportCanvas.height = bbox.height * scale;
 
-      ctx.restore();
+        // Draw background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
 
-      // Convert to data URL and trigger download
-      const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-      const dataUrl = exportCanvas.toDataURL(mimeType, 1.0);
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `canvas-export-${Date.now()}.${format}`;
-      link.click();
+        ctx.save();
+        ctx.scale(scale, scale);
 
+        // Translate if exporting selection only
+        if (options.selectionOnly) {
+          ctx.translate(-bbox.x, -bbox.y);
+        }
+
+        // Draw grid if requested
+        if (options.includeGrid) {
+          drawGridToContext(ctx, bbox.width, bbox.height, options.selectionOnly ? bbox.x : 0, options.selectionOnly ? bbox.y : 0);
+        }
+
+        // Redraw elements
+        redrawCanvasForExport(ctx, elementsToExport);
+        ctx.restore();
+
+        const dataUrl = exportCanvas.toDataURL('image/png', 1.0);
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `canvas-export-${Date.now()}.png`;
+        link.click();
+      }
     } catch (error) {
       console.error('Export failed:', error);
     } finally {
@@ -2272,26 +2395,16 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           <Trash2 size={20} />
         </button>
 
-        {/* Export button with dropdown */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => handleExport('png')}
-            disabled={isExporting}
-            className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Export as PNG"
-            title="Export as PNG"
-          >
-            <Download size={20} />
-          </button>
-          <button
-            onClick={() => handleExport('jpeg')}
-            disabled={isExporting}
-            className="px-2 py-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Export as JPEG"
-          >
-            {isExporting ? 'Exporting...' : 'JPEG'}
-          </button>
-        </div>
+        {/* Export button */}
+        <button
+          onClick={() => setShowExportModal(true)}
+          disabled={isExporting}
+          className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Export drawing"
+          title="Export Drawing"
+        >
+          <Download size={20} />
+        </button>
 
         {/* Keyboard shortcuts reference button */}
         <button
@@ -2775,6 +2888,15 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           </div>
         </div>
       )}
+
+      {/* Export Modal UI */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        onExport={(format, options) => handleExport(format, options)}
+        hasSelection={(selection.selectedIds instanceof Set ? selection.selectedIds.size : selection.selectedIds.length) > 0}
+      />
+
     </div>
   );
 };
