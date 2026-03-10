@@ -158,23 +158,28 @@ const Dashboard = () => {
    */
   const getDerivedRooms = () => {
     switch (activeTab) {
-      case 'my-rooms':
+      case 'my-rooms': {
         // My Rooms simply returns the rooms the user is part of
         return myRooms;
-      case 'public':
+      }
+      case 'public': {
         // Rooms Gallery returns all public rooms
         return publicRooms;
-      case 'recent':
+      }
+      case 'recent': {
         // Recent filters myRooms for rooms updated in the last 7 days (or just sorted by newest)
         // We'll return myRooms and rely on the sorting, optionally filtering out very old ones
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
         return myRooms.filter(r => new Date(r.updatedAt) > oneWeekAgo);
-      case 'bookmarked':
+      }
+      case 'bookmarked': {
         // Bookmarked filters myRooms for bookmarked ones
         return myRooms.filter(r => bookmarkedRoomIds.has(r.id));
-      default:
+      }
+      default: {
         return myRooms;
+      }
     }
   };
 
@@ -182,7 +187,7 @@ const Dashboard = () => {
    * Applies search filtering and sorting rules
    */
   const getProcessedRooms = () => {
-    let result = getDerivedRooms().filter(room =>
+    const result = getDerivedRooms().filter(room =>
       room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (room.description || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -313,8 +318,8 @@ const Dashboard = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${activeTab === tab.id
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   aria-label={`Switch to ${tab.label} tab`}
                   aria-pressed={activeTab === tab.id}
@@ -323,8 +328,8 @@ const Dashboard = () => {
                   <span className="font-medium">{tab.label}</span>
                   {tab.count !== undefined && (
                     <span className={`px-1.5 py-0.5 text-xs rounded-full ${activeTab === tab.id
-                        ? 'bg-white/20'
-                        : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                      ? 'bg-white/20'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                       }`}>
                       {tab.count}
                     </span>
@@ -460,11 +465,10 @@ const Dashboard = () => {
                         <div className="flex items-center gap-2">
                           {activeTab !== 'public' && (
                             <button
-                              className={`p-2 rounded-lg transition-colors border ${
-                                bookmarkedRoomIds.has(room.id)
-                                  ? 'bg-yellow-50 border-yellow-200 text-yellow-600 dark:bg-yellow-900/20 dark:border-yellow-900/50'
-                                  : 'border-slate-200 text-slate-400 hover:text-yellow-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700'
-                              }`}
+                              className={`p-2 rounded-lg transition-colors border ${bookmarkedRoomIds.has(room.id)
+                                ? 'bg-yellow-50 border-yellow-200 text-yellow-600 dark:bg-yellow-900/20 dark:border-yellow-900/50'
+                                : 'border-slate-200 text-slate-400 hover:text-yellow-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700'
+                                }`}
                               onClick={(e) => handleBookmarkToggle(room.id, e)}
                               title={bookmarkedRoomIds.has(room.id) ? "Remove bookmark" : "Add bookmark"}
                             >
