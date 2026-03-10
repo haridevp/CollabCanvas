@@ -300,7 +300,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const {
     present: elements,
-    setState: setElements,
+    setState: commitElements,
     undo,
     redo,
     canUndo,
@@ -374,7 +374,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     duplicateSelected,
     bringToFront,
     sendToBack,
-  } = useSelection(elements, setElements, zoomLevel, panOffset);
+  } = useSelection(elements, replaceElements, zoomLevel, panOffset);
 
   const {
     copyToClipboard,
@@ -383,7 +383,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     hasClipboardContent
   } = useClipboard(
     elements,
-    setElements,
+    replaceElements,
     selection.selectedIds,
     clearSelection,
     (newSelection) => setSelection({
@@ -409,7 +409,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     isLayerEditable,
     updateLayerElementCounts,
     setLayerState
-  } = useLayers(elements, setElements);
+  } = useLayers(elements, replaceElements);
 
   const processQueueRef = useRef<(() => void) | null>(null);
 
@@ -1262,7 +1262,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     };
 
     // Add to history and emit to server
-    setElements([...elements, textElement]);
+    commitElements([...elements, textElement]);
     resetSaveTimer();
 
     if (socketRef.current && resolvedRoomId) {
@@ -1313,7 +1313,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
     };
 
     // Add to history and emit to server
-    setElements([...elements, imageElement]);
+    commitElements([...elements, imageElement]);
     resetSaveTimer();
 
     if (socketRef.current && resolvedRoomId) {
@@ -1642,6 +1642,9 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
       if (transform.isTransforming) {
         endTransform();
 
+        // 📝 COMMIT TO HISTORY after transformation is done
+        commitElements([...elements]);
+
         const socket = socketRef.current;
 
         if (
@@ -1726,7 +1729,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           layerState.activeLayerId!,
       };
 
-      setElements((prev) => [...prev, elementWithLayer]);
+      commitElements((prev) => [...prev, elementWithLayer]);
       resetSaveTimer();
 
       if (socketRef.current && resolvedRoomId) {
@@ -2029,12 +2032,16 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
           case 'x':
             e.preventDefault();
             cutToClipboard();
+            // cutToClipboard calls setElements (replaceElements), so we should commit
+            commitElements([...elements]);
             break;
           case 'v':
             e.preventDefault();
             // Get mouse position for paste location
             // You might want to pass the current cursor position here
-            pasteFromClipboard(20, 20);
+            pasteFromClipboard(20, 20).then(() => {
+              commitElements([...elements]);
+            });
             break;
         }
       }
@@ -2045,12 +2052,14 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         if (e.key === 'Delete' || e.key === 'Backspace') {
           e.preventDefault();
           deleteSelected();
+          commitElements([...elements]);
         }
 
         // Duplicate (Ctrl+D)
         if (e.ctrlKey && key === 'd') {
           e.preventDefault();
           duplicateSelected();
+          commitElements([...elements]);
         }
       }
 
@@ -2288,7 +2297,15 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             title="Undo (Ctrl+Z)"
             disabled={!canUndo}
           >
-            <RotateCcw size={20} />
+            <div className="relative">
+              <RotateCcw size={20} />
+              {canUndo && (
+                <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+              )}
+            </div>
           </button>
           <button
             onClick={redo}
@@ -2300,7 +2317,15 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             title="Redo (Ctrl+Y)"
             disabled={!canRedo}
           >
-            <RotateCw size={20} />
+            <div className="relative">
+              <RotateCw size={20} />
+              {canRedo && (
+                <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+              )}
+            </div>
           </button>
         </div>
 
@@ -2354,7 +2379,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
         {/* Clear canvas button */}
         <button
           onClick={() => {
-            setElements([]);
+            commitElements([]);
             if (socketRef.current && resolvedRoomId) {
               if (isConnected) {
                 socketRef.current.emit("clear-canvas", { roomId: resolvedRoomId });
@@ -2469,7 +2494,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             {/* Paste */}
             {hasClipboardContent() && (
               <button
-                onClick={() => pasteFromClipboard(20, 20)}
+                onClick={async () => {
+                  await pasteFromClipboard(20, 20);
+                  commitElements([...elements]);
+                }}
                 className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                 title="Paste (Ctrl+V)"
               >
@@ -2481,7 +2509,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
             {/* Duplicate */}
             <button
-              onClick={duplicateSelected}
+              onClick={async () => {
+                await duplicateSelected();
+                commitElements([...elements]);
+              }}
               disabled={!!isLockedByOther}
               className={`p-2 rounded-lg transition-colors ${isLockedByOther
                 ? "opacity-50 cursor-not-allowed"
@@ -2494,7 +2525,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
             {/* Delete */}
             <button
-              onClick={deleteSelected}
+              onClick={async () => {
+                await deleteSelected();
+                commitElements([...elements]);
+              }}
               disabled={!!isLockedByOther}
               className={`p-2 rounded-lg transition-colors ${isLockedByOther
                 ? "opacity-50 cursor-not-allowed"
@@ -2509,7 +2543,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
 
             {/* Layer order */}
             <button
-              onClick={bringToFront}
+              onClick={async () => {
+                await bringToFront();
+                commitElements([...elements]);
+              }}
               disabled={!!isLockedByOther}
               className={`p-2 rounded-lg transition-colors ${isLockedByOther
                 ? "opacity-50 cursor-not-allowed"
@@ -2521,7 +2558,10 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
             </button>
 
             <button
-              onClick={sendToBack}
+              onClick={async () => {
+                await sendToBack();
+                commitElements([...elements]);
+              }}
               disabled={!!isLockedByOther}
               className={`p-2 rounded-lg transition-colors ${isLockedByOther
                 ? "opacity-50 cursor-not-allowed"
@@ -2720,7 +2760,7 @@ export const CollaborativeCanvas = ({ roomId, onSocketReady }: CollaborativeCanv
               format
             };
 
-            setElements(elements.map(el =>
+            commitElements(elements.map(el =>
               el.id === editingTextElement.id ? updatedElement : el
             ));
 
