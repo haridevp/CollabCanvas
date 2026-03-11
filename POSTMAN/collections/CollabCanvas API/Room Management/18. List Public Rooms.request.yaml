@@ -1,0 +1,19 @@
+$kind: http-request
+description: "Returns paginated public rooms. Public endpoint, no auth needed.
+  Query params: page, limit, sort (newest/popular/name), search (optional room
+  name filter)."
+url: "{{base_url}}/api/rooms/public?page=1&limit=20&sort=newest"
+method: GET
+queryParams:
+  - key: page
+    value: "1"
+  - key: limit
+    value: "20"
+  - key: sort
+    value: newest
+    description: "Options: newest, popular, name"
+  - key: search
+    value: ""
+    disabled: true
+    description: "Optional: filter by room name"
+order: 4000

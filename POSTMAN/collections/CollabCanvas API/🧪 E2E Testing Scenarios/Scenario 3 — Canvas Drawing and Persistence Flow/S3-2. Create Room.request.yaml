@@ -1,0 +1,27 @@
+$kind: http-request
+description: Creates a room for canvas testing.
+url: "{{base_url}}/api/rooms/create"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Canvas E2E Room",
+      "description": "Scenario 3 test room",
+      "isPublic": true,
+      "maxParticipants": 5
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S3-2: Room created', function () {
+        pm.response.to.have.status(201);
+        var json = pm.response.json();
+        pm.collectionVariables.set('roomId', json.room._id);
+        console.log('✅ S3-2 Create Room: PASSED — roomId: ' + json.room._id);
+      });
+    language: text/javascript
+order: 2000

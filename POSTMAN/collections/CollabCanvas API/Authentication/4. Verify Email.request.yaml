@@ -1,0 +1,14 @@
+$kind: http-request
+description: Verifies a user's email address using the token sent to their inbox
+  after registration.
+url: "{{base_url}}/api/auth/verify-email"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "token": "email-verification-token-from-email-link"
+    }
+order: 4000

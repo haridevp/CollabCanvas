@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Validates if a room exists and checks the user's access (banned,
+  member, etc.). Accepts both MongoDB _id and roomCode as the :id parameter.
+  Returns requiresPassword, isAlreadyMember flags. Route: GET
+  /api/rooms/:id/validate"
+url: "{{base_url}}/api/rooms/{{roomId}}/validate"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+order: 3000

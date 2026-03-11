@@ -1,0 +1,31 @@
+$kind: http-request
+description: >-
+  Logs in and saves jwt_token for subsequent requests.
+
+
+  NOTE: Email must be verified first (see backend auto-verify logic for emails
+  containing 'testuser').
+url: "{{base_url}}/api/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "john.doe@example.com",
+      "password": "SecurePassword123!"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S1-2: Login returns JWT token', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        pm.expect(json.token).to.be.a('string');
+        pm.collectionVariables.set('jwt_token', json.token);
+        console.log('✅ S1-2 Login: PASSED — jwt_token saved');
+      });
+    language: text/javascript
+order: 2000

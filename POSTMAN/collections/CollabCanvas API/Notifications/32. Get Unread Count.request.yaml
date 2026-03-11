@@ -1,0 +1,8 @@
+$kind: http-request
+description: "Returns the count of unread notifications for the authenticated
+  user. Route: GET /api/notifications/unread/count"
+url: "{{base_url}}/api/notifications/unread/count"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+order: 2000

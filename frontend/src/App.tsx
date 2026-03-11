@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import LandingPage from './pages/LandingPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 
 import Dashboard from './pages/Dashboard';
 import ProfilePage from './pages/ProfilePage';
@@ -43,6 +44,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/registration-success" element={<RegistrationSuccess />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
 

@@ -1,0 +1,17 @@
+$kind: http-request
+description: Exports the canvas as JSON. Change format to 'png' or 'svg' as needed.
+url: "{{base_url}}/api/rooms/{{roomId}}/export?format=json"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+queryParams:
+  format: json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S5-5: Canvas exported successfully', function () {
+        pm.response.to.have.status(200);
+        console.log('✅ S5-5 Export Canvas: PASSED');
+      });
+    language: text/javascript
+order: 5000

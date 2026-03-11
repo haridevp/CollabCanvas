@@ -1,0 +1,15 @@
+$kind: http-request
+description: Completes login for users with 2FA enabled. Called after Login
+  returns requiresTwoFactor:true.
+url: "{{base_url}}/api/auth/verify-2fa"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "userId": "65f3a1b2c4d5e6f7a8b9c0d1",
+      "twoFactorCode": "123456"
+    }
+order: 5000

@@ -1,0 +1,17 @@
+$kind: http-request
+description: Retrieves the current canvas elements array.
+url: "{{base_url}}/api/rooms/{{roomId}}/canvas/state"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S3-4: Canvas state returned', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        console.log('✅ S3-4 Canvas State: PASSED');
+      });
+    language: text/javascript
+order: 4000

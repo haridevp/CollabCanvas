@@ -1,0 +1,21 @@
+$kind: http-request
+description: "Leaves the room. Note: room owners cannot leave — they must delete
+  the room. This test accepts either outcome."
+url: "{{base_url}}/api/rooms/{{roomId}}/leave"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('S2-6: Leave room succeeds', function () {
+        var json = pm.response.json();
+        // Owners may get a specific message — accept either success or owner error
+        var isSuccess = pm.response.code === 200 && json.success;
+        var isOwnerBlocked = json.message && json.message.toLowerCase().includes('owner');
+        pm.expect(isSuccess || isOwnerBlocked).to.be.true;
+        console.log('✅ S2-6 Leave Room: PASSED — ' + json.message);
+        console.log('✅ SCENARIO 2 COMPLETE');
+      });
+    language: text/javascript
+order: 6000

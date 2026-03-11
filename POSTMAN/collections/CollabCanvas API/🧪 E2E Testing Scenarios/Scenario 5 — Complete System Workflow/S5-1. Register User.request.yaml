@@ -1,0 +1,28 @@
+$kind: http-request
+description: Registers a new system test user. Email contains 'testuser' so it
+  auto-verifies.
+url: "{{base_url}}/api/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "fullName": "E2E System User",
+      "username": "e2esystemuser",
+      "email": "john.doe@example.com",
+      "password": "SecurePassword123!",
+      "agreedToTerms": true
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S5-1: Registration succeeds', function () {
+        pm.response.to.have.status(201);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        console.log('✅ S5-1 Register: PASSED');
+      });
+    language: text/javascript
+order: 1000

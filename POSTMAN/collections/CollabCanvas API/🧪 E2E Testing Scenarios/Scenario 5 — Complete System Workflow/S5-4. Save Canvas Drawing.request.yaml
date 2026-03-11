@@ -1,0 +1,30 @@
+$kind: http-request
+description: Saves a canvas with a circle and text element.
+url: "{{base_url}}/api/rooms/{{roomId}}/canvas/save"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: >-
+    {
+      "elements": [
+        { "type": "circle", "cx": 200, "cy": 200, "r": 80, "color": "#3b82f6" },
+        { "type": "text", "content": "Hello World", "x": 150, "y": 350, "fontSize": 24 }
+      ],
+      "isAutoSave": false,
+      "label": "System Test Save"
+    }
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('S5-4: Canvas saved', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        if (json.versionId) pm.collectionVariables.set('versionId', json.versionId);
+        console.log('✅ S5-4 Save Canvas: PASSED');
+      });
+    language: text/javascript
+order: 4000

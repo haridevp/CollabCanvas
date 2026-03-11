@@ -1,0 +1,7 @@
+$kind: http-request
+description: "Checks if a username is available (not taken). Public endpoint, no
+  auth needed. Replace 'johndoe' with the username to check. Route: GET
+  /api/auth/check-username/:username"
+url: "{{base_url}}/api/auth/check-username/johndoe"
+method: GET
+order: 11000

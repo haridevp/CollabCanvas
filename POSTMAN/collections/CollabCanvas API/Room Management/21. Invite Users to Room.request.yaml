@@ -1,0 +1,16 @@
+$kind: http-request
+description: "Invites users to the room. Body: { userIds: string[] } — array of
+  MongoDB user _id values. Requires owner or moderator role. Use endpoint 12
+  (Search Users) to find user IDs."
+url: "{{base_url}}/api/rooms/{{roomId}}/invite"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "userIds": ["65f3a1b2c4d5e6f7a8b9c0d1"]
+    }
+order: 7000

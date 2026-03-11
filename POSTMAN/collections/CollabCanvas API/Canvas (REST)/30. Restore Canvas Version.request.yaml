@@ -1,0 +1,9 @@
+$kind: http-request
+description: Restores the canvas to a historical snapshot. Owner/moderator only.
+  Automatically creates a pre-restore snapshot so you can undo. {{versionId}} is
+  auto-saved by Save Canvas test script.
+url: "{{base_url}}/api/rooms/{{roomId}}/canvas/restore/{{versionId}}"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+order: 4000

@@ -11,7 +11,7 @@ import {
 import TitleAnimation from '../components/ui/TitleAnimation';
 import Background from '../components/ui/Background';
 import axios from 'axios';
-import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 /**
  * Login activity interface for tracking user login history
  * @interface LoginActivity
@@ -331,17 +331,34 @@ const LoginPage: React.FC = () => {
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
-      const { data } = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google-login`, {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      console.log('[Google Login] Calling API:', `${apiUrl}/auth/google-login`);
+      console.log('[Google Login] Credential received:', !!credentialResponse.credential);
+
+      const { data } = await axios.post(`${apiUrl}/auth/google-login`, {
         credential: credentialResponse.credential,
       });
 
+      console.log('[Google Login] Response:', data);
+
       if (data.success) {
         await recordLogin(getDeviceType());
-        login(data.token, data.user); // Update your global Auth state
+        login(data.token, data.user);
         navigate('/dashboard');
+      } else {
+        setError({
+          title: 'Login Failed',
+          message: data.message || 'Google login returned an unsuccessful response',
+          type: 'error'
+        });
       }
-    } catch (err) {
-      console.error("Google Login Error:", err);
+    } catch (err: any) {
+      console.error('[Google Login] Error:', err);
+      setError({
+        title: 'Google Login Failed',
+        message: err.response?.data?.message || err.message || 'Could not connect to server',
+        type: 'error'
+      });
     }
   };
 
@@ -506,21 +523,18 @@ const LoginPage: React.FC = () => {
                   </div>
                 </div>
 
-                <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-                  <div className="mt-6">
-                    <GoogleLogin
-                      onSuccess={handleGoogleSuccess}
-                      onError={() => {
-                        setError({
-                          title: 'Login Failed',
-                          message: 'Google Authentication was unsuccessful',
-                          type: 'error'
-                        });
-                      }}
-                      useOneTap
-                    />
-                  </div>
-                </GoogleOAuthProvider>
+                <div className="mt-6">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => {
+                      setError({
+                        title: 'Login Failed',
+                        message: 'Google Authentication was unsuccessful',
+                        type: 'error'
+                      });
+                    }}
+                  />
+                </div>
 
                 {/* Remember Me Checkbox */}
                 <div className="flex items-center px-1">

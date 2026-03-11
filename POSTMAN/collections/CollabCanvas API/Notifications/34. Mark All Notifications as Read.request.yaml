@@ -1,0 +1,7 @@
+$kind: http-request
+description: Marks all of the authenticated user's notifications as read in bulk.
+url: "{{base_url}}/api/notifications/mark-all-read"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+order: 4000

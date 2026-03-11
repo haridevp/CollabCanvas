@@ -1,0 +1,30 @@
+$kind: http-request
+description: Creates a public test room. Auto-saves roomId and roomCode.
+url: "{{base_url}}/api/rooms/create"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "E2E Test Room",
+      "description": "Created by E2E Scenario 2",
+      "isPublic": true,
+      "maxParticipants": 10
+    }
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('S2-2: Room created successfully', function () {
+        pm.response.to.have.status(201);
+        var json = pm.response.json();
+        pm.expect(json.room).to.have.property('_id');
+        pm.expect(json.room).to.have.property('roomCode');
+        pm.collectionVariables.set('roomId', json.room._id);
+        pm.collectionVariables.set('roomCode', json.room.roomCode);
+        console.log('✅ S2-2 Create Room: PASSED — roomId: ' + json.room._id + ', roomCode: ' + json.room.roomCode);
+      });
+    language: text/javascript
+order: 2000

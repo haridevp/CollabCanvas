@@ -1,0 +1,9 @@
+$kind: http-request
+description: Returns the full current drawing state as an array. HTTP fallback
+  for reconnection sync — normally the frontend uses the Socket.IO
+  'request-sync' event instead.
+url: "{{base_url}}/api/rooms/{{roomId}}/canvas/state"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+order: 2000

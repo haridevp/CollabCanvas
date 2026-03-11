@@ -1,0 +1,17 @@
+$kind: http-request
+description: Returns all notifications for the authenticated user. Test script
+  saves first notification's _id into {{notificationId}}.
+url: "{{base_url}}/api/notifications"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+scripts:
+  - type: afterResponse
+    code: |-
+      var json = pm.response.json();
+      if (json.notifications && json.notifications.length > 0) {
+        pm.collectionVariables.set('notificationId', json.notifications[0]._id);
+        console.log('notificationId saved: ' + json.notifications[0]._id);
+      }
+    language: text/javascript
+order: 1000

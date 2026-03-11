@@ -1,0 +1,19 @@
+$kind: http-request
+description: Returns the number of unread notifications.
+url: "{{base_url}}/api/notifications/unread/count"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S4-3: Unread count returned', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        pm.expect(json).to.have.property('count');
+        pm.expect(json.count).to.be.a('number');
+        console.log('✅ S4-3 Unread Count: PASSED — count: ' + json.count);
+      });
+    language: text/javascript
+order: 3000

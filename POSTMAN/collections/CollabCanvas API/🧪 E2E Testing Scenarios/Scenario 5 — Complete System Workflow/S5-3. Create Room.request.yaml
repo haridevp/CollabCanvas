@@ -1,0 +1,29 @@
+$kind: http-request
+description: Creates the room for the complete system test.
+url: "{{base_url}}/api/rooms/create"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Complete System Test Room",
+      "description": "E2E Scenario 5 room",
+      "isPublic": true,
+      "maxParticipants": 5
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S5-3: Room created', function () {
+        pm.response.to.have.status(201);
+        var json = pm.response.json();
+        pm.expect(json.room._id).to.be.a('string');
+        pm.collectionVariables.set('roomId', json.room._id);
+        pm.collectionVariables.set('roomCode', json.room.roomCode);
+        console.log('✅ S5-3 Create Room: PASSED — roomId: ' + json.room._id);
+      });
+    language: text/javascript
+order: 3000

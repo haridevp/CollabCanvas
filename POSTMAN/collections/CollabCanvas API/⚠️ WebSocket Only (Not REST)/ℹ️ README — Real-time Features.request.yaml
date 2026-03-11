@@ -1,0 +1,47 @@
+$kind: http-request
+description: >-
+  The following features are handled EXCLUSIVELY via Socket.IO WebSocket and
+  have NO REST equivalents:
+
+
+  • Drawing (strokes, shapes, text, images, eraser)
+
+  • Undo / Redo
+
+  • Clear Canvas
+
+  • Layers
+
+  • Cursor position broadcast
+
+  • Chat messages
+
+  • User presence (joined/left)
+
+  • Object locking
+
+  • Canvas sync (request-sync event)
+
+
+  To test these, connect a Socket.IO client to ws://localhost:5000 with the JWT
+  token in the auth handshake, then join a room and emit the appropriate events.
+
+
+  Key socket events (roomSocket.js):
+
+  - join-room
+
+  - drawing-update
+
+  - request-sync
+
+  - cursor-move
+
+  - send-message
+
+  - element-lock / element-unlock
+
+  - leave-room
+url: "{{base_url}}/api"
+method: GET
+order: 1000

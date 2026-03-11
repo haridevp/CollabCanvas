@@ -1,0 +1,27 @@
+$kind: http-request
+description: Deletes the account using the NEW password (changed in S1-5).
+url: "{{base_url}}/api/auth/delete-account"
+method: DELETE
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "password": "SecurePassword123!"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S1-6: Account deletion succeeds', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        pm.expect(json.message).to.include('deleted');
+        pm.collectionVariables.set('jwt_token', '');
+        console.log('✅ S1-6 Delete Account: PASSED');
+        console.log('✅ SCENARIO 1 COMPLETE');
+      });
+    language: text/javascript
+order: 6000

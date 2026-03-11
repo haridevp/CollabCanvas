@@ -1,0 +1,19 @@
+$kind: http-request
+description: Registers a new user. Body field is 'fullName' (not 'displayName')
+  — the controller maps it to displayName internally. Sends a verification
+  email.
+url: "{{base_url}}/api/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "fullName": "John Doe",
+      "username": "johndoe",
+      "email": "john.doe@example.com",
+      "password": "SecurePassword123!",
+      "agreedToTerms": true
+    }
+order: 1000

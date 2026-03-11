@@ -1,0 +1,2751 @@
+{
+    "info": {
+        "name": "CollabCanvas API",
+        "_postman_id": "collabcanvas-api-collection-v2",
+        "description": "Complete and verified REST API collection for CollabCanvas. All routes are confirmed against auth.js, rooms.js, notifications.js, and canvasController.js.\n\nBase URL: http://localhost:5000\n\nTest flow:\n1. Login → jwt_token saved automatically\n2. Create Room OR Join Room → roomId saved automatically\n3. All other endpoints just work\n\nNOTE: Drawing (strokes, shapes, text, layers, undo/redo, cursor, chat) is handled exclusively via Socket.IO WebSocket, NOT REST endpoints.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:5000",
+            "type": "string"
+        },
+        {
+            "key": "jwt_token",
+            "value": "",
+            "type": "string",
+            "description": "Auto-populated by Login User test script. Copy manually if needed."
+        },
+        {
+            "key": "roomId",
+            "value": "",
+            "type": "string",
+            "description": "Auto-populated by Create Room or Join Room test scripts. MongoDB _id of the room."
+        },
+        {
+            "key": "roomCode",
+            "value": "A1B2C3D4",
+            "type": "string",
+            "description": "Short alphanumeric room code (e.g. AB12CD34). Used in Join Room body. Get from Create Room response."
+        },
+        {
+            "key": "versionId",
+            "value": "",
+            "type": "string",
+            "description": "Canvas version _id. Auto-populated by Save Canvas test script."
+        },
+        {
+            "key": "notificationId",
+            "value": "",
+            "type": "string",
+            "description": "Notification _id. Set from Get Notifications response."
+        },
+        {
+            "key": "participantId",
+            "value": "",
+            "type": "string",
+            "description": "MongoDB user _id of a room participant. Used in Manage Participants."
+        }
+    ],
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "1. Register User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"fullName\": \"John Doe\",\n  \"username\": \"johndoe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"agreedToTerms\": true\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Registers a new user. Body field is 'fullName' (not 'displayName') — the controller maps it to displayName internally. Sends a verification email."
+                    }
+                },
+                {
+                    "name": "2. Login User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var json = pm.response.json();",
+                                    "if (json.token) {",
+                                    "  pm.collectionVariables.set('jwt_token', json.token);",
+                                    "  console.log('jwt_token saved');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Logs in and auto-saves JWT to {{jwt_token}}. If 2FA is enabled, response returns requiresTwoFactor:true — proceed to Verify 2FA instead."
+                    }
+                },
+                {
+                    "name": "3. Google OAuth Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/google-login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "google-login"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"credential\": \"eyJhbGciOiJSU...\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Authenticates via Google OAuth. Body field: 'credential' (the Google ID token string from the Google Sign-In button). Route: POST /api/auth/google-login"
+                    }
+                },
+                {
+                    "name": "4. Verify Email",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/verify-email",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "verify-email"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"token\": \"email-verification-token-from-email-link\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Verifies a user's email address using the token sent to their inbox after registration."
+                    }
+                },
+                {
+                    "name": "5. Verify 2FA Code",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/verify-2fa",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "verify-2fa"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userId\": \"65f3a1b2c4d5e6f7a8b9c0d1\",\n  \"twoFactorCode\": \"123456\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Completes login for users with 2FA enabled. Called after Login returns requiresTwoFactor:true."
+                    }
+                },
+                {
+                    "name": "6. Toggle 2FA",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/toggle-2fa",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "toggle-2fa"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"enable\": true\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Enables or disables Two-Factor Authentication for the authenticated user."
+                    }
+                },
+                {
+                    "name": "7. Forgot Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/forgot-password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "forgot-password"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"john.doe@example.com\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Sends a password reset email to the given address with a reset token link."
+                    }
+                },
+                {
+                    "name": "8. Reset Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/reset-password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "reset-password"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"token\": \"reset-token-from-email\",\n  \"password\": \"SecurePassword123!\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Resets password using the token from the reset email. Body field is 'password' (not 'newPassword')."
+                    }
+                },
+                {
+                    "name": "9. Change Password",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/change-password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "change-password"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"currentPassword\": \"SecurePassword123!\",\n  \"newPassword\": \"SecurePassword123!\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Changes the authenticated user's password. Requires current password for verification."
+                    }
+                },
+                {
+                    "name": "10. Delete Account",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/delete-account",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "delete-account"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"password\": \"SecurePassword123!\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Permanently deletes the authenticated user's account. Route: DELETE /api/auth/delete-account"
+                    }
+                },
+                {
+                    "name": "11. Check Username Availability",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/check-username/johndoe",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "check-username",
+                                "johndoe"
+                            ]
+                        },
+                        "description": "Checks if a username is available (not taken). Public endpoint, no auth needed. Replace 'johndoe' with the username to check. Route: GET /api/auth/check-username/:username"
+                    }
+                },
+                {
+                    "name": "12. Search Users",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/search?q=john",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "search"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "john"
+                                }
+                            ]
+                        },
+                        "description": "Searches users by username or displayName. Query param 'q' must be at least 2 characters. Returns up to 20 results excluding the requesting user. Route: GET /api/auth/search?q=<query>"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Profile Management",
+            "item": [
+                {
+                    "name": "13. Get Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "profile"
+                            ]
+                        },
+                        "description": "Returns the authenticated user's full profile. Route: GET /api/auth/profile (all profile endpoints live under /api/auth/, not /api/profile/)"
+                    }
+                },
+                {
+                    "name": "14. Update Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/update-profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "update-profile"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"displayName\": \"John D.\",\n  \"bio\": \"Updated bio text.\",\n  \"avatar\": \"https://example.com/avatar.png\",\n  \"notificationSettings\": {\n    \"email\": true,\n    \"push\": true,\n    \"soundEnabled\": true,\n    \"desktopNotifications\": true,\n    \"notificationFrequency\": \"realtime\"\n  }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Updates profile fields. All fields optional. 'avatar' accepts a URL or base64 string. 'notificationSettings' keys: email, push, reminders, marketing, securityAlerts, soundEnabled, desktopNotifications, notificationFrequency. Route: PUT /api/auth/update-profile"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Room Management",
+            "item": [
+                {
+                    "name": "15. Create Room",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var json = pm.response.json();",
+                                    "if (json.room && json.room._id) {",
+                                    "  pm.collectionVariables.set('roomId', json.room._id);",
+                                    "  console.log('roomId saved: ' + json.room._id);",
+                                    "  console.log('roomCode: ' + json.room.roomCode);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/create",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "create"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Brainstorming Session\",\n  \"description\": \"Design ideas map\",\n  \"isPublic\": true,\n  \"maxParticipants\": 10\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Creates a new collaborative drawing room. Use 'isPublic' (boolean) for visibility. 'maxParticipants' minimum is 2. The test script auto-saves room._id into {{roomId}}. Check the console for the roomCode to share with others. Route: POST /api/rooms/create"
+                    }
+                },
+                {
+                    "name": "16. Join Room Using Code",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var json = pm.response.json();",
+                                    "if (json.room && json.room._id) {",
+                                    "  pm.collectionVariables.set('roomId', json.room._id);",
+                                    "  console.log('roomId auto-saved from join: ' + json.room._id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/join",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "join"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"roomCode\": \"{{roomCode}}\",\n  \"password\": \"\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Joins a room using its short alphanumeric room code (e.g. 'AB12CD34'). Set {{roomCode}} in collection variables or replace inline. Leave 'password' blank for public rooms. The test script auto-saves room._id into {{roomId}}."
+                    }
+                },
+                {
+                    "name": "17. Validate Room Access",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/{{roomId}}/validate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "{{roomId}}",
+                                "validate"
+                            ]
+                        },
+                        "description": "Validates if a room exists and checks the user's access (banned, member, etc.). Accepts both MongoDB _id and roomCode as the :id parameter. Returns requiresPassword, isAlreadyMember flags. Route: GET /api/rooms/:id/validate"
+                    }
+                },
+                {
+                    "name": "18. List Public Rooms",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/public?page=1&limit=20&sort=newest",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "public"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "newest",
+                                    "description": "Options: newest, popular, name"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "",
+                                    "description": "Optional: filter by room name",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Returns paginated public rooms. Public endpoint, no auth needed. Query params: page, limit, sort (newest/popular/name), search (optional room name filter)."
+                    }
+                },
+                {
+                    "name": "19. Get My Rooms",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/my-rooms",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "my-rooms"
+                            ]
+                        },
+                        "description": "Returns all rooms the authenticated user has created or joined (excluding banned rooms). Route: GET /api/rooms/my-rooms"
+                    }
+                },
+                {
+                    "name": "20. Get Room Participants",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/{{roomId}}/participants",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "{{roomId}}",
+                                "participants"
+                            ]
+                        },
+                        "description": "Returns the participant list for a room. Route: GET /api/rooms/:id/participants"
+                    }
+                },
+                {
+                    "name": "21. Invite Users to Room",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/{{roomId}}/invite",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "{{roomId}}",
+                                "invite"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userIds\": [\"65f3a1b2c4d5e6f7a8b9c0d1\"]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Invites users to the room. Body: { userIds: string[] } — array of MongoDB user _id values. Requires owner or moderator role. Use endpoint 12 (Search Users) to find user IDs."
+                    }
+                },
+                {
+                    "name": "22. Manage Participant (kick/ban/promote/demote)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/{{roomId}}/participants/{{participantId}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "{{roomId}}",
+                                "participants",
+                                "{{participantId}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"action\": \"kick\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Admin actions on a participant. 'action' options: kick, ban, promote (to moderator), demote (to participant). Only owners/moderators can perform actions. Route: POST /api/rooms/:id/participants/:userId"
+                    }
+                },
+                {
+                    "name": "23. Leave Room",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/{{roomId}}/leave",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "{{roomId}}",
+                                "leave"
+                            ]
+                        },
+                        "description": "Removes the authenticated user from the room. Owners cannot leave — they must delete the room instead."
+                    }
+                },
+                {
+                    "name": "24. Update Room Settings",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/{{roomId}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "{{roomId}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Updated Room Name\",\n  \"description\": \"New description\",\n  \"isPublic\": false,\n  \"password\": \"SecurePassword123!\",\n  \"maxParticipants\": 20\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Updates room settings. Owner only. Use 'isPublic' (boolean) — backend translates it to the 'visibility' field. Protected fields (_id, owner, roomCode, participants, isActive, drawingData) cannot be updated."
+                    }
+                },
+                {
+                    "name": "25. Delete Room",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/{{roomId}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "{{roomId}}"
+                            ]
+                        },
+                        "description": "Soft-deletes a room (sets isActive:false). Owner only."
+                    }
+                },
+                {
+                    "name": "26. Export Canvas (PNG/SVG/JSON)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/{{roomId}}/export?format=png",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "{{roomId}}",
+                                "export"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "png",
+                                    "description": "Options: png, svg, json"
+                                }
+                            ]
+                        },
+                        "description": "Exports the current canvas drawing. 'format' options: png (binary image), svg (XML text), json (raw drawing data). Set Postman to save response as a file for binary formats."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Canvas (REST)",
+            "item": [
+                {
+                    "name": "27. Save Canvas",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var json = pm.response.json();",
+                                    "if (json.versionId) {",
+                                    "  pm.collectionVariables.set('versionId', json.versionId);",
+                                    "  console.log('versionId saved: ' + json.versionId);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/{{roomId}}/canvas/save",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "{{roomId}}",
+                                "canvas",
+                                "save"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"elements\": [],\n  \"isAutoSave\": false,\n  \"label\": \"Manual save v1\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Saves the current drawing elements and creates a versioned snapshot. 'elements' is the full drawing element array. 'isAutoSave': false = manual (labeled) save; true = auto-save. Test script saves versionId."
+                    }
+                },
+                {
+                    "name": "28. Get Canvas State (HTTP Sync Fallback)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/{{roomId}}/canvas/state",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "{{roomId}}",
+                                "canvas",
+                                "state"
+                            ]
+                        },
+                        "description": "Returns the full current drawing state as an array. HTTP fallback for reconnection sync — normally the frontend uses the Socket.IO 'request-sync' event instead."
+                    }
+                },
+                {
+                    "name": "29. List Canvas Versions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/{{roomId}}/canvas/versions?limit=20&type=all",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "{{roomId}}",
+                                "canvas",
+                                "versions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "20",
+                                    "description": "Max versions to return (max 50)"
+                                },
+                                {
+                                    "key": "type",
+                                    "value": "all",
+                                    "description": "Options: all, auto, manual"
+                                }
+                            ]
+                        },
+                        "description": "Lists canvas version snapshots (newest first). Elements are excluded from list — only metadata returned. Use Restore Version to apply a specific snapshot."
+                    }
+                },
+                {
+                    "name": "30. Restore Canvas Version",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rooms/{{roomId}}/canvas/restore/{{versionId}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rooms",
+                                "{{roomId}}",
+                                "canvas",
+                                "restore",
+                                "{{versionId}}"
+                            ]
+                        },
+                        "description": "Restores the canvas to a historical snapshot. Owner/moderator only. Automatically creates a pre-restore snapshot so you can undo. {{versionId}} is auto-saved by Save Canvas test script."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Notifications",
+            "item": [
+                {
+                    "name": "31. Get Notifications",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var json = pm.response.json();",
+                                    "if (json.notifications && json.notifications.length > 0) {",
+                                    "  pm.collectionVariables.set('notificationId', json.notifications[0]._id);",
+                                    "  console.log('notificationId saved: ' + json.notifications[0]._id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/notifications",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "notifications"
+                            ]
+                        },
+                        "description": "Returns all notifications for the authenticated user. Test script saves first notification's _id into {{notificationId}}."
+                    }
+                },
+                {
+                    "name": "32. Get Unread Count",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/notifications/unread/count",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "notifications",
+                                "unread",
+                                "count"
+                            ]
+                        },
+                        "description": "Returns the count of unread notifications for the authenticated user. Route: GET /api/notifications/unread/count"
+                    }
+                },
+                {
+                    "name": "33. Mark Notification as Read",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/notifications/{{notificationId}}/read",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "notifications",
+                                "{{notificationId}}",
+                                "read"
+                            ]
+                        },
+                        "description": "Marks a single notification as read. Route: POST /api/notifications/:id/read"
+                    }
+                },
+                {
+                    "name": "34. Mark All Notifications as Read",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/notifications/mark-all-read",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "notifications",
+                                "mark-all-read"
+                            ]
+                        },
+                        "description": "Marks all of the authenticated user's notifications as read in bulk."
+                    }
+                },
+                {
+                    "name": "35. Delete Notification",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/notifications/{{notificationId}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "notifications",
+                                "{{notificationId}}"
+                            ]
+                        },
+                        "description": "Permanently deletes a specific notification. Route: DELETE /api/notifications/:id"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "⚠️ WebSocket Only (Not REST)",
+            "item": [
+                {
+                    "name": "ℹ️ README — Real-time Features",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api"
+                            ]
+                        },
+                        "description": "The following features are handled EXCLUSIVELY via Socket.IO WebSocket and have NO REST equivalents:\n\n• Drawing (strokes, shapes, text, images, eraser)\n• Undo / Redo\n• Clear Canvas\n• Layers\n• Cursor position broadcast\n• Chat messages\n• User presence (joined/left)\n• Object locking\n• Canvas sync (request-sync event)\n\nTo test these, connect a Socket.IO client to ws://localhost:5000 with the JWT token in the auth handshake, then join a room and emit the appropriate events.\n\nKey socket events (roomSocket.js):\n- join-room\n- drawing-update\n- request-sync\n- cursor-move\n- send-message\n- element-lock / element-unlock\n- leave-room"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🧪 E2E Testing Scenarios",
+            "description": "Complete end-to-end test scenarios. Run each sub-folder top-to-bottom using the Postman Collection Runner. Variables are auto-chained between requests via test scripts. All scenarios require the backend running at {{base_url}} (default: http://localhost:5000).",
+            "item": [
+                {
+                    "name": "Scenario 1 — User Registration and Login Flow",
+                    "description": "Tests the full user lifecycle: register → verify email → login → view profile → update profile → change password → delete account.\n\nExpected Result: User successfully registers, logs in, manages profile, and deletes the account.",
+                    "item": [
+                        {
+                            "name": "S1-1. Register New User",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S1-1: Register returns success', function () {",
+                                            "  pm.response.to.have.status(201);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  pm.expect(json.message).to.include('Registration');",
+                                            "  console.log('✅ S1-1 Register: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/auth/register",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "auth",
+                                        "register"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"fullName\": \"E2E Test User\",\n  \"username\": \"e2etestuser\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"agreedToTerms\": true\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "Registers a new test user. Response should be 201 with success:true."
+                            }
+                        },
+                        {
+                            "name": "S1-2. Login (Get JWT)",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S1-2: Login returns JWT token', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  pm.expect(json.token).to.be.a('string');",
+                                            "  pm.collectionVariables.set('jwt_token', json.token);",
+                                            "  console.log('✅ S1-2 Login: PASSED — jwt_token saved');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/auth/login",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "auth",
+                                        "login"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "Logs in and saves jwt_token for subsequent requests.\n\nNOTE: Email must be verified first (see backend auto-verify logic for emails containing 'testuser')."
+                            }
+                        },
+                        {
+                            "name": "S1-3. Fetch User Profile",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S1-3: Profile returns user data', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  pm.expect(json.user).to.have.property('email');",
+                                            "  pm.expect(json.user.email).to.include('e2etestuser');",
+                                            "  console.log('✅ S1-3 Get Profile: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/auth/profile",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "auth",
+                                        "profile"
+                                    ]
+                                },
+                                "description": "Retrieves the authenticated user's full profile."
+                            }
+                        },
+                        {
+                            "name": "S1-4. Update Profile",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S1-4: Profile update succeeds', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  pm.expect(json.user.bio).to.equal('E2E test bio updated');",
+                                            "  console.log('✅ S1-4 Update Profile: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/auth/update-profile",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "auth",
+                                        "update-profile"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"displayName\": \"E2E Updated Name\",\n  \"bio\": \"E2E test bio updated\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "Updates bio and display name for the test user."
+                            }
+                        },
+                        {
+                            "name": "S1-5. Change Password",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S1-5: Password change succeeds', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  console.log('✅ S1-5 Change Password: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/auth/change-password",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "auth",
+                                        "change-password"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"currentPassword\": \"SecurePassword123!\",\n  \"newPassword\": \"SecurePassword123!\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "Changes password. Uses the original registration password as currentPassword."
+                            }
+                        },
+                        {
+                            "name": "S1-6. Delete Account",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S1-6: Account deletion succeeds', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  pm.expect(json.message).to.include('deleted');",
+                                            "  pm.collectionVariables.set('jwt_token', '');",
+                                            "  console.log('✅ S1-6 Delete Account: PASSED');",
+                                            "  console.log('✅ SCENARIO 1 COMPLETE');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "DELETE",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/auth/delete-account",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "auth",
+                                        "delete-account"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"password\": \"SecurePassword123!\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "Deletes the account using the NEW password (changed in S1-5)."
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Scenario 2 — Room Creation and Collaboration Flow",
+                    "description": "Tests the full room lifecycle: login → create room → list public rooms → join room → validate access → get participants → invite user → leave room.\n\nExpected Result: Users can create, join, invite participants, and leave collaborative rooms successfully.",
+                    "item": [
+                        {
+                            "name": "S2-1. Login",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S2-1: Login succeeds', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.token).to.be.a('string');",
+                                            "  pm.collectionVariables.set('jwt_token', json.token);",
+                                            "  console.log('✅ S2-1 Login: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/auth/login",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "auth",
+                                        "login"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "⚠️ Update email/password to match a verified account in your DB before running."
+                            }
+                        },
+                        {
+                            "name": "S2-2. Create Room",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S2-2: Room created successfully', function () {",
+                                            "  pm.response.to.have.status(201);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.room).to.have.property('_id');",
+                                            "  pm.expect(json.room).to.have.property('roomCode');",
+                                            "  pm.collectionVariables.set('roomId', json.room._id);",
+                                            "  pm.collectionVariables.set('roomCode', json.room.roomCode);",
+                                            "  console.log('✅ S2-2 Create Room: PASSED — roomId: ' + json.room._id + ', roomCode: ' + json.room.roomCode);",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/create",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "create"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"name\": \"E2E Test Room\",\n  \"description\": \"Created by E2E Scenario 2\",\n  \"isPublic\": true,\n  \"maxParticipants\": 10\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "Creates a public test room. Auto-saves roomId and roomCode."
+                            }
+                        },
+                        {
+                            "name": "S2-3. List Public Rooms",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S2-3: Public rooms list returned', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json).to.have.property('rooms');",
+                                            "  pm.expect(json.rooms).to.be.an('array');",
+                                            "  console.log('✅ S2-3 Public Rooms: PASSED — ' + json.rooms.length + ' rooms found');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/public?page=1&limit=10",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "public"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "page",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "key": "limit",
+                                            "value": "10"
+                                        }
+                                    ]
+                                },
+                                "description": "Lists public rooms. No auth required."
+                            }
+                        },
+                        {
+                            "name": "S2-4. Validate Room Access",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S2-4: Room validation returns access info', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json).to.have.property('room');",
+                                            "  console.log('✅ S2-4 Validate Room: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/{{roomId}}/validate",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "{{roomId}}",
+                                        "validate"
+                                    ]
+                                },
+                                "description": "Validates room existence and current user's access level."
+                            }
+                        },
+                        {
+                            "name": "S2-5. Get Room Participants",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S2-5: Participants list returned', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json).to.have.property('participants');",
+                                            "  pm.expect(json.participants).to.be.an('array');",
+                                            "  pm.expect(json.participants.length).to.be.at.least(1);",
+                                            "  console.log('✅ S2-5 Participants: PASSED — ' + json.participants.length + ' participant(s)');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/{{roomId}}/participants",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "{{roomId}}",
+                                        "participants"
+                                    ]
+                                },
+                                "description": "Gets the participant list for the created room."
+                            }
+                        },
+                        {
+                            "name": "S2-6. Leave Room",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S2-6: Leave room succeeds', function () {",
+                                            "  var json = pm.response.json();",
+                                            "  // Owners may get a specific message — accept either success or owner error",
+                                            "  var isSuccess = pm.response.code === 200 && json.success;",
+                                            "  var isOwnerBlocked = json.message && json.message.toLowerCase().includes('owner');",
+                                            "  pm.expect(isSuccess || isOwnerBlocked).to.be.true;",
+                                            "  console.log('✅ S2-6 Leave Room: PASSED — ' + json.message);",
+                                            "  console.log('✅ SCENARIO 2 COMPLETE');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/{{roomId}}/leave",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "{{roomId}}",
+                                        "leave"
+                                    ]
+                                },
+                                "description": "Leaves the room. Note: room owners cannot leave — they must delete the room. This test accepts either outcome."
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Scenario 3 — Canvas Drawing and Persistence Flow",
+                    "description": "Tests canvas save/retrieve/version/restore/export: login → create/join room → save canvas → get state → list versions → restore version → export.\n\nExpected Result: Canvas drawings are saved, retrieved, versioned, restored, and exported successfully.",
+                    "item": [
+                        {
+                            "name": "S3-1. Login",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S3-1: Login succeeds', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.token).to.be.a('string');",
+                                            "  pm.collectionVariables.set('jwt_token', json.token);",
+                                            "  console.log('✅ S3-1 Login: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/auth/login",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "auth",
+                                        "login"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "⚠️ Update email/password before running."
+                            }
+                        },
+                        {
+                            "name": "S3-2. Create Room",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S3-2: Room created', function () {",
+                                            "  pm.response.to.have.status(201);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.collectionVariables.set('roomId', json.room._id);",
+                                            "  console.log('✅ S3-2 Create Room: PASSED — roomId: ' + json.room._id);",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/create",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "create"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"name\": \"Canvas E2E Room\",\n  \"description\": \"Scenario 3 test room\",\n  \"isPublic\": true,\n  \"maxParticipants\": 5\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "Creates a room for canvas testing."
+                            }
+                        },
+                        {
+                            "name": "S3-3. Save Canvas",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S3-3: Canvas saved with versionId', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  pm.expect(json.versionId).to.be.a('string');",
+                                            "  pm.collectionVariables.set('versionId', json.versionId);",
+                                            "  console.log('✅ S3-3 Save Canvas: PASSED — versionId: ' + json.versionId);",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/{{roomId}}/canvas/save",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "{{roomId}}",
+                                        "canvas",
+                                        "save"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"elements\": [\n    { \"type\": \"rect\", \"x\": 10, \"y\": 10, \"width\": 100, \"height\": 50, \"color\": \"#ff0000\" }\n  ],\n  \"isAutoSave\": false,\n  \"label\": \"E2E Test Save v1\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "Saves a test drawing with a rectangle element. Auto-saves versionId."
+                            }
+                        },
+                        {
+                            "name": "S3-4. Get Canvas State",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S3-4: Canvas state returned', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  console.log('✅ S3-4 Canvas State: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/{{roomId}}/canvas/state",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "{{roomId}}",
+                                        "canvas",
+                                        "state"
+                                    ]
+                                },
+                                "description": "Retrieves the current canvas elements array."
+                            }
+                        },
+                        {
+                            "name": "S3-5. List Canvas Versions",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S3-5: Canvas versions listed', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  pm.expect(json.versions).to.be.an('array');",
+                                            "  pm.expect(json.versions.length).to.be.at.least(1);",
+                                            "  console.log('✅ S3-5 List Versions: PASSED — ' + json.versions.length + ' version(s)');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/{{roomId}}/canvas/versions?limit=10&type=all",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "{{roomId}}",
+                                        "canvas",
+                                        "versions"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "limit",
+                                            "value": "10"
+                                        },
+                                        {
+                                            "key": "type",
+                                            "value": "all"
+                                        }
+                                    ]
+                                },
+                                "description": "Lists all canvas version snapshots for the room."
+                            }
+                        },
+                        {
+                            "name": "S3-6. Restore Canvas Version",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S3-6: Canvas version restored', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  console.log('✅ S3-6 Restore Version: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/{{roomId}}/canvas/restore/{{versionId}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "{{roomId}}",
+                                        "canvas",
+                                        "restore",
+                                        "{{versionId}}"
+                                    ]
+                                },
+                                "description": "Restores the canvas to the version saved in S3-3. Uses {{versionId}} auto-saved by S3-3."
+                            }
+                        },
+                        {
+                            "name": "S3-7. Export Canvas",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S3-7: Canvas export returns data', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  console.log('✅ S3-7 Export Canvas: PASSED');",
+                                            "  console.log('✅ SCENARIO 3 COMPLETE');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/{{roomId}}/export?format=json",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "{{roomId}}",
+                                        "export"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "format",
+                                            "value": "json"
+                                        }
+                                    ]
+                                },
+                                "description": "Exports the canvas as JSON. Use format=png or format=svg for binary/SVG output."
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Scenario 4 — Notification Handling Flow",
+                    "description": "Tests full notification lifecycle: login → get notifications → check unread count → mark as read → delete.\n\nExpected Result: Notifications are retrieved, marked as read, and deleted successfully.",
+                    "item": [
+                        {
+                            "name": "S4-1. Login",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S4-1: Login succeeds', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.token).to.be.a('string');",
+                                            "  pm.collectionVariables.set('jwt_token', json.token);",
+                                            "  console.log('✅ S4-1 Login: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/auth/login",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "auth",
+                                        "login"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "⚠️ Update email/password before running."
+                            }
+                        },
+                        {
+                            "name": "S4-2. Get Notifications",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S4-2: Notifications list returned', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  pm.expect(json.notifications).to.be.an('array');",
+                                            "  if (json.notifications.length > 0) {",
+                                            "    pm.collectionVariables.set('notificationId', json.notifications[0]._id);",
+                                            "    console.log('✅ S4-2 Notifications: PASSED — notificationId saved: ' + json.notifications[0]._id);",
+                                            "  } else {",
+                                            "    console.log('⚠️ S4-2 Notifications: PASSED but no notifications exist — S4-4 and S4-5 may fail');",
+                                            "  }",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/notifications",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "notifications"
+                                    ]
+                                },
+                                "description": "Retrieves all notifications. Auto-saves first notification's _id."
+                            }
+                        },
+                        {
+                            "name": "S4-3. Get Unread Count",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S4-3: Unread count returned', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  pm.expect(json).to.have.property('count');",
+                                            "  pm.expect(json.count).to.be.a('number');",
+                                            "  console.log('✅ S4-3 Unread Count: PASSED — count: ' + json.count);",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/notifications/unread/count",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "notifications",
+                                        "unread",
+                                        "count"
+                                    ]
+                                },
+                                "description": "Returns the number of unread notifications."
+                            }
+                        },
+                        {
+                            "name": "S4-4. Mark Notification as Read",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S4-4: Notification marked as read', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  console.log('✅ S4-4 Mark as Read: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/notifications/{{notificationId}}/read",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "notifications",
+                                        "{{notificationId}}",
+                                        "read"
+                                    ]
+                                },
+                                "description": "Marks the notification from S4-2 as read. Requires {{notificationId}} to be set."
+                            }
+                        },
+                        {
+                            "name": "S4-5. Delete Notification",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S4-5: Notification deleted', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  pm.collectionVariables.set('notificationId', '');",
+                                            "  console.log('✅ S4-5 Delete Notification: PASSED');",
+                                            "  console.log('✅ SCENARIO 4 COMPLETE');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "DELETE",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/notifications/{{notificationId}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "notifications",
+                                        "{{notificationId}}"
+                                    ]
+                                },
+                                "description": "Permanently deletes the notification from S4-2."
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Scenario 5 — Complete System Workflow",
+                    "description": "Full end-to-end system test covering all major subsystems: register → login → create room → save canvas → export canvas → leave room.\n\nExpected Result: The entire system workflow functions correctly without errors.",
+                    "item": [
+                        {
+                            "name": "S5-1. Register User",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S5-1: Registration succeeds', function () {",
+                                            "  pm.response.to.have.status(201);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  console.log('✅ S5-1 Register: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/auth/register",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "auth",
+                                        "register"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"fullName\": \"E2E System User\",\n  \"username\": \"e2esystemuser\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"agreedToTerms\": true\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "Registers a new system test user. Email contains 'testuser' so it auto-verifies."
+                            }
+                        },
+                        {
+                            "name": "S5-2. Login",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S5-2: Login and JWT received', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  pm.expect(json.token).to.be.a('string');",
+                                            "  pm.collectionVariables.set('jwt_token', json.token);",
+                                            "  console.log('✅ S5-2 Login: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/auth/login",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "auth",
+                                        "login"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePassword123!\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "Logs in the user registered in S5-1."
+                            }
+                        },
+                        {
+                            "name": "S5-3. Create Room",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S5-3: Room created', function () {",
+                                            "  pm.response.to.have.status(201);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.room._id).to.be.a('string');",
+                                            "  pm.collectionVariables.set('roomId', json.room._id);",
+                                            "  pm.collectionVariables.set('roomCode', json.room.roomCode);",
+                                            "  console.log('✅ S5-3 Create Room: PASSED — roomId: ' + json.room._id);",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/create",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "create"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"name\": \"Complete System Test Room\",\n  \"description\": \"E2E Scenario 5 room\",\n  \"isPublic\": true,\n  \"maxParticipants\": 5\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "Creates the room for the complete system test."
+                            }
+                        },
+                        {
+                            "name": "S5-4. Save Canvas Drawing",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S5-4: Canvas saved', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  if (json.versionId) pm.collectionVariables.set('versionId', json.versionId);",
+                                            "  console.log('✅ S5-4 Save Canvas: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/{{roomId}}/canvas/save",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "{{roomId}}",
+                                        "canvas",
+                                        "save"
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"elements\": [\n    { \"type\": \"circle\", \"cx\": 200, \"cy\": 200, \"r\": 80, \"color\": \"#3b82f6\" },\n    { \"type\": \"text\", \"content\": \"Hello World\", \"x\": 150, \"y\": 350, \"fontSize\": 24 }\n  ],\n  \"isAutoSave\": false,\n  \"label\": \"System Test Save\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "description": "Saves a canvas with a circle and text element."
+                            }
+                        },
+                        {
+                            "name": "S5-5. Export Canvas",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S5-5: Canvas exported successfully', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  console.log('✅ S5-5 Export Canvas: PASSED');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/{{roomId}}/export?format=json",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "{{roomId}}",
+                                        "export"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "format",
+                                            "value": "json"
+                                        }
+                                    ]
+                                },
+                                "description": "Exports the canvas as JSON. Change format to 'png' or 'svg' as needed."
+                            }
+                        },
+                        {
+                            "name": "S5-6. Delete Room (Cleanup)",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('S5-6: Room deleted / system test complete', function () {",
+                                            "  pm.response.to.have.status(200);",
+                                            "  var json = pm.response.json();",
+                                            "  pm.expect(json.success).to.be.true;",
+                                            "  pm.collectionVariables.set('roomId', '');",
+                                            "  pm.collectionVariables.set('roomCode', '');",
+                                            "  console.log('✅ S5-6 Delete Room: PASSED');",
+                                            "  console.log('');",
+                                            "  console.log('🎉 SCENARIO 5 COMPLETE — ALL SYSTEMS OPERATIONAL');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "DELETE",
+                                "header": [
+                                    {
+                                        "key": "Authorization",
+                                        "value": "Bearer {{jwt_token}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/api/rooms/{{roomId}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "rooms",
+                                        "{{roomId}}"
+                                    ]
+                                },
+                                "description": "Deletes the room created in S5-3. Cleans up roomId and roomCode variables."
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

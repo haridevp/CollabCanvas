@@ -1,0 +1,28 @@
+$kind: http-request
+description: Registers a new test user. Response should be 201 with success:true.
+url: "{{base_url}}/api/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "fullName": "E2E Test User",
+      "username": "e2etestuser",
+      "email": "john.doe@example.com",
+      "password": "SecurePassword123!",
+      "agreedToTerms": true
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S1-1: Register returns success', function () {
+        pm.response.to.have.status(201);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        pm.expect(json.message).to.include('Registration');
+        console.log('✅ S1-1 Register: PASSED');
+      });
+    language: text/javascript
+order: 1000

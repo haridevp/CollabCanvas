@@ -1,0 +1,17 @@
+$kind: http-request
+description: Validates room existence and current user's access level.
+url: "{{base_url}}/api/rooms/{{roomId}}/validate"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S2-4: Room validation returns access info', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json).to.have.property('room');
+        console.log('✅ S2-4 Validate Room: PASSED');
+      });
+    language: text/javascript
+order: 4000

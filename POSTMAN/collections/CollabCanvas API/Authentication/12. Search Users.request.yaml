@@ -1,0 +1,11 @@
+$kind: http-request
+description: "Searches users by username or displayName. Query param 'q' must be
+  at least 2 characters. Returns up to 20 results excluding the requesting user.
+  Route: GET /api/auth/search?q=<query>"
+url: "{{base_url}}/api/auth/search?q=john"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+queryParams:
+  q: john
+order: 12000

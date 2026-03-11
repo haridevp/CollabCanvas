@@ -1,0 +1,8 @@
+$kind: http-request
+description: "Returns the participant list for a room. Route: GET
+  /api/rooms/:id/participants"
+url: "{{base_url}}/api/rooms/{{roomId}}/participants"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+order: 6000

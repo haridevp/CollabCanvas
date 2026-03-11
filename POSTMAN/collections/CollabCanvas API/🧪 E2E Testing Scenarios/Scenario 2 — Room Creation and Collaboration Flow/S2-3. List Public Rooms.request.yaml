@@ -1,0 +1,19 @@
+$kind: http-request
+description: Lists public rooms. No auth required.
+url: "{{base_url}}/api/rooms/public?page=1&limit=10"
+method: GET
+queryParams:
+  page: "1"
+  limit: "10"
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('S2-3: Public rooms list returned', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json).to.have.property('rooms');
+        pm.expect(json.rooms).to.be.an('array');
+        console.log('✅ S2-3 Public Rooms: PASSED — ' + json.rooms.length + ' rooms found');
+      });
+    language: text/javascript
+order: 3000

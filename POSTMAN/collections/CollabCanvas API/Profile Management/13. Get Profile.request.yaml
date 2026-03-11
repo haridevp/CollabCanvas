@@ -1,0 +1,9 @@
+$kind: http-request
+description: "Returns the authenticated user's full profile. Route: GET
+  /api/auth/profile (all profile endpoints live under /api/auth/, not
+  /api/profile/)"
+url: "{{base_url}}/api/auth/profile"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+order: 1000

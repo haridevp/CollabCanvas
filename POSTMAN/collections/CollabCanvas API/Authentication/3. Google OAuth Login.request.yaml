@@ -1,0 +1,15 @@
+$kind: http-request
+description: "Authenticates via Google OAuth. Body field: 'credential' (the
+  Google ID token string from the Google Sign-In button). Route: POST
+  /api/auth/google-login"
+url: "{{base_url}}/api/auth/google-login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "credential": "eyJhbGciOiJSU..."
+    }
+order: 3000

@@ -1,0 +1,26 @@
+$kind: http-request
+description: Updates bio and display name for the test user.
+url: "{{base_url}}/api/auth/update-profile"
+method: PUT
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "displayName": "E2E Updated Name",
+      "bio": "E2E test bio updated"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S1-4: Profile update succeeds', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        pm.expect(json.user.bio).to.equal('E2E test bio updated');
+        console.log('✅ S1-4 Update Profile: PASSED');
+      });
+    language: text/javascript
+order: 4000

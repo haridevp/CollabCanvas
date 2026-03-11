@@ -1,0 +1,27 @@
+$kind: http-request
+description: Joins a room using its short alphanumeric room code (e.g.
+  'AB12CD34'). Set {{roomCode}} in collection variables or replace inline. Leave
+  'password' blank for public rooms. The test script auto-saves room._id into
+  {{roomId}}.
+url: "{{base_url}}/api/rooms/join"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "roomCode": "{{roomCode}}",
+      "password": ""
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      var json = pm.response.json();
+      if (json.room && json.room._id) {
+        pm.collectionVariables.set('roomId', json.room._id);
+        console.log('roomId auto-saved from join: ' + json.room._id);
+      }
+    language: text/javascript
+order: 2000

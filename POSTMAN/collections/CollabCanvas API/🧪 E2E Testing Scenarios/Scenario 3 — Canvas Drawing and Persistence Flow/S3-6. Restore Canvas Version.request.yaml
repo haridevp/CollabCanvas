@@ -1,0 +1,18 @@
+$kind: http-request
+description: Restores the canvas to the version saved in S3-3. Uses
+  {{versionId}} auto-saved by S3-3.
+url: "{{base_url}}/api/rooms/{{roomId}}/canvas/restore/{{versionId}}"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S3-6: Canvas version restored', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        console.log('✅ S3-6 Restore Version: PASSED');
+      });
+    language: text/javascript
+order: 6000

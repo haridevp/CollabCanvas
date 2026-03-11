@@ -1,0 +1,9 @@
+$kind: collection
+description: >-
+  Tests the full user lifecycle: register → verify email → login → view profile
+  → update profile → change password → delete account.
+
+
+  Expected Result: User successfully registers, logs in, manages profile, and
+  deletes the account.
+order: 1000

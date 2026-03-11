@@ -1,0 +1,7 @@
+$kind: http-request
+description: "Marks a single notification as read. Route: POST /api/notifications/:id/read"
+url: "{{base_url}}/api/notifications/{{notificationId}}/read"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+order: 3000

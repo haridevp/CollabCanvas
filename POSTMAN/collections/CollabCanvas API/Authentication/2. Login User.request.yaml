@@ -1,0 +1,24 @@
+$kind: http-request
+description: Logs in and auto-saves JWT to {{jwt_token}}. If 2FA is enabled,
+  response returns requiresTwoFactor:true — proceed to Verify 2FA instead.
+url: "{{base_url}}/api/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "john.doe@example.com",
+      "password": "SecurePassword123!"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      var json = pm.response.json();
+      if (json.token) {
+        pm.collectionVariables.set('jwt_token', json.token);
+        console.log('jwt_token saved');
+      }
+    language: text/javascript
+order: 2000

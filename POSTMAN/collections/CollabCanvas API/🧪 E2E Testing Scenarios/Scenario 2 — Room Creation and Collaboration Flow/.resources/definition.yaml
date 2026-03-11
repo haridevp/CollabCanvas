@@ -1,0 +1,9 @@
+$kind: collection
+description: >-
+  Tests the full room lifecycle: login → create room → list public rooms → join
+  room → validate access → get participants → invite user → leave room.
+
+
+  Expected Result: Users can create, join, invite participants, and leave
+  collaborative rooms successfully.
+order: 2000

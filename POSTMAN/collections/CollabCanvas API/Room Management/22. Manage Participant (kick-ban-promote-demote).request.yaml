@@ -1,0 +1,17 @@
+$kind: http-request
+name: 22. Manage Participant (kick/ban/promote/demote)
+description: "Admin actions on a participant. 'action' options: kick, ban,
+  promote (to moderator), demote (to participant). Only owners/moderators can
+  perform actions. Route: POST /api/rooms/:id/participants/:userId"
+url: "{{base_url}}/api/rooms/{{roomId}}/participants/{{participantId}}"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "action": "kick"
+    }
+order: 8000

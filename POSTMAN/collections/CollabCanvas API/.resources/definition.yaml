@@ -1,0 +1,29 @@
+$kind: collection
+description: >-
+  Complete and verified REST API collection for CollabCanvas. All routes are
+  confirmed against auth.js, rooms.js, notifications.js, and
+  canvasController.js.
+
+
+  Base URL: http://localhost:5000
+
+
+  Test flow:
+
+  1. Login → jwt_token saved automatically
+
+  2. Create Room OR Join Room → roomId saved automatically
+
+  3. All other endpoints just work
+
+
+  NOTE: Drawing (strokes, shapes, text, layers, undo/redo, cursor, chat) is
+  handled exclusively via Socket.IO WebSocket, NOT REST endpoints.
+variables:
+  base_url: http://localhost:5000
+  jwt_token: ""
+  roomId: ""
+  roomCode: A1B2C3D4
+  versionId: ""
+  notificationId: ""
+  participantId: ""

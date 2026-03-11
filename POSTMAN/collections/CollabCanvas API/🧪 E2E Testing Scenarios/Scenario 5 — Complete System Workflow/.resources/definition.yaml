@@ -1,0 +1,9 @@
+$kind: collection
+description: >-
+  Full end-to-end system test covering all major subsystems: register → login →
+  create room → save canvas → export canvas → leave room.
+
+
+  Expected Result: The entire system workflow functions correctly without
+  errors.
+order: 5000

@@ -1,0 +1,9 @@
+$kind: collection
+description: >-
+  Tests canvas save/retrieve/version/restore/export: login → create/join room →
+  save canvas → get state → list versions → restore version → export.
+
+
+  Expected Result: Canvas drawings are saved, retrieved, versioned, restored,
+  and exported successfully.
+order: 3000

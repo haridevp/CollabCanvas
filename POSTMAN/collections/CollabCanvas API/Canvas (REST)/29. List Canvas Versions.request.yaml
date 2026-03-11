@@ -1,0 +1,16 @@
+$kind: http-request
+description: Lists canvas version snapshots (newest first). Elements are
+  excluded from list — only metadata returned. Use Restore Version to apply a
+  specific snapshot.
+url: "{{base_url}}/api/rooms/{{roomId}}/canvas/versions?limit=20&type=all"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+queryParams:
+  - key: limit
+    value: "20"
+    description: Max versions to return (max 50)
+  - key: type
+    value: all
+    description: "Options: all, auto, manual"
+order: 3000

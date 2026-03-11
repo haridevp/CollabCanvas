@@ -1,0 +1,9 @@
+$kind: collection
+description: >-
+  Tests full notification lifecycle: login → get notifications → check unread
+  count → mark as read → delete.
+
+
+  Expected Result: Notifications are retrieved, marked as read, and deleted
+  successfully.
+order: 4000

@@ -1,0 +1,8 @@
+$kind: http-request
+description: Removes the authenticated user from the room. Owners cannot leave —
+  they must delete the room instead.
+url: "{{base_url}}/api/rooms/{{roomId}}/leave"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+order: 9000

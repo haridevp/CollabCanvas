@@ -1,0 +1,8 @@
+$kind: http-request
+description: "Returns all rooms the authenticated user has created or joined
+  (excluding banned rooms). Route: GET /api/rooms/my-rooms"
+url: "{{base_url}}/api/rooms/my-rooms"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+order: 5000

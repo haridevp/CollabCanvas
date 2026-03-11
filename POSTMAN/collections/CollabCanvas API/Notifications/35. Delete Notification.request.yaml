@@ -1,0 +1,8 @@
+$kind: http-request
+description: "Permanently deletes a specific notification. Route: DELETE
+  /api/notifications/:id"
+url: "{{base_url}}/api/notifications/{{notificationId}}"
+method: DELETE
+headers:
+  Authorization: Bearer {{jwt_token}}
+order: 5000

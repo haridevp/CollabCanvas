@@ -1,0 +1,6 @@
+$kind: collection
+description: "Complete end-to-end test scenarios. Run each sub-folder
+  top-to-bottom using the Postman Collection Runner. Variables are auto-chained
+  between requests via test scripts. All scenarios require the backend running
+  at {{base_url}} (default: http://localhost:5000)."
+order: 7000

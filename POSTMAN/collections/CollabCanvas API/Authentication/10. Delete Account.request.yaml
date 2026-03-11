@@ -1,0 +1,15 @@
+$kind: http-request
+description: "Permanently deletes the authenticated user's account. Route:
+  DELETE /api/auth/delete-account"
+url: "{{base_url}}/api/auth/delete-account"
+method: DELETE
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "password": "SecurePassword123!"
+    }
+order: 10000

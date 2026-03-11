@@ -1,0 +1,18 @@
+$kind: http-request
+description: Marks the notification from S4-2 as read. Requires
+  {{notificationId}} to be set.
+url: "{{base_url}}/api/notifications/{{notificationId}}/read"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S4-4: Notification marked as read', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        console.log('✅ S4-4 Mark as Read: PASSED');
+      });
+    language: text/javascript
+order: 4000

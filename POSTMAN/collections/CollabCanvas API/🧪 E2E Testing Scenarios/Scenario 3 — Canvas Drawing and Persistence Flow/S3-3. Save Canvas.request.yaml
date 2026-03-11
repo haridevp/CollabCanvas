@@ -1,0 +1,30 @@
+$kind: http-request
+description: Saves a test drawing with a rectangle element. Auto-saves versionId.
+url: "{{base_url}}/api/rooms/{{roomId}}/canvas/save"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: >-
+    {
+      "elements": [
+        { "type": "rect", "x": 10, "y": 10, "width": 100, "height": 50, "color": "#ff0000" }
+      ],
+      "isAutoSave": false,
+      "label": "E2E Test Save v1"
+    }
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('S3-3: Canvas saved with versionId', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        pm.expect(json.versionId).to.be.a('string');
+        pm.collectionVariables.set('versionId', json.versionId);
+        console.log('✅ S3-3 Save Canvas: PASSED — versionId: ' + json.versionId);
+      });
+    language: text/javascript
+order: 3000

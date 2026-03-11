@@ -1,0 +1,14 @@
+$kind: http-request
+description: Enables or disables Two-Factor Authentication for the authenticated user.
+url: "{{base_url}}/api/auth/toggle-2fa"
+method: PUT
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "enable": true
+    }
+order: 6000

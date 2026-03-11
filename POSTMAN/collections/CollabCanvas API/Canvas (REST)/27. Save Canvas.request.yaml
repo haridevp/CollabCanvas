@@ -1,0 +1,27 @@
+$kind: http-request
+description: "Saves the current drawing elements and creates a versioned
+  snapshot. 'elements' is the full drawing element array. 'isAutoSave': false =
+  manual (labeled) save; true = auto-save. Test script saves versionId."
+url: "{{base_url}}/api/rooms/{{roomId}}/canvas/save"
+method: POST
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "elements": [],
+      "isAutoSave": false,
+      "label": "Manual save v1"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      var json = pm.response.json();
+      if (json.versionId) {
+        pm.collectionVariables.set('versionId', json.versionId);
+        console.log('versionId saved: ' + json.versionId);
+      }
+    language: text/javascript
+order: 1000

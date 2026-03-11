@@ -1,0 +1,26 @@
+$kind: http-request
+description: "Updates profile fields. All fields optional. 'avatar' accepts a
+  URL or base64 string. 'notificationSettings' keys: email, push, reminders,
+  marketing, securityAlerts, soundEnabled, desktopNotifications,
+  notificationFrequency. Route: PUT /api/auth/update-profile"
+url: "{{base_url}}/api/auth/update-profile"
+method: PUT
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "displayName": "John D.",
+      "bio": "Updated bio text.",
+      "avatar": "https://example.com/avatar.png",
+      "notificationSettings": {
+        "email": true,
+        "push": true,
+        "soundEnabled": true,
+        "desktopNotifications": true,
+        "notificationFrequency": "realtime"
+      }
+    }
+order: 2000

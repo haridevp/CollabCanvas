@@ -1,0 +1,19 @@
+$kind: http-request
+description: Gets the participant list for the created room.
+url: "{{base_url}}/api/rooms/{{roomId}}/participants"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('S2-5: Participants list returned', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json).to.have.property('participants');
+        pm.expect(json.participants).to.be.an('array');
+        pm.expect(json.participants.length).to.be.at.least(1);
+        console.log('✅ S2-5 Participants: PASSED — ' + json.participants.length + ' participant(s)');
+      });
+    language: text/javascript
+order: 5000

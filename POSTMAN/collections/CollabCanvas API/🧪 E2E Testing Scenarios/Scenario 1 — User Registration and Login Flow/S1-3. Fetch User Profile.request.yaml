@@ -1,0 +1,19 @@
+$kind: http-request
+description: Retrieves the authenticated user's full profile.
+url: "{{base_url}}/api/auth/profile"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('S1-3: Profile returns user data', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        pm.expect(json.user).to.have.property('email');
+        pm.expect(json.user.email).to.include('e2etestuser');
+        console.log('✅ S1-3 Get Profile: PASSED');
+      });
+    language: text/javascript
+order: 3000

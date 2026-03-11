@@ -1,0 +1,22 @@
+$kind: http-request
+description: Lists all canvas version snapshots for the room.
+url: "{{base_url}}/api/rooms/{{roomId}}/canvas/versions?limit=10&type=all"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+queryParams:
+  limit: "10"
+  type: all
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('S3-5: Canvas versions listed', function () {
+        pm.response.to.have.status(200);
+        var json = pm.response.json();
+        pm.expect(json.success).to.be.true;
+        pm.expect(json.versions).to.be.an('array');
+        pm.expect(json.versions.length).to.be.at.least(1);
+        console.log('✅ S3-5 List Versions: PASSED — ' + json.versions.length + ' version(s)');
+      });
+    language: text/javascript
+order: 5000

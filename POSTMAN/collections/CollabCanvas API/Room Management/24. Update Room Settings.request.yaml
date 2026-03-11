@@ -1,0 +1,20 @@
+$kind: http-request
+description: Updates room settings. Owner only. Use 'isPublic' (boolean) —
+  backend translates it to the 'visibility' field. Protected fields (_id, owner,
+  roomCode, participants, isActive, drawingData) cannot be updated.
+url: "{{base_url}}/api/rooms/{{roomId}}"
+method: PUT
+headers:
+  Authorization: Bearer {{jwt_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Updated Room Name",
+      "description": "New description",
+      "isPublic": false,
+      "password": "SecurePassword123!",
+      "maxParticipants": 20
+    }
+order: 10000

@@ -1,0 +1,14 @@
+$kind: http-request
+name: 26. Export Canvas (PNG/SVG/JSON)
+description: "Exports the current canvas drawing. 'format' options: png (binary
+  image), svg (XML text), json (raw drawing data). Set Postman to save response
+  as a file for binary formats."
+url: "{{base_url}}/api/rooms/{{roomId}}/export?format=png"
+method: GET
+headers:
+  Authorization: Bearer {{jwt_token}}
+queryParams:
+  - key: format
+    value: png
+    description: "Options: png, svg, json"
+order: 12000
