@@ -157,23 +157,28 @@ const Dashboard = () => {
    */
   const getDerivedRooms = () => {
     switch (activeTab) {
-      case 'my-rooms':
+      case 'my-rooms': {
         // My Rooms simply returns the rooms the user is part of
         return myRooms;
-      case 'public':
+      }
+      case 'public': {
         // Rooms Gallery returns all public rooms
         return publicRooms;
-      case 'recent':
+      }
+      case 'recent': {
         // Recent filters myRooms for rooms updated in the last 7 days (or just sorted by newest)
         // We'll return myRooms and rely on the sorting, optionally filtering out very old ones
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
         return myRooms.filter(r => new Date(r.updatedAt) > oneWeekAgo);
-      case 'bookmarked':
+      }
+      case 'bookmarked': {
         // Bookmarked filters myRooms for bookmarked ones
         return myRooms.filter(r => bookmarkedRoomIds.has(r.id));
-      default:
+      }
+      default: {
         return myRooms;
+      }
     }
   };
 
@@ -181,7 +186,7 @@ const Dashboard = () => {
    * Applies search filtering and sorting rules
    */
   const getProcessedRooms = () => {
-    let result = getDerivedRooms().filter(room =>
+    const result = getDerivedRooms().filter(room =>
       room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (room.description || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -461,8 +466,8 @@ const Dashboard = () => {
                           {activeTab !== 'public' && (
                             <button
                               className={`p-2 rounded-lg transition-colors border ${bookmarkedRoomIds.has(room.id)
-                                  ? 'bg-yellow-50 border-yellow-200 text-yellow-600 dark:bg-yellow-900/20 dark:border-yellow-900/50'
-                                  : 'border-slate-200 text-slate-400 hover:text-yellow-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700'
+                                ? 'bg-yellow-50 border-yellow-200 text-yellow-600 dark:bg-yellow-900/20 dark:border-yellow-900/50'
+                                : 'border-slate-200 text-slate-400 hover:text-yellow-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700'
                                 }`}
                               onClick={(e) => handleBookmarkToggle(room.id, e)}
                               title={bookmarkedRoomIds.has(room.id) ? "Remove bookmark" : "Add bookmark"}

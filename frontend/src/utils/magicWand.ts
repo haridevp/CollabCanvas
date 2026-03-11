@@ -8,22 +8,22 @@ const distanceBetween = (p1: Point, p2: Point) => Math.sqrt(Math.pow(p2.x - p1.x
  * Wand tool threshold parameter. Max pixel distance an element can be from
  * a point or other clustered element to be "grouped" via Magic Wand.
  */
-const WAND_TOLERANCE = 50; 
+const WAND_TOLERANCE = 50;
 
 /**
  * Returns the bounding centers of various element types to determine clustering.
  */
-const getElementBoundings = (el: DrawingElement): {centerX: number, centerY: number, maxRadius: number} => {
+const getElementBoundings = (el: DrawingElement): { centerX: number, centerY: number, maxRadius: number } => {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    
+
     // Calculate actual bounds safely based on type and coordinates
     if (el.type === 'pencil' || el.type === 'line' || el.type === 'arrow' || el.type === 'eraser') {
         if (el.points && el.points.length > 0) {
             el.points.forEach(p => {
-              minX = Math.min(minX, p.x);
-              minY = Math.min(minY, p.y);
-              maxX = Math.max(maxX, p.x);
-              maxY = Math.max(maxY, p.y);
+                minX = Math.min(minX, p.x);
+                minY = Math.min(minY, p.y);
+                maxX = Math.max(maxX, p.x);
+                maxY = Math.max(maxY, p.y);
             });
         }
     } else if (el.type === 'rectangle' || el.type === 'circle' || el.type === 'image') {
@@ -32,7 +32,7 @@ const getElementBoundings = (el: DrawingElement): {centerX: number, centerY: num
         const by = el.y || 0;
         const width = el.width || 0;
         const height = el.height || 0;
-        
+
         if (width < 0) minX = Math.min(minX, bx + width); else minX = bx;
         if (height < 0) minY = Math.min(minY, by + height); else minY = by;
         maxX = Math.max(maxX, bx + Math.abs(width), bx);
@@ -64,12 +64,12 @@ const getElementBoundings = (el: DrawingElement): {centerX: number, centerY: num
  *    whose bounding box edges or cluster distances are within WAND_TOLERANCE.
  */
 export const performMagicWandSelection = (
-    clickPoint: Point, 
-    allElements: DrawingElement[], 
+    clickPoint: Point,
+    allElements: DrawingElement[],
     zoomLevel: number = 1
 ): string[] => {
     // 1. Identify seed element
-    let seedIds = new Set<string>();
+    const seedIds = new Set<string>();
 
     // First try exact hit test
     for (let i = allElements.length - 1; i >= 0; i--) {
@@ -90,7 +90,7 @@ export const performMagicWandSelection = (
             const dist = distanceBetween(clickPoint, { x: bounds.centerX, y: bounds.centerY });
             // Approximate distance to outer edge of element
             const edgeDist = Math.max(0, dist - bounds.maxRadius);
-            
+
             if (edgeDist < (WAND_TOLERANCE / zoomLevel) && edgeDist < closestDist) {
                 closestDist = edgeDist;
                 closestId = el.id;
@@ -120,7 +120,7 @@ export const performMagicWandSelection = (
             if (selectedIds.has(el.id)) return;
 
             const elBounds = boundsCache.get(el.id)!;
-            
+
             // Check distance against all *currently clustered* elements
             for (const clusteredId of selectedIds) {
                 const clusterBounds = boundsCache.get(clusteredId)!;
@@ -128,14 +128,14 @@ export const performMagicWandSelection = (
                     { x: elBounds.centerX, y: elBounds.centerY },
                     { x: clusterBounds.centerX, y: clusterBounds.centerY }
                 );
-                
+
                 // If the gap between their bounding radii is smaller than WAND_TOLERANCE, group them
                 const gap = dist - elBounds.maxRadius - clusterBounds.maxRadius;
-                
+
                 if (gap <= (WAND_TOLERANCE / zoomLevel)) {
                     selectedIds.add(el.id);
                     newlyAdded = true;
-                    break; 
+                    break;
                 }
             }
         });
