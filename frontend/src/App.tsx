@@ -7,6 +7,7 @@ import RegistrationSuccess from './pages/RegistrationSuccess'; // NEW
 import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import LandingPage from './pages/LandingPage';
 
 import Dashboard from './pages/Dashboard';
 import ProfilePage from './pages/ProfilePage';
@@ -36,7 +37,7 @@ function App() {
         <Router basename={import.meta.env.BASE_URL}>
           <ThemeManager />
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<LandingPage />} />
 
             {/* Authentication Routes */}
             <Route path="/login" element={<LoginPage />} />

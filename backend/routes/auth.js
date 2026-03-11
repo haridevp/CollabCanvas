@@ -87,7 +87,7 @@ router.post("/google-login", async (req, res) => {
     if (user.loginActivities.length > 50) user.loginActivities = user.loginActivities.slice(-50);
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
     res.json({
       success: true,
@@ -385,7 +385,7 @@ router.post("/login", async (req, res) => {
     await user.save();
 
     // Generate a JWT signed with the user's ID and the secret key
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user._id.toString() }, process.env.JWT_SECRET, {
       // Set the token to expire in one day
       expiresIn: "1d",
     });
@@ -453,7 +453,7 @@ router.post("/verify-2fa", async (req, res) => {
 
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
     res.json({
       success: true,
