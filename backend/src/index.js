@@ -89,6 +89,13 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
+// Fix Cross-Origin-Opener-Policy to allow Google OAuth popup to postMessage back to the page.
+// The default 'same-origin' (often set by hosting platforms) blocks the OAuth popup flow.
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  next();
+});
+
 // Parse incoming JSON request bodies automatically
 app.use(express.json());
 

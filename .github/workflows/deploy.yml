@@ -23,7 +23,8 @@ jobs:
       - name: Install and Build
         env:
           # You can update this later in GitHub Secrets if you have a real backend URL
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'http://localhost:5000/api' }} 
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'http://localhost:5000/api' }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
         run: |
           cd frontend
           npm ci
